@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none" role="img" aria-label="KineSys">
+  <g fill="#0066A1">
+    <ellipse cx="24" cy="23" rx="13" ry="21" transform="rotate(-32 24 23)" />
+    <ellipse cx="24" cy="57" rx="13" ry="21" transform="rotate(32 24 57)" />
+    <ellipse cx="50" cy="24" rx="12" ry="22" transform="rotate(38 50 24)" />
+    <ellipse cx="50" cy="56" rx="12" ry="22" transform="rotate(-38 50 56)" />
+  </g>
+</svg>

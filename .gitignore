@@ -1,0 +1,26 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# next
+/.next/
+/out/
+
+# env — nunca subir claves
+.env
+.env*.local
+
+# debug / OS
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# typescript
+next-env.d.ts
+*.tsbuildinfo
