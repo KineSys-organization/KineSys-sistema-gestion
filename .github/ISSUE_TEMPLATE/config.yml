@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentación del flujo de trabajo
+    url: https://github.com/KineSys-organization/KineSys-sistema-gestion/blob/main/docs/github-workflow.md
+    about: Cómo elegir una HU, crear la rama feature y abrir el Pull Request.
+  - name: Roles por incremento
+    url: https://github.com/KineSys-organization/KineSys-sistema-gestion/blob/main/docs/roles-por-incremento.md
+    about: Distribución de PO / Coach / Developers por incremento.
