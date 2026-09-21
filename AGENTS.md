@@ -2,7 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy solo existe la **base de acceso**: login, sesión e inicio protegido. No hay módulos de turnos, pacientes, profesionales, pagos ni indicadores.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido) y dos módulos de Gerente: **Servicios** (`/servicios`) y **Profesionales** (`/profesionales`). No hay turnos, pacientes, pagos ni indicadores.
 
 Los pacientes usan otra web. **No pueden entrar acá.** Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -21,7 +21,7 @@ Permitido:
 
 - Auth: `signInWithPassword`, `signOut`, `getUser` / `getSession`
 - `supabase.rpc("fn_...", { ... })`
-- Edge functions: `supabase.functions.invoke("nombre", { body })` (todavía no hay ninguna en uso)
+- Edge functions: `supabase.functions.invoke("nombre", { body })` — en uso: `crear-profesional`
 
 Prohibido en cualquier archivo del front:
 
@@ -105,7 +105,9 @@ src/
     (auth)/login            → /login
     (auth)/logout/actions
     (main)/                 → /   (protegido)
-    dashboard/              → /dashboard redirige a /
+    (main)/servicios
+    (main)/profesionales
+    (main)/profesionales/nuevo
   proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
 ```
 
@@ -155,9 +157,16 @@ npm run dev
 ## Fuera de alcance (todavía)
 
 - Web de pacientes
-- Turnos, pacientes, kinesiología, historia clínica, configuración, pagos, indicadores
-- Alta de usuarios: edge function `crear-usuario`, solo Gerente
+- Turnos, franjas horarias (HU-02B)
+- Editar profesional y activo/inactivo (HU-03)
+- Pacientes, kinesiología, historia clínica, pagos, indicadores
+- Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
 - RLS cerrado (hoy las policies están abiertas a propósito)
+
+### HU-01 / HU-02A
+
+- Servicios: `fn_listar_servicios`, `fn_registrar_servicio`, `fn_editar_servicio`, `fn_desactivar_servicio`. Solo Gerente muta; listar lo pueden otros roles de gestión.
+- Profesionales (HU-02A): `fn_listar_profesionales` y edge `crear-profesional`. El alta exige al menos un servicio **antes** de invocar la edge. Pantallas solo Gerente.
 
 ---
 
