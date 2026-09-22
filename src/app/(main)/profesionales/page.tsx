@@ -31,6 +31,7 @@ export default async function ProfesionalesPage() {
               <th>Matrícula</th>
               <th>Servicios</th>
               <th>Estado</th>
+              <th>Horarios</th>
             </tr>
           </thead>
           <tbody>
@@ -50,6 +51,11 @@ export default async function ProfesionalesPage() {
                   <span className={profesional.activo ? "badge-activo" : "badge-inactivo"}>
                     {profesional.activo ? "Activo" : "Inactivo"}
                   </span>
+                </td>
+                <td>
+                  <Link className="boton-pill" href={`/profesionales/${profesional.id_usuario}/horarios`}>
+                    Horarios
+                  </Link>
                 </td>
               </tr>
             ))}

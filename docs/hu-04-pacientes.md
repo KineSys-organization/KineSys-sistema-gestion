@@ -29,4 +29,4 @@ No es idempotente al 100% en funciones (usa `create or replace`); las tablas usa
 
 ## Entrega
 
-PR a `main` (mismo criterio que HU-01/HU-02A). Integración a `develop` cuando el equipo sincronice esa rama.
+PR a `main` (mismo criterio que HU-01/HU-02A/HU-02B). La rama incluye merge de `main` con HU-02B resuelto (`AGENTS.md` + `globals.css`). Integración a `develop` cuando el equipo sincronice esa rama.

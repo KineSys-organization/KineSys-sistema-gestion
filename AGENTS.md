@@ -2,7 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales**) y el módulo de recepción **Pacientes** (`/pacientes`). No hay turnos, pagos ni indicadores.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y el módulo de recepción **Pacientes** (`/pacientes`). No hay turnos otorgados, pagos ni indicadores.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -108,6 +108,7 @@ src/
     (main)/servicios
     (main)/profesionales
     (main)/profesionales/nuevo
+    (main)/profesionales/[id]/horarios
     (main)/pacientes
     (main)/pacientes/nuevo
     (main)/pacientes/[id]
@@ -160,17 +161,18 @@ npm run dev
 ## Fuera de alcance (todavía)
 
 - Web de pacientes (login del paciente)
-- Turnos, franjas horarias (HU-02B / HU-05)
+- Turnos y consulta de disponibilidad (HU-05 / HU-06)
 - Editar profesional y activo/inactivo (HU-03)
 - Historia clínica, pagos, indicadores
 - Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
 - Administración del catálogo de obras sociales desde la app
 - RLS cerrado en tablas históricas (las nuevas de HU-04 van con RLS + revoke; el acceso es solo por `fn_*`)
 
-### HU-01 / HU-02A
+### HU-01 / HU-02A / HU-02B
 
 - Servicios: `fn_listar_servicios`, `fn_registrar_servicio`, `fn_editar_servicio`, `fn_desactivar_servicio`. Solo Gerente muta; listar lo pueden otros roles de gestión.
 - Profesionales (HU-02A): `fn_listar_profesionales` y edge `crear-profesional`. El alta exige al menos un servicio **antes** de invocar la edge. Pantallas solo Gerente.
+- Horarios de profesionales (HU-02B): `fn_consultar_horarios_profesional` y `fn_registrar_franja_profesional`. Franjas horarias semanales recurrentes por día de la semana. Exige al menos un servicio asociado. Restricción `EXCLUDE` (GiST) en PostgreSQL para evitar solapamientos. Pantallas solo Gerente.
 
 ### HU-04 — Pacientes
 
