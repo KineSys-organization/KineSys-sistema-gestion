@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export type UsuarioGestion = {
@@ -30,4 +31,11 @@ export async function obtenerUsuarioGestion() {
   }
 
   return data[0] as UsuarioGestion;
+}
+
+export async function exigirGerente() {
+  const usuario = await obtenerUsuarioGestion();
+  if (!usuario) redirect("/login");
+  if (usuario.rol_usuario !== "Gerente") redirect("/");
+  return usuario;
 }

@@ -14,7 +14,7 @@ export default async function MainLayout({
 
   return (
     <div className="dashboard">
-      <BarraGestion />
+      <BarraGestion usuario={usuario} />
       {children}
     </div>
   );
