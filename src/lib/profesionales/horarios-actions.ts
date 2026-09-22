@@ -1,0 +1,43 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { esIdProfesional, validarCamposFranja } from "./horarios";
+import type { EstadoFranja, HorariosProfesional } from "./horarios";
+
+export async function consultarHorarios(id: string): Promise<{
+  data: HorariosProfesional | null;
+  error: string | null;
+}> {
+  if (!esIdProfesional(id)) return { data: null, error: "Profesional inválido" };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("fn_consultar_horarios_profesional", { p_id_usuario: id });
+  return { data: error ? null : data as HorariosProfesional, error: error?.message ?? null };
+}
+
+export async function registrarFranja(
+  id: string,
+  _prev: EstadoFranja,
+  formData: FormData,
+): Promise<EstadoFranja> {
+  const campos = {
+    dia_semana: String(formData.get("dia_semana") ?? ""),
+    hora_inicio: String(formData.get("hora_inicio") ?? ""),
+    hora_fin: String(formData.get("hora_fin") ?? ""),
+  };
+  if (!esIdProfesional(id)) return { ok: false, error: "Profesional inválido", campos };
+  const errorValidacion = validarCamposFranja(campos);
+  if (errorValidacion) return { ok: false, error: errorValidacion, campos };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("fn_registrar_franja_profesional", {
+    p_id_usuario: id,
+    p_dia_semana: Number(campos.dia_semana),
+    p_hora_inicio: campos.hora_inicio,
+    p_hora_fin: campos.hora_fin,
+  });
+  if (error) return { ok: false, error: error.message, campos };
+  revalidatePath(`/profesionales/${id}/horarios`);
+  return { ok: true, error: null };
+}
+

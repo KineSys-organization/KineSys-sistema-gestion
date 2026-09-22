@@ -33,7 +33,8 @@ a {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -95,7 +96,8 @@ input {
   color: var(--azul-oscuro);
 }
 
-.campo input:not([type="checkbox"]) {
+.campo input:not([type="checkbox"]),
+.campo select {
   width: 100%;
   border: 1px solid var(--borde);
   border-radius: 10px;
@@ -104,7 +106,8 @@ input {
   background: var(--blanco);
 }
 
-.campo input:not([type="checkbox"]):focus {
+.campo input:not([type="checkbox"]):focus,
+.campo select:focus {
   outline: 2px solid var(--celeste);
   border-color: var(--celeste);
 }
@@ -504,4 +507,18 @@ fieldset.campo legend {
   color: var(--azul-principal);
   font-size: 13px;
   font-weight: 600;
+}
+
+.horarios-lista h3 {
+  margin-top: 0;
+}
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
