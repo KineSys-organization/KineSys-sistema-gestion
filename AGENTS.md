@@ -2,9 +2,9 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido) y dos módulos de Gerente: **Servicios** (`/servicios`) y **Profesionales** (`/profesionales`). No hay turnos, pacientes, pagos ni indicadores.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales**) y el módulo de recepción **Pacientes** (`/pacientes`). No hay turnos, pagos ni indicadores.
 
-Los pacientes usan otra web. **No pueden entrar acá.** Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
+Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
 El enrutamiento y el login/logout copian el ERP Palacio de las Golosinas (`erp-epg`), en TypeScript.
 
@@ -77,7 +77,7 @@ Server actions (como el ERP):
 
 El botón de salir es `<form action={logout}>` (`LogoutButton`).
 
-`src/lib/auth.ts`: validación + `obtenerUsuarioGestion()`.
+`src/lib/auth.ts`: validación + `obtenerUsuarioGestion()`, `exigirGerente()`, `exigirRecepcion()` (Gerente o Mesa de Entradas).
 
 ### `fn_acceso_gestion`
 
@@ -108,6 +108,9 @@ src/
     (main)/servicios
     (main)/profesionales
     (main)/profesionales/nuevo
+    (main)/pacientes
+    (main)/pacientes/nuevo
+    (main)/pacientes/[id]
   proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
 ```
 
@@ -156,17 +159,27 @@ npm run dev
 
 ## Fuera de alcance (todavía)
 
-- Web de pacientes
-- Turnos, franjas horarias (HU-02B)
+- Web de pacientes (login del paciente)
+- Turnos, franjas horarias (HU-02B / HU-05)
 - Editar profesional y activo/inactivo (HU-03)
-- Pacientes, kinesiología, historia clínica, pagos, indicadores
+- Historia clínica, pagos, indicadores
 - Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
-- RLS cerrado (hoy las policies están abiertas a propósito)
+- Administración del catálogo de obras sociales desde la app
+- RLS cerrado en tablas históricas (las nuevas de HU-04 van con RLS + revoke; el acceso es solo por `fn_*`)
 
 ### HU-01 / HU-02A
 
 - Servicios: `fn_listar_servicios`, `fn_registrar_servicio`, `fn_editar_servicio`, `fn_desactivar_servicio`. Solo Gerente muta; listar lo pueden otros roles de gestión.
 - Profesionales (HU-02A): `fn_listar_profesionales` y edge `crear-profesional`. El alta exige al menos un servicio **antes** de invocar la edge. Pantallas solo Gerente.
+
+### HU-04 — Pacientes
+
+- Pantallas: `/pacientes` (buscar), `/pacientes/nuevo`, `/pacientes/[id]` (editar). Solo **Gerente** y **Mesa de Entradas** (`exigirRecepcion`).
+- RPCs: `fn_listar_obras_sociales`, `fn_buscar_pacientes`, `fn_obtener_paciente`, `fn_registrar_paciente`, `fn_editar_paciente`.
+- DNI y fecha de nacimiento **no** se editan después del alta.
+- Obra social opcional; sin ninguna = particular (no se guarda “Particular” como obra). Varias obras con nº de afiliado; misma obra dos veces → rechazo.
+- DNI duplicado → error que sugiere el paciente existente.
+- SQL: `supabase/migrations/003_hu04_pacientes.sql` (aplicar en SQL Editor con autorización del equipo).
 
 ---
 
@@ -177,3 +190,4 @@ npm run dev
 - No subas `.env.local`.
 - No rompas el matcher/proxy: los estáticos no se redirigen a `/login`.
 - `grep` de `.from(` en `src/` debe dar **cero** resultados.
+- Entrega por **PR** a `main` (revisión del equipo). No pushear directo a `main`.
