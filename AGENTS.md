@@ -108,6 +108,7 @@ src/
     (main)/servicios
     (main)/profesionales
     (main)/profesionales/nuevo
+    (main)/profesionales/[id]/horarios
   proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
 ```
 
@@ -157,16 +158,17 @@ npm run dev
 ## Fuera de alcance (todavía)
 
 - Web de pacientes
-- Turnos, franjas horarias (HU-02B)
+- Turnos
 - Editar profesional y activo/inactivo (HU-03)
 - Pacientes, kinesiología, historia clínica, pagos, indicadores
 - Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
 - RLS cerrado (hoy las policies están abiertas a propósito)
 
-### HU-01 / HU-02A
+### HU-01 / HU-02A / HU-02B
 
 - Servicios: `fn_listar_servicios`, `fn_registrar_servicio`, `fn_editar_servicio`, `fn_desactivar_servicio`. Solo Gerente muta; listar lo pueden otros roles de gestión.
 - Profesionales (HU-02A): `fn_listar_profesionales` y edge `crear-profesional`. El alta exige al menos un servicio **antes** de invocar la edge. Pantallas solo Gerente.
+- Horarios de profesionales (HU-02B): `fn_consultar_horarios_profesional` y `fn_registrar_franja_profesional`. Franjas horarias semanales recurrentes por día de la semana. Exige al menos un servicio asociado. Restricción `EXCLUDE` (GiST) en PostgreSQL para evitar solapamientos. Pantallas solo Gerente.
 
 ---
 
