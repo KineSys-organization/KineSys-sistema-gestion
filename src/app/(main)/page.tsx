@@ -22,10 +22,16 @@ export default async function InicioPage() {
       {(esGerente || esRecepcion) && (
         <div className="tarjetas-inicio">
           {esRecepcion && (
-            <Link className="tarjeta-link" href="/pacientes">
-              <strong>Pacientes</strong>
-              <span>Registrar, buscar y editar datos de contacto.</span>
-            </Link>
+            <>
+              <Link className="tarjeta-link" href="/pacientes">
+                <strong>Pacientes</strong>
+                <span>Registrar, buscar y editar datos de contacto.</span>
+              </Link>
+              <Link className="tarjeta-link" href="/disponibilidad">
+                <strong>Disponibilidad</strong>
+                <span>Consultar horarios libres de un profesional.</span>
+              </Link>
+            </>
           )}
           {esGerente && (
             <>
