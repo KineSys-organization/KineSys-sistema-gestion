@@ -36,12 +36,19 @@ export async function consultarDisponibilidad(
   _prev: EstadoConsulta,
   formData: FormData
 ): Promise<EstadoConsulta> {
-  const campos = {
+  return obtenerDisponibilidad({
     id_profesional: String(formData.get("id_profesional") ?? ""),
     id_servicio: String(formData.get("id_servicio") ?? ""),
     fecha: String(formData.get("fecha") ?? ""),
-  };
+  });
+}
 
+// También la usa HU-06 para mostrar el horario elegido antes de confirmar.
+export async function obtenerDisponibilidad(campos: {
+  id_profesional: string;
+  id_servicio: string;
+  fecha: string;
+}): Promise<EstadoConsulta> {
   const errorValidacion = validarConsultaDisponibilidad(campos);
   if (errorValidacion) {
     return { ok: false, error: errorValidacion, data: null };
