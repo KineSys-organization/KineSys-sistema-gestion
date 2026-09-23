@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirGerente } from "@/lib/auth";
 import { consultarHorarios } from "@/lib/profesionales/horarios-actions";
-import { DIAS_SEMANA, esIdProfesional } from "@/lib/profesionales/horarios";
-import { HorariosForm } from "@/components/profesionales/HorariosForm";
+import { esIdProfesional } from "@/lib/profesionales/horarios";
+import { HorariosPanel } from "@/components/profesionales/HorariosPanel";
 
 export default async function HorariosPage({ params }: { params: Promise<{ id: string }> }) {
   await exigirGerente();
@@ -23,37 +23,12 @@ export default async function HorariosPage({ params }: { params: Promise<{ id: s
       </div>
       {error && <p className="mensaje-error" role="alert">{error}</p>}
       {data && (
-        <div className="modulo-grid">
-          <div className="tarjeta">
-            <h3>Agregar franja</h3>
-            {data.tiene_servicios ? <HorariosForm id={id} /> : (
-              <p className="mensaje-error">El profesional debe tener al menos un servicio asociado para cargar horarios.</p>
-            )}
-          </div>
-          <div className="horarios-lista">
-            <h3>Franjas semanales</h3>
-            {data.franjas.length === 0 ? (
-              <p className="texto-suave">No tiene horarios configurados.</p>
-            ) : (
-              <table className="tabla">
-                <caption className="solo-lectores">Horarios semanales del profesional</caption>
-                <thead><tr><th scope="col">Día</th><th scope="col">Inicio</th><th scope="col">Fin</th></tr></thead>
-                <tbody>{data.franjas.map((franja) => (
-                  <tr key={franja.id_franja}>
-                    <td>{DIAS_SEMANA[franja.dia_semana - 1]}</td>
-                    <td>{franja.hora_inicio.slice(0, 5)}</td>
-                    <td>{franja.hora_fin.slice(0, 5)}</td>
-                  </tr>
-                ))}</tbody>
-              </table>
-            )}
-            <p className="aviso-accion">
-              {data.habilitado_turnos
-                ? "El profesional tiene servicios y horarios configurados para recibir turnos."
-                : "Para recibir turnos, el profesional debe estar activo y tener al menos un servicio y una franja horaria."}
-            </p>
-          </div>
-        </div>
+        <HorariosPanel
+          id={id}
+          tieneServicios={data.tiene_servicios}
+          habilitadoTurnos={data.habilitado_turnos}
+          franjas={data.franjas}
+        />
       )}
     </section>
   );

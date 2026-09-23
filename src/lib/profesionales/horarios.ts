@@ -23,10 +23,23 @@ export type CamposFranja = {
   hora_fin: string;
 };
 
+export type TurnoAfectado = {
+  id_turno: string;
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
+  paciente: string;
+  dni_paciente: number | null;
+  servicio: string;
+  estado: string;
+};
+
 export type EstadoFranja = {
   ok: boolean;
   error: string | null;
   campos?: CamposFranja;
+  turnos?: TurnoAfectado[];
+  requiereConfirmacion?: boolean;
 };
 
 export function esIdProfesional(id: string) {

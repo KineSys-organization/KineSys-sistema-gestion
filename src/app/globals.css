@@ -523,6 +523,7 @@ fieldset.campo legend {
   white-space: nowrap;
 }
 
+
 .busqueda-pacientes {
   display: flex;
   flex-wrap: wrap;
@@ -638,4 +639,50 @@ a.badge-horario:hover {
   margin: 0;
   color: var(--azul-oscuro);
   font-weight: 600;
+}
+
+.fila-acciones {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+
+}
+
+
+/* La casilla y su servicio forman una sola opción, incluso dentro de .campo. */
+.campo label.check-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.campo label.check-item:has(input:checked) {
+  border-color: var(--azul-principal);
+  background: #eef7fc;
+}
+.campo label.check-item:focus-within {
+  outline: 2px solid var(--celeste);
+  outline-offset: 2px;
+}
+.campo input[readonly] {
+  background: #eef3f7;
+}
+.campos-sin-borde {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.turnos-afectados {
+  display: grid;
+  gap: 12px;
+  padding-left: 20px;
 }
