@@ -522,3 +522,64 @@ fieldset.campo legend {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+.busqueda-pacientes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.busqueda-pacientes .campo {
+  flex: 1 1 240px;
+  margin: 0;
+}
+
+.fieldset-obras {
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 12px 14px 16px;
+  margin: 0;
+}
+
+.fieldset-obras legend {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.lista-obras {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.obra-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.obra-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.campo-afiliado {
+  margin-left: 28px;
+}
+
+.texto-ayuda {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--gris-texto);
+}
+
+input:disabled {
+  background: #eef3f7;
+  color: var(--gris-texto);
+  cursor: not-allowed;
+}

@@ -39,3 +39,16 @@ export async function exigirGerente() {
   if (usuario.rol_usuario !== "Gerente") redirect("/");
   return usuario;
 }
+
+/** Recepción: Gerente o Mesa de Entradas (HU-04 pacientes). */
+export async function exigirRecepcion() {
+  const usuario = await obtenerUsuarioGestion();
+  if (!usuario) redirect("/login");
+  if (
+    usuario.rol_usuario !== "Gerente" &&
+    usuario.rol_usuario !== "Mesa de Entradas"
+  ) {
+    redirect("/");
+  }
+  return usuario;
+}
