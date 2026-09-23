@@ -583,3 +583,22 @@ input:disabled {
   color: var(--gris-texto);
   cursor: not-allowed;
 }
+
+.lista-horarios {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge-horario {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #e7f3f9;
+  color: var(--azul-principal);
+  font-weight: 600;
+  font-size: 14px;
+}

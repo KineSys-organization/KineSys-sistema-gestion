@@ -2,7 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y el módulo de recepción **Pacientes** (`/pacientes`). No hay turnos otorgados, pagos ni indicadores.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**). Otorgar turnos (HU-06), pagos e indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -112,6 +112,7 @@ src/
     (main)/pacientes
     (main)/pacientes/nuevo
     (main)/pacientes/[id]
+    (main)/disponibilidad
   proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
 ```
 
@@ -161,7 +162,7 @@ npm run dev
 ## Fuera de alcance (todavía)
 
 - Web de pacientes (login del paciente)
-- Turnos y consulta de disponibilidad (HU-05 / HU-06)
+- Otorgar / cancelar turnos (HU-06 / HU-10A)
 - Editar profesional y activo/inactivo (HU-03)
 - Historia clínica, pagos, indicadores
 - Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
@@ -184,6 +185,15 @@ npm run dev
 - Obra social opcional; sin ninguna = particular. Varias obras con nº de afiliado; misma obra dos veces → rechazo.
 - DNI duplicado → error que sugiere el paciente existente.
 - SQL: `supabase/migrations/003_hu04_pacientes.sql`.
+
+### HU-05 — Disponibilidad
+
+- Pantalla: `/disponibilidad`. Solo **Gerente** y **Mesa de Entradas**.
+- RPC: `fn_consultar_disponibilidad(profesional, servicio, fecha)`.
+- Calcula slots = franjas del día × duración/granularidad del servicio − turnos `otorgado`.
+- No horarios pasados; ventana máxima 30 días; solo profesional activo con servicio asociado.
+- Tabla mínima `turno` (ocupación). El alta de turnos es HU-06.
+- SQL: `supabase/migrations/004_hu05_disponibilidad.sql`.
 
 ---
 
