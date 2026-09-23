@@ -148,6 +148,7 @@ Logo: `public/logo-kinesys.svg`. Código simple, comentado, estilo estudiante. `
 ```bash
 npm install
 npm run dev
+npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 ```
 
 `http://localhost:3000`. Cuentas de prueba (contraseñas las tiene el equipo, no van en el código):
@@ -206,7 +207,7 @@ npm run dev
 - Concurrencia: al confirmar se revalida el horario (lock por profesional+día + `fn_consultar_disponibilidad`). Restricción `EXCLUDE` (GiST) `turno_sin_superposicion` como última defensa. Error: *El horario seleccionado ya no está disponible*.
 - No se otorgan turnos en fecha/hora pasada.
 - Cobertura: `turno.id_obra_social` (null = Particular) + `numero_afiliado` guardado al otorgar. Tiene que ser una obra del paciente. Una sola obra → preseleccionada; varias → Recepción elige; siempre se puede elegir Particular.
-- SQL: `supabase/migrations/005_hu06_otorgar_turno.sql`. Pruebas: `supabase/tests/hu06_turnos.sql` y `tests/turnos.test.mjs`.
+- SQL: `supabase/migrations/005_hu06_otorgar_turno.sql`. Pruebas: `supabase/tests/hu06_turnos.sql` y `tests/turnos.test.mjs` (`npm test`). Evidencia en `docs/hu-06-otorgar-turno.md`.
 
 ---
 

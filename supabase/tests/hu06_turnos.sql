@@ -71,16 +71,16 @@ begin
 
   -- Paciente con dos obras sociales y paciente particular.
   v_pac1 := public.fn_registrar_paciente(
-    'Ana', 'TestHU06', 99006001, date '1990-05-10',
-    '1100000006', 'ana.hu06@test.com',
+    'Ana', 'TestHU06', 99006101, date '1990-05-10',
+    '1100000006', 'ana.hu06.sql@test.com',
     jsonb_build_array(
       jsonb_build_object('id_obra_social', v_obra1, 'numero_afiliado', 'A-1'),
       jsonb_build_object('id_obra_social', v_obra2, 'numero_afiliado', 'B-2')
     )
   );
   v_pac2 := public.fn_registrar_paciente(
-    'Bruno', 'TestHU06', 99006002, date '1985-08-20',
-    '1100000007', 'bruno.hu06@test.com', '[]'::jsonb
+    'Bruno', 'TestHU06', 99006102, date '1985-08-20',
+    '1100000007', 'bruno.hu06.sql@test.com', '[]'::jsonb
   );
 
   -- Criterios 1, 5 y 6: se crea con todos los datos y la segunda obra elegida.
@@ -180,7 +180,8 @@ begin
   end;
   perform set_config('request.jwt.claims', v_recepcion, true);
 
-  raise notice 'HU-06 OK';
+  raise notice 'HU-06 OK: C1 C2 C2-EXCLUDE C3 C4 C5 C6 C6-particular C6-obra-ajena permisos (fecha %, horas % y %)',
+    v_fecha, to_char(v_hora1, 'HH24:MI'), to_char(v_hora2, 'HH24:MI');
 end;
 $$;
 
