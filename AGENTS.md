@@ -2,7 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**). Otorgar turnos (HU-06), pagos e indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06). Cancelar turnos, pagos e indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -113,6 +113,8 @@ src/
     (main)/pacientes/nuevo
     (main)/pacientes/[id]
     (main)/disponibilidad
+    (main)/turnos/nuevo
+    (main)/turnos/[id]
   proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
 ```
 
@@ -162,7 +164,7 @@ npm run dev
 ## Fuera de alcance (todavía)
 
 - Web de pacientes (login del paciente)
-- Otorgar / cancelar turnos (HU-06 / HU-10A)
+- Cancelar turnos (HU-10A)
 - Editar profesional y activo/inactivo (HU-03)
 - Historia clínica, pagos, indicadores
 - Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
@@ -190,10 +192,21 @@ npm run dev
 
 - Pantalla: `/disponibilidad`. Solo **Gerente** y **Mesa de Entradas**.
 - RPC: `fn_consultar_disponibilidad(profesional, servicio, fecha)`.
-- Calcula slots = franjas del día × duración/granularidad del servicio − turnos `otorgado`.
+- Calcula slots = franjas del día × duración/granularidad del servicio − turnos `confirmado` (antes `otorgado`, cambiado en HU-06).
 - No horarios pasados; ventana máxima 30 días; solo profesional activo con servicio asociado.
 - Tabla mínima `turno` (ocupación). El alta de turnos es HU-06.
+- Cada horario libre es un link a `/turnos/nuevo` (HU-06).
 - SQL: `supabase/migrations/004_hu05_disponibilidad.sql`.
+
+### HU-06 — Otorgar turno
+
+- Pantallas: `/turnos/nuevo?profesional&servicio&fecha&hora` (buscar paciente → cobertura → confirmar) y `/turnos/[id]` (resumen). Solo **Gerente** y **Mesa de Entradas**.
+- RPCs: `fn_otorgar_turno(paciente, profesional, servicio, fecha, hora, obra_social)` y `fn_obtener_turno(id)`.
+- Estado del turno: `confirmado` (también `cancelado`, `ausente`).
+- Concurrencia: al confirmar se revalida el horario (lock por profesional+día + `fn_consultar_disponibilidad`). Restricción `EXCLUDE` (GiST) `turno_sin_superposicion` como última defensa. Error: *El horario seleccionado ya no está disponible*.
+- No se otorgan turnos en fecha/hora pasada.
+- Cobertura: `turno.id_obra_social` (null = Particular) + `numero_afiliado` guardado al otorgar. Tiene que ser una obra del paciente. Una sola obra → preseleccionada; varias → Recepción elige; siempre se puede elegir Particular.
+- SQL: `supabase/migrations/005_hu06_otorgar_turno.sql`. Pruebas: `supabase/tests/hu06_turnos.sql` y `tests/turnos.test.mjs`.
 
 ---
 

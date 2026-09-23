@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { consultarDisponibilidad } from "@/lib/disponibilidad/actions";
-import type { EstadoConsulta } from "@/lib/disponibilidad/tipos";
+import type { Disponibilidad, EstadoConsulta } from "@/lib/disponibilidad/tipos";
 import type { Profesional } from "@/lib/profesionales/tipos";
 import {
   fechaMaximaConsulta,
@@ -10,6 +11,17 @@ import {
 } from "@/lib/disponibilidad/validar";
 
 const vacio: EstadoConsulta = { ok: false, error: null, data: null };
+
+// HU-06: cada horario libre lleva a otorgar el turno con los datos ya elegidos.
+function urlOtorgar(data: Disponibilidad, hora: string) {
+  const params = new URLSearchParams({
+    profesional: data.id_profesional,
+    servicio: data.id_servicio,
+    fecha: data.fecha,
+    hora,
+  });
+  return `/turnos/nuevo?${params.toString()}`;
+}
 
 export function DisponibilidadForm({
   profesionales,
@@ -111,13 +123,21 @@ export function DisponibilidadForm({
             )}
 
             {estado.data.horarios.length > 0 && (
-              <ul className="lista-horarios">
-                {estado.data.horarios.map((hora) => (
-                  <li key={hora}>
-                    <span className="badge-horario">{hora}</span>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <p className="texto-ayuda">Elegí un horario para otorgar el turno.</p>
+                <ul className="lista-horarios">
+                  {estado.data.horarios.map((hora) => (
+                    <li key={hora}>
+                      <Link
+                        className="badge-horario"
+                        href={urlOtorgar(estado.data!, hora)}
+                      >
+                        {hora}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </>
         )}
