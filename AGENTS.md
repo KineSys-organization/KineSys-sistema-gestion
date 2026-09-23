@@ -177,11 +177,13 @@ npm run dev
 ### HU-04 — Pacientes
 
 - Pantallas: `/pacientes` (buscar), `/pacientes/nuevo`, `/pacientes/[id]` (editar). Solo **Gerente** y **Mesa de Entradas** (`exigirRecepcion`).
-- RPCs: `fn_listar_obras_sociales`, `fn_buscar_pacientes`, `fn_obtener_paciente`, `fn_registrar_paciente`, `fn_editar_paciente`.
+- Extiende la tabla **`paciente` ya existente** (no la recrea). Agrega `mail_paciente`, catálogo `obra_social` y `paciente_obra_social`.
+- RPCs: `fn_listar_obras_sociales`, `fn_buscar_pacientes`, `fn_obtener_paciente`, `fn_registrar_paciente` (gestión), `fn_editar_paciente`.
+- No tocar `fn_completar_registro_paciente` (web de pacientes).
 - DNI y fecha de nacimiento **no** se editan después del alta.
-- Obra social opcional; sin ninguna = particular (no se guarda “Particular” como obra). Varias obras con nº de afiliado; misma obra dos veces → rechazo.
+- Obra social opcional; sin ninguna = particular. Varias obras con nº de afiliado; misma obra dos veces → rechazo.
 - DNI duplicado → error que sugiere el paciente existente.
-- SQL: `supabase/migrations/003_hu04_pacientes.sql` (aplicar en SQL Editor con autorización del equipo).
+- SQL: `supabase/migrations/003_hu04_pacientes.sql`.
 
 ---
 

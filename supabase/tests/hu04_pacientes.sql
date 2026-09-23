@@ -1,5 +1,4 @@
--- Pruebas HU-04. Ejecutar en SQL Editor; todo se revierte al final.
--- Requiere un usuario Gerente o Mesa de Entradas autenticado (auth.uid()).
+-- Pruebas HU-04 sobre el esquema extendido. Ejecutar con sesión Gerente/Mesa; se revierte.
 begin;
 
 do $$
@@ -21,21 +20,17 @@ begin
     raise exception 'Falta el catálogo de obras sociales';
   end if;
 
-  -- Alta particular (sin obras)
   v_id := public.fn_registrar_paciente(
     'Lucía', 'TestHU04', 99001001, date '1995-01-15',
     '1100000000', 'lucia.hu04@test.com', '[]'::jsonb
   );
 
-  -- Buscar por DNI
   select count(*) into v_count from public.fn_buscar_pacientes('99001001');
   if v_count <> 1 then raise exception 'Buscar por DNI falló'; end if;
 
-  -- Buscar por apellido
   select count(*) into v_count from public.fn_buscar_pacientes('TestHU04');
   if v_count < 1 then raise exception 'Buscar por nombre falló'; end if;
 
-  -- DNI duplicado
   begin
     perform public.fn_registrar_paciente(
       'Otra', 'Persona', 99001001, date '1990-01-01',
@@ -48,7 +43,6 @@ begin
     end if;
   end;
 
-  -- Asociar dos obras
   perform public.fn_editar_paciente(
     v_id, 'Lucía', 'TestHU04', '1100000000', 'lucia.hu04@test.com',
     jsonb_build_array(
@@ -62,7 +56,11 @@ begin
     raise exception 'Debió guardar dos obras sociales';
   end if;
 
-  -- Misma obra dos veces
+  -- Columna legacy sincronizada
+  if (select obra_social from public.paciente where id_paciente = v_id) is null then
+    raise exception 'Debió sincronizar obra_social legacy';
+  end if;
+
   begin
     perform public.fn_editar_paciente(
       v_id, 'Lucía', 'TestHU04', '1100000000', 'lucia.hu04@test.com',
@@ -77,6 +75,11 @@ begin
       raise;
     end if;
   end;
+
+  -- Web pacientes intacta
+  if to_regprocedure('public.fn_completar_registro_paciente(text,text,integer,date,text,text)') is null then
+    raise exception 'Se rompió fn_completar_registro_paciente';
+  end if;
 
   raise notice 'HU-04 OK';
 end;

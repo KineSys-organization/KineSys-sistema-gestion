@@ -63,6 +63,9 @@ export function validarAltaPaciente(input: CamposPaciente): string | null {
   if (!Number.isInteger(dni) || dni <= 0) {
     return "El DNI debe ser un número entero mayor a cero";
   }
+  if (dni > 2147483647) {
+    return "El DNI no es válido";
+  }
 
   const nacimiento = new Date(`${input.fecha_nacimiento_paciente}T00:00:00`);
   if (Number.isNaN(nacimiento.getTime())) return "La fecha de nacimiento no es válida";

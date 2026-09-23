@@ -18,9 +18,15 @@ function estadoError(mensaje: string): EstadoFormulario {
 }
 
 function normalizarPaciente(fila: Paciente): Paciente {
+  const fecha = fila.fecha_nacimiento_paciente
+    ? String(fila.fecha_nacimiento_paciente).slice(0, 10)
+    : "";
+
   return {
     ...fila,
-    fecha_nacimiento_paciente: String(fila.fecha_nacimiento_paciente).slice(0, 10),
+    telefono_paciente: fila.telefono_paciente ?? "",
+    mail_paciente: fila.mail_paciente ?? "",
+    fecha_nacimiento_paciente: fecha,
     obras_sociales: Array.isArray(fila.obras_sociales) ? fila.obras_sociales : [],
   };
 }
