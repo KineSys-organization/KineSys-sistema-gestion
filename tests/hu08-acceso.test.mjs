@@ -25,6 +25,9 @@ const MATRIZ = {
   "/agenda": [true, true, false],
   "/turnos/nuevo": [true, true, false],
   "/turnos/abc": [true, true, false],
+  // HU-12/HU-13: la agenda propia y la atención son solo del Profesional.
+  "/mi-agenda": [false, false, true],
+  "/mi-agenda/abc": [false, false, true],
 };
 const ORDEN_ROLES = ["Gerente", "Mesa de Entradas", "Profesional"];
 
@@ -73,6 +76,8 @@ test("puedeHacer: cada acción según el rol", () => {
     "agenda.consultar": [true, true, false],
     "turnos.gestionar": [true, true, false],
     "turnos.cancelar": [true, true, false],
+    "atencion.agenda": [false, false, true],
+    "atencion.registrar": [false, false, true],
   };
   assert.deepEqual(Object.keys(PERMISOS_ACCIONES).sort(), Object.keys(esperado).sort());
   for (const [accion, valores] of Object.entries(esperado)) {
@@ -113,6 +118,10 @@ test("cada página de (main) exige el rol que marca la matriz", () => {
       assert.match(codigo, /obtenerUsuarioGestion\(\)/, "Inicio valida la sesión");
     } else if (puedeAcceder("Mesa de Entradas", ruta)) {
       assert.match(codigo, /await exigirRecepcion\(\)/, `${ruta} debe usar exigirRecepcion`);
+    } else if (puedeAcceder("Profesional", ruta)) {
+      // HU-12/HU-13: pantallas solo del Profesional.
+      assert.equal(puedeAcceder("Gerente", ruta), false, `${ruta} es solo del Profesional`);
+      assert.match(codigo, /await exigirProfesional\(\)/, `${ruta} debe usar exigirProfesional`);
     } else {
       assert.equal(puedeAcceder("Gerente", ruta), true, `${ruta} no está en la matriz`);
       assert.match(codigo, /await exigirGerente\(\)/, `${ruta} debe usar exigirGerente`);

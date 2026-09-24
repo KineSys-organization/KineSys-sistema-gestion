@@ -12,12 +12,21 @@ const ETIQUETA_ESTADO = {
   confirmado: "Confirmado",
   cancelado: "Cancelado",
   ausente: "Ausente",
+  atendido: "Atendido", // HU-13
 } as const;
 
 const CLASE_ESTADO = {
   confirmado: "badge-activo",
   cancelado: "badge-cancelado",
   ausente: "badge-inactivo",
+  atendido: "badge-atendido",
+} as const;
+
+const TITULO_ESTADO = {
+  confirmado: "Turno otorgado",
+  cancelado: "Turno cancelado",
+  ausente: "Turno ausente",
+  atendido: "Turno atendido",
 } as const;
 
 // "2026-09-24T18:05:00+00:00" -> "24/09/2026 15:05" (hora de Argentina).
@@ -53,7 +62,7 @@ export default async function TurnoPage({ params }: Props) {
     <section className="modulo modulo-angosto">
       <div className="modulo-cabecera">
         <div>
-          <h2>{turno.estado === "cancelado" ? "Turno cancelado" : "Turno otorgado"}</h2>
+          <h2>{TITULO_ESTADO[turno.estado] ?? "Turno"}</h2>
           <p className="texto-suave">Resumen para informarle al paciente.</p>
         </div>
         <span className={CLASE_ESTADO[turno.estado] ?? "badge-inactivo"}>

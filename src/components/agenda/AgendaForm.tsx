@@ -94,6 +94,9 @@ export function AgendaForm({ profesionales }: { profesionales: Profesional[] }) 
                       >
                         Cancelado
                       </span>
+                    ) : turno.estado === "atendido" ? (
+                      // HU-13: el profesional ya registró la atención.
+                      <span className="badge-atendido">Atendido</span>
                     ) : (
                       <span className="badge-activo">Confirmado</span>
                     )}

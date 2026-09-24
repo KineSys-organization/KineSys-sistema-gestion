@@ -11,6 +11,7 @@ export const MENSAJE_SIN_PERMISO = "No tenés permisos para realizar esta acció
 // Grupos de roles que se repiten en la matriz.
 const SOLO_GERENTE: readonly Rol[] = ["Gerente"];
 const RECEPCION: readonly Rol[] = ["Gerente", "Mesa de Entradas"];
+const SOLO_PROFESIONAL: readonly Rol[] = ["Profesional"];
 
 // Rutas de (main) y quién puede entrar. Inicio ("/") lo ve cualquier rol de gestión.
 // Un prefijo cubre también sus subrutas: "/pacientes" incluye "/pacientes/nuevo".
@@ -21,6 +22,7 @@ export const PERMISOS_RUTAS: { prefijo: string; roles: readonly Rol[] }[] = [
   { prefijo: "/disponibilidad", roles: RECEPCION },
   { prefijo: "/agenda", roles: RECEPCION },
   { prefijo: "/turnos", roles: RECEPCION },
+  { prefijo: "/mi-agenda", roles: SOLO_PROFESIONAL }, // HU-12/HU-13: incluye /mi-agenda/[id]
 ];
 
 // Acciones que ejecutan las server actions (src/lib/*/actions.ts).
@@ -34,6 +36,8 @@ export const PERMISOS_ACCIONES = {
   "agenda.consultar": RECEPCION,
   "turnos.gestionar": RECEPCION, // otorgar y ver el resumen
   "turnos.cancelar": RECEPCION, // HU-10A
+  "atencion.agenda": SOLO_PROFESIONAL, // HU-12: su agenda y sus turnos (la base filtra por auth.uid())
+  "atencion.registrar": SOLO_PROFESIONAL, // HU-13: registrar y editar la atención
 } satisfies Record<string, readonly Rol[]>;
 
 export type Accion = keyof typeof PERMISOS_ACCIONES;
