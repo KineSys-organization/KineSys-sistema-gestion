@@ -56,6 +56,11 @@ export async function exigirRecepcion() {
   return exigirRol(["Gerente", "Mesa de Entradas"]);
 }
 
+/** HU-12/HU-13: pantallas del Profesional (su agenda y sus turnos). */
+export async function exigirProfesional() {
+  return exigirRol(["Profesional"]);
+}
+
 // Para server actions: se pueden invocar sin pasar por la página, así que repiten el chequeo.
 // No redirige: devuelve el mensaje de error (o null si puede) para mostrarlo en el formulario.
 export async function exigirAccion(accion: Accion): Promise<string | null> {

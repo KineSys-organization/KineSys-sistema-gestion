@@ -20,6 +20,11 @@ export default async function InicioPage({
   const rol = usuario.rol_usuario;
   const tarjetas = [
     {
+      href: "/mi-agenda",
+      titulo: "Mi agenda",
+      texto: "Tus turnos y pacientes del día. Registrá cada atención.",
+    },
+    {
       href: "/pacientes",
       titulo: "Pacientes",
       texto: "Registrar, buscar y editar datos de contacto.",

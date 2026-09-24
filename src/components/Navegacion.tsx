@@ -7,6 +7,7 @@ export const LINKS_MENU = [
   { href: "/pacientes", texto: "Pacientes" },
   { href: "/disponibilidad", texto: "Disponibilidad" },
   { href: "/agenda", texto: "Agenda" },
+  { href: "/mi-agenda", texto: "Mi agenda" }, // HU-12: solo Profesional
   { href: "/profesionales", texto: "Profesionales" },
   { href: "/servicios", texto: "Servicios" },
 ];

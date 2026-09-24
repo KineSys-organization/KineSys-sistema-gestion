@@ -2,7 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06, **Agenda** HU-07, **Cancelar turno** HU-10A), con control de acceso por rol (HU-08). Pagos e indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06, **Agenda** HU-07, **Cancelar turno** HU-10A), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08). Pagos e indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -119,6 +119,8 @@ src/
     (main)/agenda
     (main)/turnos/nuevo
     (main)/turnos/[id]       → resumen + cancelar (HU-10A)
+    (main)/mi-agenda         → agenda propia del Profesional (HU-12)
+    (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13)
   proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
 ```
 
@@ -164,7 +166,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 | pedroramirez@gmail.com | Entra (Profesional) |
 | juanrodriguez@gmail.com | Rechazado (Paciente) |
 
-> Al 24/09/2026 `pedroramirez@gmail.com` no existe en Auth: el único Profesional activo es `luciafernandez@gmail.com`.
+> Al 24/09/2026 `pedroramirez@gmail.com` no existe en Auth: el único Profesional activo con franjas es `luciafernandez@gmail.com` (la contraseña la tiene el equipo; se cambió el 24/09 para probar HU-12/13).
 
 ---
 
@@ -208,7 +210,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 
 - Pantallas: `/turnos/nuevo?profesional&servicio&fecha&hora` (buscar paciente → cobertura → confirmar) y `/turnos/[id]` (resumen). Solo **Gerente** y **Mesa de Entradas**.
 - RPCs: `fn_otorgar_turno(paciente, profesional, servicio, fecha, hora, obra_social)` y `fn_obtener_turno(id)`.
-- Estado del turno: `confirmado` (también `cancelado`, `ausente`).
+- Estado del turno: `confirmado` (también `cancelado`, `ausente` y, desde HU-13, `atendido`).
 - Concurrencia: al confirmar se revalida el horario (lock por profesional+día + `fn_consultar_disponibilidad`). Restricción `EXCLUDE` (GiST) `turno_sin_superposicion` como última defensa. Error: *El horario seleccionado ya no está disponible*.
 - No se otorgan turnos en fecha/hora pasada.
 - Cobertura: `turno.id_obra_social` (null = Particular) + `numero_afiliado` guardado al otorgar. Tiene que ser una obra del paciente. Una sola obra → preseleccionada; varias → Recepción elige; siempre se puede elegir Particular.
@@ -224,7 +226,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 
 ### HU-08 — Autenticación y acceso interno
 
-- Matriz: Inicio todos; `/servicios` Gerente + Mesa de Entradas (**solo lectura** para Mesa); `/profesionales/*` solo Gerente; pacientes, disponibilidad, agenda y turnos Gerente + Mesa de Entradas. Profesional por ahora solo ve Inicio.
+- Matriz: Inicio todos; `/servicios` Gerente + Mesa de Entradas (**solo lectura** para Mesa); `/profesionales/*` solo Gerente; pacientes, disponibilidad, agenda y turnos Gerente + Mesa de Entradas; `/mi-agenda/*` solo Profesional (HU-12/13, `exigirProfesional`).
 - Defensa en 3 capas: página (`exigirGerente` / `exigirRecepcion`, sin permiso → `/?error=sin-permiso` con aviso en Inicio), server action (`exigirAccion`) y RPC (`fn_*` valida rol con usuario activo).
 - `fn_exigir_rol(text[])` (interna, revocada a `authenticated`): exige usuario activo con uno de los roles; un `NULL` siempre se rechaza. Reemplaza a `rol_actual()` en las funciones de servicios y `fn_listar_profesionales`. Mensaje: *No tenés permisos para realizar esta acción*.
 - Menú y tarjetas de Inicio se filtran con `puedeAcceder` (solo UX). El header muestra "Nombre Apellido · Rol".
@@ -238,6 +240,16 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Errores: ya cancelado, ya ausente, *El turno ya pasó; corresponde marcarlo como Ausente*, sin motivo.
 - `fn_obtener_turno` suma los datos de cancelación y `cancelable`. La agenda (HU-07) muestra también los cancelados.
 - SQL: `supabase/migrations/009_hu10a_cancelar_turno.sql`. Pruebas: `supabase/tests/hu10a_cancelar_turno.sql` y `tests/hu10a-cancelar-turno.test.mjs` (`npm test`). Evidencia en `docs/hu-10a-cancelar-turno.md`.
+
+### HU-12 / HU-13 — Mi agenda y registrar la atención (Profesional)
+
+- Pantallas: `/mi-agenda?fecha=` (hoy por defecto, día anterior/siguiente) y `/mi-agenda/[id]` (paciente del turno + atención). Solo **Profesional** (`exigirProfesional`, acciones `atencion.agenda` y `atencion.registrar`).
+- Quién es el profesional: `turno.id_profesional = profesional.id_usuario = auth.uid()`. El front nunca manda el id del profesional desde el request; lo toma de la sesión y la base lo vuelve a exigir.
+- HU-12 reutiliza las RPC de HU-06/HU-07: `fn_consultar_agenda_profesional` (Recepción igual que antes; un Profesional solo con su propio id → *Solo podés consultar tu propia agenda*) y `fn_obtener_turno` (un Profesional solo sus turnos → *El turno no existe o no pertenece a tu agenda*, mismo mensaje si no existe). Suman `atendible` (confirmado y del día, hora de Argentina), datos del paciente (fecha de nacimiento, teléfono) y la `atencion` (solo para el profesional que atendió; Recepción no ve observaciones clínicas).
+- HU-13: tabla `atencion` (una por turno, `unique(id_turno)`; fecha, profesional y paciente se copian del turno; observaciones 1..2000; `motivo_consulta` opcional ≤ 200; `registrado_en`, `editado_en`), con RLS y sin grants. `fn_registrar_atencion(turno, observaciones, motivo)` exige turno propio, confirmado y del día, y pasa el turno a **`atendido`**. Registrar de nuevo → *La atención de este turno ya fue registrada…*. `fn_editar_atencion` es la edición explícita (botón "Editar atención"): solo observaciones y motivo.
+- Helper interno `fn_exigir_turno_propio(uuid)` (revocado a `authenticated`).
+- Efectos en lo existente: `turno_estado_valido` suma `atendido`; un turno atendido sigue ocupando su horario (`turno_sin_superposicion` y `fn_consultar_disponibilidad` miran `confirmado` y `atendido`); `fn_cancelar_turno` rechaza atendidos; `/agenda` y `/turnos/[id]` muestran el estado Atendido.
+- SQL: `supabase/migrations/010_hu12_hu13_atencion.sql`. Pruebas: `supabase/tests/hu12_hu13_atencion.sql` y `tests/hu12-hu13-atencion.test.mjs` (`npm test`). Evidencia en `docs/hu-12-13-atencion.md`.
 
 ---
 

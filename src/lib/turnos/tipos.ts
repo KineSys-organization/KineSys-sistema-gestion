@@ -1,7 +1,19 @@
+// HU-13 suma "atendido".
+export type EstadoTurno = "confirmado" | "cancelado" | "ausente" | "atendido";
+
+// HU-13: la atención registrada. Solo la recibe el profesional que atendió.
+export type Atencion = {
+  fecha_atencion: string;
+  observaciones: string;
+  motivo_consulta: string | null;
+  registrado_en: string;
+  editado_en: string | null;
+};
+
 // Lo que devuelve fn_obtener_turno / fn_otorgar_turno.
 export type Turno = {
   id_turno: string;
-  estado: "confirmado" | "cancelado" | "ausente";
+  estado: EstadoTurno;
   fecha: string;
   hora_inicio: string;
   hora_fin: string;
@@ -9,6 +21,9 @@ export type Turno = {
   nombre_paciente: string;
   apellido_paciente: string;
   dni_paciente: number;
+  // HU-12: para que el profesional identifique y atienda al paciente.
+  fecha_nacimiento_paciente: string | null;
+  telefono_paciente: string | null;
   id_profesional: string;
   nombre_profesional: string;
   apellido_profesional: string;
@@ -23,6 +38,9 @@ export type Turno = {
   cancelado_en: string | null;
   // Confirmado y todavía no pasó (lo calcula la base con la hora de Argentina).
   cancelable: boolean;
+  // HU-13: confirmado y del día (se le puede registrar la atención).
+  atendible: boolean;
+  atencion: Atencion | null;
 };
 
 export type EstadoOtorgar = {

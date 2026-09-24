@@ -756,3 +756,64 @@ a.badge-horario:hover {
   outline: 2px solid var(--celeste);
   border-color: var(--celeste);
 }
+
+/* HU-12 / HU-13: mi agenda y atención del turno. */
+.badge-atendido,
+.badge-hoy {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #e6f1f8;
+  color: var(--azul-principal);
+}
+
+.badge-hoy {
+  margin-left: 10px;
+  padding: 3px 10px;
+  vertical-align: middle;
+}
+
+.bloque {
+  margin-bottom: 20px;
+}
+
+.filtro-fecha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.filtro-fecha .campo {
+  margin: 0;
+}
+
+.filtro-fecha .fila-acciones {
+  margin-left: auto;
+}
+
+.texto-observaciones {
+  white-space: pre-wrap;
+  font-weight: 400;
+}
+
+.form-atencion {
+  margin: 16px 0;
+}
+
+.aviso-atencion {
+  margin: 16px 0;
+}
+
+/* Botón fuerte ("Atender"): al pasar el mouse el texto sigue blanco
+   (.boton-pill:hover le cambiaba el color y se perdía el contraste). */
+.boton-pill.boton-pill-fuerte:hover:not(:disabled) {
+  color: var(--blanco);
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+}
