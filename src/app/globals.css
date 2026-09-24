@@ -218,6 +218,34 @@ select {
   min-width: 0;
 }
 
+.aviso-inicio {
+  margin-bottom: 20px;
+}
+
+.dashboard-barra-der {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.usuario-conectado {
+  font-size: 13px;
+  color: #d6e6f2;
+  white-space: nowrap;
+}
+
+.usuario-conectado strong {
+  color: var(--blanco);
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  .usuario-conectado {
+    display: none;
+  }
+}
+
 .nav-app {
   display: flex;
   flex-wrap: wrap;

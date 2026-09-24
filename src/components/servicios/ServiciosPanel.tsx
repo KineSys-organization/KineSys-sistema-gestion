@@ -10,7 +10,27 @@ import type { EstadoFormulario, Servicio } from "@/lib/servicios/tipos";
 
 const vacio: EstadoFormulario = { ok: false, error: null };
 
-export function ServiciosPanel({ servicios }: { servicios: Servicio[] }) {
+// HU-08: sin permiso de gestión (Mesa de Entradas) solo se muestra la tabla, sin formulario ni botones.
+export function ServiciosPanel({
+  servicios,
+  puedeGestionar,
+}: {
+  servicios: Servicio[];
+  puedeGestionar: boolean;
+}) {
+  if (!puedeGestionar) {
+    return (
+      <section className="tarjeta">
+        <h3>Servicios cargados</h3>
+        <TablaServicios servicios={servicios} />
+      </section>
+    );
+  }
+
+  return <ServiciosGestion servicios={servicios} />;
+}
+
+function ServiciosGestion({ servicios }: { servicios: Servicio[] }) {
   const [editando, setEditando] = useState<Servicio | null>(null);
   const [altaState, altaAction, altaPending] = useActionState(registrarServicio, vacio);
   const [edicionState, edicionAction, edicionPending] = useActionState(editarServicio, vacio);
@@ -56,61 +76,77 @@ export function ServiciosPanel({ servicios }: { servicios: Servicio[] }) {
       <section className="tarjeta">
         <h3>Servicios cargados</h3>
         {mensajeLista && <p className="mensaje-error">{mensajeLista}</p>}
-        {servicios.length === 0 ? (
-          <p className="texto-suave">Todavía no hay servicios.</p>
-        ) : (
-          <table className="tabla">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Duración</th>
-                <th>Granularidad</th>
-                <th>Precio</th>
-                <th>Estado</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {servicios.map((servicio) => (
-                <tr key={servicio.id_servicio}>
-                  <td>{servicio.nombre_servicio}</td>
-                  <td>{servicio.duracion_minutos} min</td>
-                  <td>{servicio.granularidad_minutos} min</td>
-                  <td>
-                    {servicio.precio_servicio == null
-                      ? "—"
-                      : `$${servicio.precio_servicio}`}
-                  </td>
-                  <td>
-                    <span className={servicio.activo ? "badge-activo" : "badge-inactivo"}>
-                      {servicio.activo ? "Activo" : "Inactivo"}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="fila-acciones">
-                      <button
-                        className="boton-pill"
-                        type="button"
-                        onClick={() => setEditando(servicio)}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        className="boton-pill"
-                        type="button"
-                        onClick={() => alAlternar(servicio.id_servicio)}
-                      >
-                        {servicio.activo ? "Desactivar" : "Activar"}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <TablaServicios
+          servicios={servicios}
+          acciones={(servicio) => (
+            <div className="fila-acciones">
+              <button
+                className="boton-pill"
+                type="button"
+                onClick={() => setEditando(servicio)}
+              >
+                Editar
+              </button>
+              <button
+                className="boton-pill"
+                type="button"
+                onClick={() => alAlternar(servicio.id_servicio)}
+              >
+                {servicio.activo ? "Desactivar" : "Activar"}
+              </button>
+            </div>
+          )}
+        />
       </section>
     </div>
+  );
+}
+
+// Tabla compartida. Sin `acciones` (solo lectura) no se dibuja la columna de botones.
+function TablaServicios({
+  servicios,
+  acciones,
+}: {
+  servicios: Servicio[];
+  acciones?: (servicio: Servicio) => React.ReactNode;
+}) {
+  if (servicios.length === 0) {
+    return <p className="texto-suave">Todavía no hay servicios.</p>;
+  }
+
+  return (
+    <table className="tabla">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Duración</th>
+          <th>Granularidad</th>
+          <th>Precio</th>
+          <th>Estado</th>
+          {acciones && <th></th>}
+        </tr>
+      </thead>
+      <tbody>
+        {servicios.map((servicio) => (
+          <tr key={servicio.id_servicio}>
+            <td>{servicio.nombre_servicio}</td>
+            <td>{servicio.duracion_minutos} min</td>
+            <td>{servicio.granularidad_minutos} min</td>
+            <td>
+              {servicio.precio_servicio == null
+                ? "—"
+                : `$${servicio.precio_servicio}`}
+            </td>
+            <td>
+              <span className={servicio.activo ? "badge-activo" : "badge-inactivo"}>
+                {servicio.activo ? "Activo" : "Inactivo"}
+              </span>
+            </td>
+            {acciones && <td>{acciones(servicio)}</td>}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
