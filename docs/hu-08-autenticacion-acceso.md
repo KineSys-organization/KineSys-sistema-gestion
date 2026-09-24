@@ -63,7 +63,7 @@ La navegación (menú del header y tarjetas de Inicio) filtra con `puedeAcceder`
 
 ## Migración
 
-`supabase/migrations/008_hu08_control_acceso.sql` (no hay 007; en el repo hay dos 006).
+`supabase/migrations/008_hu08_control_acceso.sql` (va después de 007, HU-07).
 
 - `fn_exigir_rol(text[])`: `security definer`, `search_path = ''`, revocada para `public, anon, authenticated` (solo la llaman otras `fn_*`).
 - `create or replace` de `fn_listar_servicios`, `fn_registrar_servicio`, `fn_editar_servicio`, `fn_desactivar_servicio` y `fn_listar_profesionales`: misma lógica, solo cambia el chequeo de rol. Los mensajes "Solo un Gerente puede…" pasan a "No tenés permisos para realizar esta acción".

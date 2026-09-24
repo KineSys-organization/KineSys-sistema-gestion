@@ -221,7 +221,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - RPC: `fn_consultar_agenda_profesional(profesional, fecha)`.
 - Muestra los turnos `confirmado` del profesional para la fecha, ordenados por horario, con paciente, DNI, servicio y horario.
 - Una fecha sin turnos se muestra vacía, sin error.
-- SQL: `supabase/migrations/006_hu07_agenda_profesional.sql`. Pruebas: `tests/agenda.test.mjs` (`npm test`).
+- SQL: `supabase/migrations/007_hu07_agenda_profesional.sql`. Pruebas: `tests/agenda.test.mjs` (`npm test`).
 
 ### HU-08 — Autenticación y acceso interno
 
