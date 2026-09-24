@@ -2,7 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06, **Agenda** HU-07), con control de acceso por rol (HU-08). Cancelar turnos, pagos e indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06, **Agenda** HU-07, **Cancelar turno** HU-10A), con control de acceso por rol (HU-08). Pagos e indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -118,7 +118,7 @@ src/
     (main)/disponibilidad
     (main)/agenda
     (main)/turnos/nuevo
-    (main)/turnos/[id]
+    (main)/turnos/[id]       → resumen + cancelar (HU-10A)
   proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
 ```
 
@@ -171,7 +171,6 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 ## Fuera de alcance (todavía)
 
 - Web de pacientes (login del paciente)
-- Cancelar turnos (HU-10A)
 - Historia clínica, pagos, indicadores
 - Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
 - Administración del catálogo de obras sociales desde la app
@@ -199,7 +198,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 
 - Pantalla: `/disponibilidad`. Solo **Gerente** y **Mesa de Entradas**.
 - RPC: `fn_consultar_disponibilidad(profesional, servicio, fecha)`.
-- Calcula slots = franjas del día × duración/granularidad del servicio − turnos `confirmado` (antes `otorgado`, cambiado en HU-06).
+- Calcula slots = franjas del día × duración/granularidad del servicio − turnos `confirmado` (antes `otorgado`, cambiado en HU-06). Un turno `cancelado` (HU-10A) no ocupa.
 - No horarios pasados; ventana máxima 30 días; solo profesional activo con servicio asociado.
 - Tabla mínima `turno` (ocupación). El alta de turnos es HU-06.
 - Cada horario libre es un link a `/turnos/nuevo` (HU-06).
@@ -219,7 +218,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 
 - Pantalla: `/agenda`. Solo **Gerente** y **Mesa de Entradas**.
 - RPC: `fn_consultar_agenda_profesional(profesional, fecha)`.
-- Muestra los turnos `confirmado` del profesional para la fecha, ordenados por horario, con paciente, DNI, servicio y horario.
+- Muestra los turnos `confirmado` y `cancelado` (este último desde HU-10A, identificado y con su motivo) del profesional para la fecha, ordenados por horario, con paciente, DNI, servicio, horario, estado y link a `/turnos/[id]`.
 - Una fecha sin turnos se muestra vacía, sin error.
 - SQL: `supabase/migrations/007_hu07_agenda_profesional.sql`. Pruebas: `tests/agenda.test.mjs` (`npm test`).
 
@@ -230,6 +229,15 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - `fn_exigir_rol(text[])` (interna, revocada a `authenticated`): exige usuario activo con uno de los roles; un `NULL` siempre se rechaza. Reemplaza a `rol_actual()` en las funciones de servicios y `fn_listar_profesionales`. Mensaje: *No tenés permisos para realizar esta acción*.
 - Menú y tarjetas de Inicio se filtran con `puedeAcceder` (solo UX). El header muestra "Nombre Apellido · Rol".
 - SQL: `supabase/migrations/008_hu08_control_acceso.sql`. Pruebas: `supabase/tests/hu08_control_acceso.sql` y `tests/hu08-acceso.test.mjs` (`npm test`). Evidencia en `docs/hu-08-autenticacion-acceso.md`.
+
+### HU-10A — Cancelar un turno
+
+- Desde `/turnos/[id]` (botón "Cancelar turno" solo si `cancelable`: confirmado y no pasó). Solo **Gerente** y **Mesa de Entradas** (acción `turnos.cancelar`).
+- RPC: `fn_cancelar_turno(turno, motivo, detalle)`. Motivos: `pedido_paciente`, `profesional`, `otro` (etiquetas en `MOTIVOS_CANCELACION`). Detalle opcional ≤ 200.
+- No borra: pasa a `cancelado` con `motivo_cancelacion`, `detalle_cancelacion`, `cancelado_en`, `cancelado_por`. Usa el mismo lock y la misma hora de Argentina que `fn_otorgar_turno`.
+- Errores: ya cancelado, ya ausente, *El turno ya pasó; corresponde marcarlo como Ausente*, sin motivo.
+- `fn_obtener_turno` suma los datos de cancelación y `cancelable`. La agenda (HU-07) muestra también los cancelados.
+- SQL: `supabase/migrations/009_hu10a_cancelar_turno.sql`. Pruebas: `supabase/tests/hu10a_cancelar_turno.sql` y `tests/hu10a-cancelar-turno.test.mjs` (`npm test`). Evidencia en `docs/hu-10a-cancelar-turno.md`.
 
 ---
 
