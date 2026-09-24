@@ -69,7 +69,10 @@ La navegación (menú del header y tarjetas de Inicio) filtra con `puedeAcceder`
 - `create or replace` de `fn_listar_servicios`, `fn_registrar_servicio`, `fn_editar_servicio`, `fn_desactivar_servicio` y `fn_listar_profesionales`: misma lógica, solo cambia el chequeo de rol. Los mensajes "Solo un Gerente puede…" pasan a "No tenés permisos para realizar esta acción".
 - No toca `fn_completar_registro_paciente` ni `rol_actual()` (puede estar usado por políticas RLS).
 
-**Pendiente:** aplicarla en Supabase (el conector usado en esta HU es de solo lectura; no se aplicó ni se probó contra la base).
+**Aplicada** el 24/09/2026 con autorización del equipo, como `hu08_control_acceso` (versión `20260924151153`). Verificado después con consultas de solo lectura:
+
+- Las 5 funciones usan `fn_exigir_rol(...)` y ninguna usa `rol_actual()`.
+- Permisos: `authenticated` puede ejecutar las 5 funciones; `fn_exigir_rol` solo `postgres` y `service_role`.
 
 ## Pruebas
 
@@ -114,7 +117,7 @@ Cómo correrlo: después de aplicar 008, pegar el archivo en el SQL editor de Su
 | `POST /servicios` con header `Next-Action` (invocar una action sin sesión) | `307 → /login` |
 | `/login`, `/logo-kinesys.svg`, CSS de `/_next/static` | `200` (con estilos) |
 
-**SQL:** pendiente, hasta aplicar la migración 008.
+**SQL:** pendiente de correr en el editor SQL de Supabase. El conector de solo lectura no tiene EXECUTE sobre las `fn_*` ni puede hacer `SET ROLE authenticated`, así que desde ahí no se puede ejecutar.
 
 **Prueba manual por rol:** pendiente, la corre el equipo (las contraseñas no están en el repo).
 
