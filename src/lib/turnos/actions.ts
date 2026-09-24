@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigirAccion } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { EstadoOtorgar, Turno } from "@/lib/turnos/tipos";
+import type { EstadoCancelar, EstadoOtorgar, Turno } from "@/lib/turnos/tipos";
 import {
   coberturaParaRpc,
   esIdTurno,
+  validarCancelacion,
   validarOtorgarTurno,
 } from "@/lib/turnos/validar";
 
@@ -71,4 +72,38 @@ export async function obtenerTurno(id: string): Promise<{
     data: { ...turno, fecha: String(turno.fecha).slice(0, 10) },
     error: null,
   };
+}
+
+// HU-10A. Cancelar un turno con motivo. Las reglas (estado, "ya pasó", permisos)
+// las valida fn_cancelar_turno; acá solo se revisan los parámetros.
+export async function cancelarTurno(
+  _prev: EstadoCancelar,
+  formData: FormData
+): Promise<EstadoCancelar> {
+  const sinPermiso = await exigirAccion("turnos.cancelar");
+  if (sinPermiso) return { ok: false, error: sinPermiso };
+
+  const campos = {
+    idTurno: String(formData.get("id_turno") ?? ""),
+    motivo: String(formData.get("motivo") ?? ""),
+    detalle: String(formData.get("detalle") ?? ""),
+  };
+
+  const errorValidacion = validarCancelacion(campos);
+  if (errorValidacion) return { ok: false, error: errorValidacion };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("fn_cancelar_turno", {
+    p_id_turno: campos.idTurno.trim(),
+    p_motivo: campos.motivo.trim(),
+    p_detalle: campos.detalle.trim() || null,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  // El turno cambió de estado, la agenda lo muestra cancelado y el horario queda libre.
+  revalidatePath(`/turnos/${campos.idTurno.trim()}`);
+  revalidatePath("/agenda");
+  revalidatePath("/disponibilidad");
+  return { ok: true, error: null };
 }

@@ -69,3 +69,40 @@ export function formatearFecha(fecha: string): string {
 export function coberturaParaRpc(valor: string): string | null {
   return valor === PARTICULAR ? null : valor;
 }
+
+// HU-10A. Motivos de cancelación: el valor es el que guarda la base.
+export const MOTIVOS_CANCELACION = [
+  { valor: "pedido_paciente", etiqueta: "A pedido del paciente" },
+  { valor: "profesional", etiqueta: "Por el profesional" },
+  { valor: "otro", etiqueta: "Otro" },
+] as const;
+
+export const LARGO_MAXIMO_DETALLE = 200;
+
+export type CamposCancelacion = {
+  idTurno: string;
+  motivo: string;
+  detalle: string;
+};
+
+export function validarCancelacion(input: CamposCancelacion): string | null {
+  if (!UUID_OK.test(input.idTurno.trim())) return "Turno inválido";
+
+  const motivo = input.motivo.trim();
+  if (!motivo) return "Tenés que indicar el motivo de la cancelación";
+  if (!MOTIVOS_CANCELACION.some((m) => m.valor === motivo)) {
+    return "El motivo de cancelación no es válido";
+  }
+
+  if (input.detalle.trim().length > LARGO_MAXIMO_DETALLE) {
+    return "El detalle no puede superar los 200 caracteres";
+  }
+
+  return null;
+}
+
+// "pedido_paciente" -> "A pedido del paciente". Si no lo conoce, lo deja igual.
+export function etiquetaMotivo(valor: string | null): string {
+  const motivo = MOTIVOS_CANCELACION.find((m) => m.valor === valor);
+  return motivo ? motivo.etiqueta : (valor ?? "");
+}

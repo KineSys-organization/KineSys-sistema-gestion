@@ -11,6 +11,7 @@ export type TurnoAgenda = {
   id_profesional: string;
   id_servicio: string;
   nombre_servicio: string;
+  motivo_cancelacion: string | null; // HU-10A
 };
 
 export type Agenda = {

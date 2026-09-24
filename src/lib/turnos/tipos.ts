@@ -17,9 +17,20 @@ export type Turno = {
   id_obra_social: string | null;
   cobertura: string;
   numero_afiliado: string | null;
+  // HU-10A: datos de la cancelación (null si no está cancelado).
+  motivo_cancelacion: string | null;
+  detalle_cancelacion: string | null;
+  cancelado_en: string | null;
+  // Confirmado y todavía no pasó (lo calcula la base con la hora de Argentina).
+  cancelable: boolean;
 };
 
 export type EstadoOtorgar = {
+  ok: boolean;
+  error: string | null;
+};
+
+export type EstadoCancelar = {
   ok: boolean;
   error: string | null;
 };

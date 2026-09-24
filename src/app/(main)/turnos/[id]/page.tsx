@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { exigirRecepcion } from "@/lib/auth";
+import { CancelarTurnoForm } from "@/components/turnos/CancelarTurnoForm";
 import { obtenerTurno } from "@/lib/turnos/actions";
-import { formatearFecha } from "@/lib/turnos/validar";
+import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -13,8 +14,26 @@ const ETIQUETA_ESTADO = {
   ausente: "Ausente",
 } as const;
 
+const CLASE_ESTADO = {
+  confirmado: "badge-activo",
+  cancelado: "badge-cancelado",
+  ausente: "badge-inactivo",
+} as const;
+
+// "2026-09-24T18:05:00+00:00" -> "24/09/2026 15:05" (hora de Argentina).
+function formatearMomento(valor: string): string {
+  const momento = new Date(valor);
+  if (Number.isNaN(momento.getTime())) return valor;
+  return new Intl.DateTimeFormat("es-AR", {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: "America/Argentina/Buenos_Aires",
+  }).format(momento);
+}
+
 // Resumen del turno otorgado (HU-06). Es una página propia:
 // recargarla no vuelve a confirmar el turno.
+// HU-10A: desde acá se cancela, y si está cancelado se muestra el motivo.
 export default async function TurnoPage({ params }: Props) {
   await exigirRecepcion();
   const { id } = await params;
@@ -34,12 +53,10 @@ export default async function TurnoPage({ params }: Props) {
     <section className="modulo modulo-angosto">
       <div className="modulo-cabecera">
         <div>
-          <h2>Turno otorgado</h2>
+          <h2>{turno.estado === "cancelado" ? "Turno cancelado" : "Turno otorgado"}</h2>
           <p className="texto-suave">Resumen para informarle al paciente.</p>
         </div>
-        <span
-          className={turno.estado === "confirmado" ? "badge-activo" : "badge-inactivo"}
-        >
+        <span className={CLASE_ESTADO[turno.estado] ?? "badge-inactivo"}>
           {ETIQUETA_ESTADO[turno.estado] ?? turno.estado}
         </span>
       </div>
@@ -68,8 +85,28 @@ export default async function TurnoPage({ params }: Props) {
             {turno.cobertura}
             {turno.numero_afiliado && ` · nº ${turno.numero_afiliado}`}
           </dd>
+          {turno.estado === "cancelado" && (
+            <>
+              <dt>Motivo de cancelación</dt>
+              <dd>{etiquetaMotivo(turno.motivo_cancelacion)}</dd>
+              {turno.detalle_cancelacion && (
+                <>
+                  <dt>Detalle</dt>
+                  <dd>{turno.detalle_cancelacion}</dd>
+                </>
+              )}
+              {turno.cancelado_en && (
+                <>
+                  <dt>Cancelado el</dt>
+                  <dd>{formatearMomento(turno.cancelado_en)}</dd>
+                </>
+              )}
+            </>
+          )}
         </dl>
       </div>
+
+      {turno.cancelable && <CancelarTurnoForm idTurno={turno.id_turno} />}
 
       <div className="fila-acciones">
         <Link className="boton-principal boton-inline" href="/disponibilidad">
