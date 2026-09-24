@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { exigirGerente } from "@/lib/auth";
 import { listarProfesionales } from "@/lib/profesionales/actions";
+import { BotonAlternarProfesional } from "@/components/profesionales/BotonAlternarProfesional";
 
 export default async function ProfesionalesPage() {
   await exigirGerente();
@@ -31,7 +32,7 @@ export default async function ProfesionalesPage() {
               <th>Matrícula</th>
               <th>Servicios</th>
               <th>Estado</th>
-              <th>Horarios</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -53,9 +54,15 @@ export default async function ProfesionalesPage() {
                   </span>
                 </td>
                 <td>
-                  <Link className="boton-pill" href={`/profesionales/${profesional.id_usuario}/horarios`}>
-                    Horarios
-                  </Link>
+                  <div className="fila-acciones">
+                    <Link className="boton-pill" href={`/profesionales/${profesional.id_usuario}/editar`}>
+                      Editar
+                    </Link>
+                    <Link className="boton-pill" href={`/profesionales/${profesional.id_usuario}/horarios`}>
+                      Horarios
+                    </Link>
+                    <BotonAlternarProfesional id={profesional.id_usuario} activo={profesional.activo} />
+                  </div>
                 </td>
               </tr>
             ))}

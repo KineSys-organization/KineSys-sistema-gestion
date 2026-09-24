@@ -7,7 +7,7 @@ export function ListaServiciosChecks({
   servicios: Servicio[];
   seleccionados?: string[];
 }) {
-  const activos = servicios.filter((servicio) => servicio.activo);
+  const activos = servicios.filter((servicio) => servicio.activo || seleccionados.includes(servicio.id_servicio));
 
   if (activos.length === 0) {
     return (
@@ -25,7 +25,7 @@ export function ListaServiciosChecks({
             value={servicio.id_servicio}
             defaultChecked={seleccionados.includes(servicio.id_servicio)}
           />
-          <span>{servicio.nombre_servicio}</span>
+          <span>{servicio.nombre_servicio}{!servicio.activo && " (inactivo)"}</span>
         </label>
       ))}
     </div>
