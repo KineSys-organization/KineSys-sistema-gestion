@@ -9,7 +9,9 @@ export function BarraGestion({ usuario }: { usuario: UsuarioGestion }) {
       <div className="dashboard-barra-izq">
         <Link href="/" className="dashboard-marca">
           <img src="/logo-kinesys.svg" alt="" />
-          <span>KineSys</span>
+          <span>
+            Kine<span className="marca-sys">Sys</span>
+          </span>
         </Link>
         <Navegacion rol={usuario.rol_usuario} />
       </div>

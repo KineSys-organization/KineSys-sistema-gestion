@@ -4,6 +4,8 @@
   --fondo: #f7fafc;
   --azul-oscuro: #123b5d;
   --gris-texto: #586770;
+  --verde: #17a58b; /* verde del logo (hojas de la K y "Sys") */
+  --verde-claro: #4fd1b4; /* el mismo verde, legible sobre la barra oscura */
   --blanco: #ffffff;
   --borde: #d7e3ec;
   --error-fondo: #fdecec;
@@ -72,6 +74,11 @@ select {
   font-size: 32px;
   letter-spacing: -0.04em;
   color: var(--azul-principal);
+}
+
+/* "Sys" en verde, como el logo. */
+.marca-sys {
+  color: var(--verde);
 }
 
 .brand p {
@@ -180,10 +187,18 @@ select {
   color: inherit;
 }
 
+/* El logo es a dos colores: en la barra oscura va sobre un cuadrado blanco
+   (como ícono de app) para que el azul no se pierda. */
 .dashboard-marca img {
   width: 36px;
   height: 36px;
-  filter: brightness(0) invert(1);
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--blanco);
+}
+
+.dashboard-marca .marca-sys {
+  color: var(--verde-claro);
 }
 
 .boton-salida {
