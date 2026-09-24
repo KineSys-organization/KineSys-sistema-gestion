@@ -210,6 +210,14 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Cobertura: `turno.id_obra_social` (null = Particular) + `numero_afiliado` guardado al otorgar. Tiene que ser una obra del paciente. Una sola obra → preseleccionada; varias → Recepción elige; siempre se puede elegir Particular.
 - SQL: `supabase/migrations/005_hu06_otorgar_turno.sql`. Pruebas: `supabase/tests/hu06_turnos.sql` y `tests/turnos.test.mjs` (`npm test`). Evidencia en `docs/hu-06-otorgar-turno.md`.
 
+### HU-07 — Consultar agenda del profesional
+
+- Pantalla: `/agenda`. Solo **Gerente** y **Mesa de Entradas**.
+- RPC: `fn_consultar_agenda_profesional(profesional, fecha)`.
+- Muestra los turnos `confirmado` del profesional para la fecha, ordenados por horario, con paciente, DNI, servicio y horario.
+- Una fecha sin turnos se muestra vacía, sin error.
+- SQL: `supabase/migrations/006_hu07_agenda_profesional.sql`. Pruebas: `tests/agenda.test.mjs` (`npm test`).
+
 ---
 
 ## Al implementar

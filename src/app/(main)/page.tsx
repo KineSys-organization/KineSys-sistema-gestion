@@ -31,6 +31,10 @@ export default async function InicioPage() {
                 <strong>Disponibilidad</strong>
                 <span>Consultar horarios libres de un profesional.</span>
               </Link>
+              <Link className="tarjeta-link" href="/agenda">
+                <strong>Agenda</strong>
+                <span>Consultar los turnos asignados a un profesional.</span>
+              </Link>
             </>
           )}
           {esGerente && (
