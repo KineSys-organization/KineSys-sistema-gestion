@@ -73,6 +73,8 @@ Rama: `feature/hu-10a-cancelar-turno`. Issue: #26. Depende de HU-05 (disponibili
 
 **Build** — `npm run build` OK. **Arquitectura** — `grep -rn "\.from(" src/` → 0 resultados.
 
-**SQL** — _pendiente: correr después de aplicar la migración 009._
+**Migración** — `009_hu10a_cancelar_turno.sql` aplicada en Supabase el 24/09/2026 (registrada como `hu10a_cancelar_turno`). Verificado: las 4 columnas nuevas, los checks `turno_motivo_cancelacion_valido`, `turno_detalle_cancelacion_largo` y `turno_cancelado_con_motivo`, las 3 funciones `security definer` con `search_path = ''`, `execute` para `authenticated` y no para `anon`, y la agenda con `('confirmado', 'cancelado')`.
+
+**SQL** — _pendiente: correr `supabase/tests/hu10a_cancelar_turno.sql` en el SQL editor (necesita `postgres` para `set local role authenticated`)._
 
 **En la app** (carlaperez@, Mesa de Entradas) — _pendiente: otorgar → cancelar → ver en agenda → ver el horario libre en disponibilidad._
