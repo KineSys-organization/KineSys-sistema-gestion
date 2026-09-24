@@ -1,5 +1,6 @@
 "use server";
 
+import { exigirAccion } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Profesional } from "@/lib/profesionales/tipos";
 import type { Disponibilidad, EstadoConsulta } from "@/lib/disponibilidad/tipos";
@@ -18,6 +19,9 @@ export async function listarProfesionalesParaDisponibilidad(): Promise<{
   data: Profesional[];
   error: string | null;
 }> {
+  const sinPermiso = await exigirAccion("disponibilidad.consultar");
+  if (sinPermiso) return { data: [], error: sinPermiso };
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_listar_profesionales");
 
@@ -49,6 +53,9 @@ export async function obtenerDisponibilidad(campos: {
   id_servicio: string;
   fecha: string;
 }): Promise<EstadoConsulta> {
+  const sinPermiso = await exigirAccion("disponibilidad.consultar");
+  if (sinPermiso) return { ok: false, error: sinPermiso, data: null };
+
   const errorValidacion = validarConsultaDisponibilidad(campos);
   if (errorValidacion) {
     return { ok: false, error: errorValidacion, data: null };

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { exigirAccion } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { EstadoOtorgar, Turno } from "@/lib/turnos/tipos";
 import {
@@ -14,6 +15,9 @@ export async function otorgarTurno(
   _prev: EstadoOtorgar,
   formData: FormData
 ): Promise<EstadoOtorgar> {
+  const sinPermiso = await exigirAccion("turnos.gestionar");
+  if (sinPermiso) return { ok: false, error: sinPermiso };
+
   const campos = {
     id_paciente: String(formData.get("id_paciente") ?? ""),
     id_profesional: String(formData.get("id_profesional") ?? ""),
@@ -48,6 +52,9 @@ export async function obtenerTurno(id: string): Promise<{
   data: Turno | null;
   error: string | null;
 }> {
+  const sinPermiso = await exigirAccion("turnos.gestionar");
+  if (sinPermiso) return { data: null, error: sinPermiso };
+
   if (!esIdTurno(id)) {
     return { data: null, error: "Turno inválido" };
   }

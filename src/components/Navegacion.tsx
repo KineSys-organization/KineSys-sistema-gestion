@@ -1,27 +1,24 @@
 import Link from "next/link";
-import type { UsuarioGestion } from "@/lib/auth";
+import { puedeAcceder, type Rol } from "@/lib/auth/permisos";
 
-function puedeRecepcion(rol: UsuarioGestion["rol_usuario"]) {
-  return rol === "Gerente" || rol === "Mesa de Entradas";
-}
+// Links del menú. Solo UX: el bloqueo real está en páginas, server actions y fn_* de la base.
+export const LINKS_MENU = [
+  { href: "/", texto: "Inicio" },
+  { href: "/pacientes", texto: "Pacientes" },
+  { href: "/disponibilidad", texto: "Disponibilidad" },
+  { href: "/agenda", texto: "Agenda" },
+  { href: "/profesionales", texto: "Profesionales" },
+  { href: "/servicios", texto: "Servicios" },
+];
 
-export function Navegacion({ rol }: { rol: UsuarioGestion["rol_usuario"] }) {
+export function Navegacion({ rol }: { rol: Rol }) {
   return (
     <nav className="nav-app">
-      <Link href="/">Inicio</Link>
-      {puedeRecepcion(rol) && (
-        <>
-          <Link href="/pacientes">Pacientes</Link>
-          <Link href="/disponibilidad">Disponibilidad</Link>
-          <Link href="/agenda">Agenda</Link>
-        </>
-      )}
-      {rol === "Gerente" && (
-        <>
-          <Link href="/profesionales">Profesionales</Link>
-          <Link href="/servicios">Servicios</Link>
-        </>
-      )}
+      {LINKS_MENU.filter((link) => puedeAcceder(rol, link.href)).map((link) => (
+        <Link key={link.href} href={link.href}>
+          {link.texto}
+        </Link>
+      ))}
     </nav>
   );
 }

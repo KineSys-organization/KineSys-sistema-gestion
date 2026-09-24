@@ -2,7 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06). Cancelar turnos, pagos e indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06, **Agenda** HU-07), con control de acceso por rol (HU-08). Cancelar turnos, pagos e indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -77,7 +77,9 @@ Server actions (como el ERP):
 
 El botón de salir es `<form action={logout}>` (`LogoutButton`).
 
-`src/lib/auth.ts`: validación + `obtenerUsuarioGestion()`, `exigirGerente()`, `exigirRecepcion()` (Gerente o Mesa de Entradas).
+`src/lib/auth/index.ts`: validación + `obtenerUsuarioGestion()`, `exigirGerente()`, `exigirRecepcion()` (Gerente o Mesa de Entradas) para páginas y `exigirAccion(accion)` para server actions.
+
+`src/lib/auth/permisos.ts`: matriz de permisos (HU-08) con `puedeAcceder(rol, ruta)` y `puedeHacer(rol, accion)`. Lógica pura, testeada en `tests/hu08-acceso.test.mjs`.
 
 ### `fn_acceso_gestion`
 
@@ -114,6 +116,7 @@ src/
     (main)/pacientes/nuevo
     (main)/pacientes/[id]
     (main)/disponibilidad
+    (main)/agenda
     (main)/turnos/nuevo
     (main)/turnos/[id]
   proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
@@ -160,6 +163,8 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 | carlaperez@gmail.com | Entra (Mesa de Entradas) |
 | pedroramirez@gmail.com | Entra (Profesional) |
 | juanrodriguez@gmail.com | Rechazado (Paciente) |
+
+> Al 24/09/2026 `pedroramirez@gmail.com` no existe en Auth: el único Profesional activo es `luciafernandez@gmail.com`.
 
 ---
 
@@ -216,7 +221,15 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - RPC: `fn_consultar_agenda_profesional(profesional, fecha)`.
 - Muestra los turnos `confirmado` del profesional para la fecha, ordenados por horario, con paciente, DNI, servicio y horario.
 - Una fecha sin turnos se muestra vacía, sin error.
-- SQL: `supabase/migrations/006_hu07_agenda_profesional.sql`. Pruebas: `tests/agenda.test.mjs` (`npm test`).
+- SQL: `supabase/migrations/007_hu07_agenda_profesional.sql`. Pruebas: `tests/agenda.test.mjs` (`npm test`).
+
+### HU-08 — Autenticación y acceso interno
+
+- Matriz: Inicio todos; `/servicios` Gerente + Mesa de Entradas (**solo lectura** para Mesa); `/profesionales/*` solo Gerente; pacientes, disponibilidad, agenda y turnos Gerente + Mesa de Entradas. Profesional por ahora solo ve Inicio.
+- Defensa en 3 capas: página (`exigirGerente` / `exigirRecepcion`, sin permiso → `/?error=sin-permiso` con aviso en Inicio), server action (`exigirAccion`) y RPC (`fn_*` valida rol con usuario activo).
+- `fn_exigir_rol(text[])` (interna, revocada a `authenticated`): exige usuario activo con uno de los roles; un `NULL` siempre se rechaza. Reemplaza a `rol_actual()` en las funciones de servicios y `fn_listar_profesionales`. Mensaje: *No tenés permisos para realizar esta acción*.
+- Menú y tarjetas de Inicio se filtran con `puedeAcceder` (solo UX). El header muestra "Nombre Apellido · Rol".
+- SQL: `supabase/migrations/008_hu08_control_acceso.sql`. Pruebas: `supabase/tests/hu08_control_acceso.sql` y `tests/hu08-acceso.test.mjs` (`npm test`). Evidencia en `docs/hu-08-autenticacion-acceso.md`.
 
 ---
 
@@ -227,4 +240,6 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - No subas `.env.local`.
 - No rompas el matcher/proxy: los estáticos no se redirigen a `/login`.
 - `grep` de `.from(` en `src/` debe dar **cero** resultados.
+- Página nueva en `(main)/`: sumar su ruta a `src/lib/auth/permisos.ts` y llamar `exigirGerente()` / `exigirRecepcion()`. Server action nueva: empezar con `exigirAccion(...)`. Si no, `npm test` falla.
+- `fn_*` nueva: validar rol con usuario activo (`fn_exigir_rol` o `fn_es_recepcion`), nunca con `rol_actual()` (deja pasar `NULL`).
 - Entrega por **PR** a `main` (revisión del equipo). No pushear directo a `main`.

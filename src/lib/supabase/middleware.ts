@@ -45,6 +45,7 @@ export async function updateSession(request: NextRequest) {
   if (!user && !esRutaPublica) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = ""; // no arrastrar parámetros de la ruta privada al login
     return NextResponse.redirect(url);
   }
 
@@ -54,6 +55,7 @@ export async function updateSession(request: NextRequest) {
     if (!error && data && data.length > 0) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
+      url.search = "";
       return NextResponse.redirect(url);
     }
   }

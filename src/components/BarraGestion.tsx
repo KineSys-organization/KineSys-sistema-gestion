@@ -13,7 +13,13 @@ export function BarraGestion({ usuario }: { usuario: UsuarioGestion }) {
         </Link>
         <Navegacion rol={usuario.rol_usuario} />
       </div>
-      <LogoutButton className="boton-salida" />
+      <div className="dashboard-barra-der">
+        {/* HU-08: quién está conectado y con qué rol */}
+        <span className="usuario-conectado">
+          {usuario.nombre_usuario} {usuario.apellido_usuario} · <strong>{usuario.rol_usuario}</strong>
+        </span>
+        <LogoutButton className="boton-salida" />
+      </div>
     </header>
   );
 }
