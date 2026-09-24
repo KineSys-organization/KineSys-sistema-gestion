@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { exigirAccion } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { precioOpcional, validarServicio } from "@/lib/servicios/validar";
 import type { EstadoFormulario, Servicio } from "@/lib/servicios/tipos";
@@ -12,6 +13,9 @@ function estadoError(mensaje: string): EstadoFormulario {
 }
 
 export async function listarServicios(): Promise<{ data: Servicio[]; error: string | null }> {
+  const sinPermiso = await exigirAccion("servicios.ver");
+  if (sinPermiso) return { data: [], error: sinPermiso };
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_listar_servicios");
 
@@ -26,6 +30,9 @@ export async function registrarServicio(
   _prev: EstadoFormulario,
   formData: FormData
 ): Promise<EstadoFormulario> {
+  const sinPermiso = await exigirAccion("servicios.gestionar");
+  if (sinPermiso) return estadoError(sinPermiso);
+
   const nombre = String(formData.get("nombre") ?? "");
   const duracion = String(formData.get("duracion") ?? "");
   const granularidad = String(formData.get("granularidad") ?? "");
@@ -52,6 +59,9 @@ export async function editarServicio(
   _prev: EstadoFormulario,
   formData: FormData
 ): Promise<EstadoFormulario> {
+  const sinPermiso = await exigirAccion("servicios.gestionar");
+  if (sinPermiso) return estadoError(sinPermiso);
+
   const id = String(formData.get("id_servicio") ?? "");
   const nombre = String(formData.get("nombre") ?? "");
   const duracion = String(formData.get("duracion") ?? "");
@@ -79,6 +89,9 @@ export async function editarServicio(
 }
 
 export async function alternarServicio(idServicio: string): Promise<EstadoFormulario> {
+  const sinPermiso = await exigirAccion("servicios.gestionar");
+  if (sinPermiso) return estadoError(sinPermiso);
+
   if (!idServicio) return estadoError("El servicio no existe");
 
   const supabase = await createClient();

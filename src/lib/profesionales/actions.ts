@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { exigirAccion } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { validarAltaProfesional, validarEdicionProfesional } from "@/lib/profesionales/validar";
 import type { DetalleProfesionalEdicion, EstadoFormulario, Profesional } from "@/lib/profesionales/tipos";
@@ -18,6 +19,9 @@ export async function listarProfesionales(): Promise<{
   data: Profesional[];
   error: string | null;
 }> {
+  const sinPermiso = await exigirAccion("profesionales.gestionar");
+  if (sinPermiso) return { data: [], error: sinPermiso };
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_listar_profesionales");
 
@@ -53,6 +57,9 @@ export async function crearProfesional(
   _prev: EstadoFormulario,
   formData: FormData
 ): Promise<EstadoFormulario> {
+  const sinPermiso = await exigirAccion("profesionales.gestionar");
+  if (sinPermiso) return estadoError(sinPermiso);
+
   const servicios = formData.getAll("servicios").map(String).filter(Boolean);
   const campos = {
     email: String(formData.get("email") ?? ""),
@@ -95,6 +102,8 @@ export async function alternarProfesional(id: string): Promise<{
   error: string | null;
   activo?: boolean;
 }> {
+  const sinPermiso = await exigirAccion("profesionales.gestionar");
+  if (sinPermiso) return { ok: false, error: sinPermiso };
   if (!esIdProfesional(id)) return { ok: false, error: "Profesional inválido" };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_alternar_estado_profesional", {
@@ -111,6 +120,8 @@ export async function obtenerProfesional(id: string): Promise<{
   data: DetalleProfesionalEdicion | null;
   error: string | null;
 }> {
+  const sinPermiso = await exigirAccion("profesionales.gestionar");
+  if (sinPermiso) return { data: null, error: sinPermiso };
   if (!esIdProfesional(id)) return { data: null, error: "Profesional inválido" };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_obtener_profesional", {
@@ -129,6 +140,9 @@ export async function editarProfesional(
   prev: EstadoFormulario,
   formData: FormData
 ): Promise<EstadoFormulario> {
+  const sinPermiso = await exigirAccion("profesionales.gestionar");
+  if (sinPermiso) return estadoError(sinPermiso);
+
   const servicios = formData.getAll("servicios").map(String).filter(Boolean);
   const campos = {
     nombre_usuario: String(formData.get("nombre_usuario") ?? ""),

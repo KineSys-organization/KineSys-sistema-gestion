@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { exigirAccion } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { EstadoFormulario, ObraSocial, Paciente } from "@/lib/pacientes/tipos";
 import {
@@ -35,6 +36,9 @@ export async function listarObrasSociales(): Promise<{
   data: ObraSocial[];
   error: string | null;
 }> {
+  const sinPermiso = await exigirAccion("pacientes.gestionar");
+  if (sinPermiso) return { data: [], error: sinPermiso };
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_listar_obras_sociales");
 
@@ -48,6 +52,9 @@ export async function listarObrasSociales(): Promise<{
 export async function buscarPacientes(
   texto: string
 ): Promise<{ data: Paciente[]; error: string | null }> {
+  const sinPermiso = await exigirAccion("pacientes.gestionar");
+  if (sinPermiso) return { data: [], error: sinPermiso };
+
   const consulta = texto.trim();
   if (!consulta) {
     return { data: [], error: null };
@@ -72,6 +79,9 @@ export async function obtenerPaciente(id: string): Promise<{
   data: Paciente | null;
   error: string | null;
 }> {
+  const sinPermiso = await exigirAccion("pacientes.gestionar");
+  if (sinPermiso) return { data: null, error: sinPermiso };
+
   if (!esIdPaciente(id)) {
     return { data: null, error: "Paciente inválido" };
   }
@@ -92,6 +102,9 @@ export async function registrarPaciente(
   _prev: EstadoFormulario,
   formData: FormData
 ): Promise<EstadoFormulario> {
+  const sinPermiso = await exigirAccion("pacientes.gestionar");
+  if (sinPermiso) return estadoError(sinPermiso);
+
   const campos = {
     nombre_paciente: String(formData.get("nombre_paciente") ?? ""),
     apellido_paciente: String(formData.get("apellido_paciente") ?? ""),
@@ -130,6 +143,9 @@ export async function editarPaciente(
   _prev: EstadoFormulario,
   formData: FormData
 ): Promise<EstadoFormulario> {
+  const sinPermiso = await exigirAccion("pacientes.gestionar");
+  if (sinPermiso) return estadoError(sinPermiso);
+
   if (!esIdPaciente(idPaciente)) return estadoError("Paciente inválido");
 
   const campos = {

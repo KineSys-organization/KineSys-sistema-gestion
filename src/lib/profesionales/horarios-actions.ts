@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { exigirAccion } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { esIdProfesional, validarCamposFranja } from "./horarios";
 import type { EstadoFranja, HorariosProfesional } from "./horarios";
@@ -9,6 +10,8 @@ export async function consultarHorarios(id: string): Promise<{
   data: HorariosProfesional | null;
   error: string | null;
 }> {
+  const sinPermiso = await exigirAccion("horarios.gestionar");
+  if (sinPermiso) return { data: null, error: sinPermiso };
   if (!esIdProfesional(id)) return { data: null, error: "Profesional inválido" };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_consultar_horarios_profesional", { p_id_usuario: id });
@@ -20,6 +23,9 @@ export async function registrarFranja(
   _prev: EstadoFranja,
   formData: FormData,
 ): Promise<EstadoFranja> {
+  const sinPermiso = await exigirAccion("horarios.gestionar");
+  if (sinPermiso) return { ok: false, error: sinPermiso };
+
   const campos = {
     dia_semana: String(formData.get("dia_semana") ?? ""),
     hora_inicio: String(formData.get("hora_inicio") ?? ""),
@@ -49,6 +55,9 @@ export async function editarFranja(
   _prev: EstadoFranja,
   formData: FormData,
 ): Promise<EstadoFranja> {
+  const sinPermiso = await exigirAccion("horarios.gestionar");
+  if (sinPermiso) return { ok: false, error: sinPermiso };
+
   const campos = {
     dia_semana: String(formData.get("dia_semana") ?? ""),
     hora_inicio: String(formData.get("hora_inicio") ?? ""),
@@ -78,6 +87,8 @@ export async function eliminarFranja(
   idFranja: string,
   confirmar = false,
 ): Promise<EstadoFranja> {
+  const sinPermiso = await exigirAccion("horarios.gestionar");
+  if (sinPermiso) return { ok: false, error: sinPermiso };
   if (!esIdProfesional(idProfesional) || !esIdProfesional(idFranja)) return { ok: false, error: "Profesional o franja inválidos" };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_eliminar_franja_profesional", {
