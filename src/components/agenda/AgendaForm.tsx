@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { consultarAgenda } from "@/lib/agenda/actions";
 import type { EstadoAgenda } from "@/lib/agenda/tipos";
 import type { Profesional } from "@/lib/profesionales/tipos";
+import { etiquetaMotivo } from "@/lib/turnos/validar";
 
 const vacio: EstadoAgenda = { ok: false, error: null, data: null };
 
@@ -65,11 +67,17 @@ export function AgendaForm({ profesionales }: { profesionales: Profesional[] }) 
                 <th>Paciente</th>
                 <th>DNI</th>
                 <th>Servicio</th>
+                <th>Estado</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {estado.data.turnos.map((turno) => (
-                <tr key={turno.id_turno}>
+                // HU-10A: los cancelados se ven atenuados y no ocupan el horario.
+                <tr
+                  key={turno.id_turno}
+                  className={turno.estado === "cancelado" ? "fila-cancelada" : undefined}
+                >
                   <td>
                     {turno.hora_inicio} a {turno.hora_fin}
                   </td>
@@ -78,6 +86,23 @@ export function AgendaForm({ profesionales }: { profesionales: Profesional[] }) 
                   </td>
                   <td>{turno.dni_paciente}</td>
                   <td>{turno.nombre_servicio}</td>
+                  <td>
+                    {turno.estado === "cancelado" ? (
+                      <span
+                        className="badge-cancelado"
+                        title={etiquetaMotivo(turno.motivo_cancelacion)}
+                      >
+                        Cancelado
+                      </span>
+                    ) : (
+                      <span className="badge-activo">Confirmado</span>
+                    )}
+                  </td>
+                  <td>
+                    <Link className="boton-texto" href={`/turnos/${turno.id_turno}`}>
+                      Ver turno
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>

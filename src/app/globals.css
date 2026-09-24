@@ -714,3 +714,45 @@ a.badge-horario:hover {
   gap: 12px;
   padding-left: 20px;
 }
+
+/* HU-10A: turnos cancelados (agenda y resumen). */
+.badge-cancelado {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--error-fondo);
+  color: var(--error-texto);
+}
+
+.fila-cancelada td {
+  color: var(--gris-texto);
+  opacity: 0.75;
+}
+
+.fila-cancelada td:nth-child(-n + 4) {
+  text-decoration: line-through;
+}
+
+.form-cancelar {
+  margin: 16px 0;
+}
+
+/* Igual que los input y select de .campo. */
+.campo textarea {
+  width: 100%;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--azul-oscuro);
+  background: var(--blanco);
+  font: inherit;
+  resize: vertical;
+}
+
+.campo textarea:focus {
+  outline: 2px solid var(--celeste);
+  border-color: var(--celeste);
+}
