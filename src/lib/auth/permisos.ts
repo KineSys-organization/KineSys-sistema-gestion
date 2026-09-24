@@ -33,6 +33,7 @@ export const PERMISOS_ACCIONES = {
   "disponibilidad.consultar": RECEPCION,
   "agenda.consultar": RECEPCION,
   "turnos.gestionar": RECEPCION, // otorgar y ver el resumen
+  "turnos.cancelar": RECEPCION, // HU-10A
 } satisfies Record<string, readonly Rol[]>;
 
 export type Accion = keyof typeof PERMISOS_ACCIONES;
