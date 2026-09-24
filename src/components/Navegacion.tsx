@@ -13,6 +13,7 @@ export function Navegacion({ rol }: { rol: UsuarioGestion["rol_usuario"] }) {
         <>
           <Link href="/pacientes">Pacientes</Link>
           <Link href="/disponibilidad">Disponibilidad</Link>
+          <Link href="/agenda">Agenda</Link>
         </>
       )}
       {rol === "Gerente" && (
