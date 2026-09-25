@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { obtenerUsuarioGestion } from "@/lib/auth";
 import { MENSAJE_SIN_PERMISO, puedeAcceder, puedeHacer } from "@/lib/auth/permisos";
+import { consultarMiAgenda } from "@/lib/atencion/actions";
+import { hoyArgentina } from "@/lib/atencion/validar";
 
 export default async function InicioPage({
   searchParams,
@@ -18,6 +20,7 @@ export default async function InicioPage({
   const sinPermiso = error === "sin-permiso";
 
   const rol = usuario.rol_usuario;
+  // Ordenadas por uso diario: lo primero que hace cada rol va arriba.
   const tarjetas = [
     {
       href: "/mi-agenda",
@@ -25,19 +28,25 @@ export default async function InicioPage({
       texto: "Tus turnos y pacientes del día. Registrá cada atención.",
     },
     {
-      href: "/pacientes",
-      titulo: "Pacientes",
-      texto: "Registrar, buscar y editar datos de contacto.",
-    },
-    {
       href: "/disponibilidad",
-      titulo: "Disponibilidad",
-      texto: "Consultar horarios libres de un profesional.",
+      titulo: "Otorgar turno",
+      texto: "Elegí profesional y servicio, mirá los días libres en el calendario y dá el turno.",
+      destacada: true,
     },
     {
       href: "/agenda",
       titulo: "Agenda",
-      texto: "Consultar los turnos asignados a un profesional.",
+      texto: "Los turnos de un profesional para un día.",
+    },
+    {
+      href: "/pacientes",
+      titulo: "Pacientes",
+      texto: "Buscar y filtrar por obra social o edad, registrar y editar.",
+    },
+    {
+      href: "/profesionales",
+      titulo: "Profesionales",
+      texto: "Registrar profesionales, sus servicios y horarios.",
     },
     {
       href: "/servicios",
@@ -46,12 +55,13 @@ export default async function InicioPage({
         ? "Definir tratamientos, duración y precio."
         : "Consultar tratamientos, duración y precio.",
     },
-    {
-      href: "/profesionales",
-      titulo: "Profesionales",
-      texto: "Registrar profesionales, sus servicios y horarios.",
-    },
   ].filter((tarjeta) => puedeAcceder(rol, tarjeta.href));
+
+  // HU-12: el Profesional ve de entrada cómo viene su día.
+  const hoy = rol === "Profesional" ? await consultarMiAgenda(hoyArgentina()) : null;
+  const turnosHoy = (hoy?.data?.turnos ?? []).filter((t) => t.estado !== "cancelado");
+  const pendientes = turnosHoy.filter((t) => t.atendible);
+  const proximo = pendientes[0];
 
   return (
     <section className="dashboard-cuerpo">
@@ -66,10 +76,39 @@ export default async function InicioPage({
       </h2>
       <p className="rol">{rol}</p>
 
+      {hoy && (
+        <div className="resumen-dia">
+          <div>
+            <strong>
+              {turnosHoy.length === 0
+                ? "Hoy no tenés turnos"
+                : `Hoy tenés ${turnosHoy.length} ${turnosHoy.length === 1 ? "turno" : "turnos"}`}
+            </strong>
+            <span>
+              {turnosHoy.length === 0
+                ? "Podés revisar otros días en tu agenda."
+                : pendientes.length === 0
+                  ? "Ya registraste todas las atenciones del día."
+                  : `${pendientes.length} por atender · Próximo: ${proximo.hora_inicio} ${proximo.apellido_paciente}, ${proximo.nombre_paciente}`}
+            </span>
+          </div>
+          <Link
+            className="boton-principal boton-inline"
+            href={proximo ? `/mi-agenda/${proximo.id_turno}` : "/mi-agenda"}
+          >
+            {proximo ? "Atender al próximo" : "Ver mi agenda"}
+          </Link>
+        </div>
+      )}
+
       {tarjetas.length > 0 && (
         <div className="tarjetas-inicio">
           {tarjetas.map((tarjeta) => (
-            <Link key={tarjeta.href} className="tarjeta-link" href={tarjeta.href}>
+            <Link
+              key={tarjeta.href}
+              className={`tarjeta-link${"destacada" in tarjeta ? " tarjeta-destacada" : ""}`}
+              href={tarjeta.href}
+            >
               <strong>{tarjeta.titulo}</strong>
               <span>{tarjeta.texto}</span>
             </Link>

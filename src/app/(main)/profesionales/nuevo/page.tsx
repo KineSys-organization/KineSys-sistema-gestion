@@ -16,7 +16,7 @@ export default async function NuevoProfesionalPage() {
       <p className="texto-suave">
         Se crea la cuenta de usuario (rol Profesional) y se asocian los servicios en el mismo paso.
       </p>
-      {error && <p className="mensaje-error">{error}</p>}
+      {error && <p className="mensaje-error" role="alert">{error}</p>}
       <div className="tarjeta">
         <AltaProfesionalForm servicios={data} />
       </div>

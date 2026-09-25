@@ -6,6 +6,7 @@
   --gris-texto: #586770;
   --verde: #17a58b; /* verde del logo (hojas de la K y "Sys") */
   --verde-claro: #4fd1b4; /* el mismo verde, legible sobre la barra oscura */
+  --azul-hover: #00527f; /* hover de botones azules (contraste con texto blanco) */
   --blanco: #ffffff;
   --borde: #d7e3ec;
   --error-fondo: #fdecec;
@@ -131,8 +132,9 @@ select {
   cursor: pointer;
 }
 
+/* Hover más oscuro (no celeste): el texto blanco sobre celeste no llegaba a 4.5:1. */
 .boton-principal:hover:not(:disabled) {
-  background: var(--celeste);
+  background: var(--azul-hover);
 }
 
 .boton-principal:disabled {
@@ -261,15 +263,57 @@ select {
   }
 }
 
+/* Menú: sin subrayado, la sección activa resaltada y en un solo renglón. */
 .nav-app {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+  flex-wrap: nowrap;
+  gap: 4px;
+  min-width: 0;
   font-size: 14px;
+  /* En pantallas angostas el menú se desliza de costado, sin barra de scroll visible. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav-app::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-app a {
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #d6e6f2;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .nav-app a:hover {
-  color: #b9d7ea;
+  color: var(--blanco);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-app a.activo {
+  color: var(--blanco);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.nav-app a:focus-visible,
+.boton-salida:focus-visible,
+.dashboard-marca:focus-visible {
+  outline: 2px solid var(--verde-claro);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1000px) {
+  .dashboard-barra-izq {
+    gap: 12px;
+  }
+
+  .dashboard-marca span {
+    display: none;
+  }
 }
 
 .modulo {
@@ -343,17 +387,16 @@ select {
   background: #eef5f9;
 }
 
-.fila-acciones {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 8px;
-}
-
+/* Botones de acción de una pantalla: principal, secundario y de riesgo con el
+   mismo alto (44px), para que en una fila no queden de tamaños distintos. */
 .boton-inline {
   width: auto;
   margin-top: 0;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 18px;
   text-align: center;
   text-decoration: none;
 }
@@ -366,6 +409,17 @@ select {
   border-radius: 8px;
   padding: 8px 12px;
   cursor: pointer;
+}
+
+.boton-secundario.boton-inline {
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 600;
+}
+
+.boton-secundario:hover:not(:disabled) {
+  border-color: var(--celeste);
+  color: var(--azul-principal);
 }
 
 .boton-texto {
@@ -401,7 +455,7 @@ select {
 
 .badge-inactivo {
   background: #eef1f4;
-  color: #6b7680;
+  color: #56616b; /* 5.4:1 (antes #6b7680, 4.1:1) */
 }
 
 .lista-checks {
@@ -464,7 +518,7 @@ select {
 }
 
 .boton-pill-fuerte:hover:not(:disabled) {
-  background: var(--celeste);
+  background: var(--azul-hover);
 }
 
 .boton-peligro {
@@ -831,4 +885,323 @@ a.badge-horario:hover {
 
 .tabla-scroll {
   overflow-x: auto;
+}
+
+/* ===== Mejoras UX: acciones, otorgar turno, calendario, filtros, inicio ===== */
+
+/* Fila de acciones al pie de una pantalla: mismas alturas y separación.
+   La acción de riesgo (cancelar) va aparte, a la derecha. */
+.acciones-pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.acciones-pie .accion-riesgo {
+  margin-left: auto;
+}
+
+/* El formulario de cancelación, al abrirse, ocupa todo el ancho debajo. */
+.acciones-pie .form-cancelar {
+  flex: 1 1 100%;
+  margin: 8px 0 0;
+}
+
+.boton-secundario.boton-peligro {
+  background: #fff5f5;
+  border-color: #f3c6c6;
+  color: var(--error-texto);
+}
+
+.boton-secundario.boton-peligro:hover:not(:disabled) {
+  background: var(--error-fondo);
+  border-color: #e8a0a0;
+  color: var(--error-texto);
+}
+
+.aviso-accion p {
+  margin: 0 0 10px;
+}
+
+/* Pasos de "Otorgar turno". */
+.pasos-turno {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+}
+
+.paso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 6px;
+  border-radius: 999px;
+  background: var(--blanco);
+  border: 1px solid var(--borde);
+  color: var(--gris-texto);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.paso-numero {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #eef1f4;
+  font-size: 13px;
+}
+
+.paso-actual {
+  border-color: var(--azul-principal);
+  color: var(--azul-oscuro);
+}
+
+.paso-actual .paso-numero {
+  background: var(--azul-principal);
+  color: var(--blanco);
+}
+
+.paso-hecho .paso-numero {
+  background: var(--verde);
+  color: var(--blanco);
+}
+
+/* Paso 1: selector + calendario + horarios. */
+.selector-turno {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 700px) {
+  .selector-turno {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.grid-turno {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 1000px) {
+  .grid-turno {
+    grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+    align-items: start;
+  }
+}
+
+.calendario {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 6px;
+  table-layout: fixed;
+}
+
+.calendario th {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gris-texto);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.calendario td {
+  padding: 0;
+  height: 64px;
+  vertical-align: top;
+}
+
+.dia-calendario {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 8px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.dia-numero {
+  font-weight: 700;
+}
+
+.dia-numero small {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.dia-libres {
+  font-size: 12px;
+}
+
+.dia-libre {
+  background: #e8f6f2;
+  color: #0e6b58;
+  border: 1px solid #bfe6db;
+}
+
+.dia-libre:hover {
+  border-color: var(--verde);
+  background: #d9f1ea;
+}
+
+.dia-libre:focus-visible {
+  outline: 2px solid var(--azul-principal);
+  outline-offset: 2px;
+}
+
+.dia-elegido,
+.dia-elegido:hover {
+  background: var(--azul-principal);
+  border-color: var(--azul-principal);
+  color: var(--blanco);
+}
+
+.dia-sin-lugar {
+  background: #f3f5f7;
+  color: #56616b;
+}
+
+/* Horarios del día elegido: botones grandes, fáciles de tocar. */
+.horarios-botones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.horario-boton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid #b9d7ea;
+  background: #eef7fc;
+  color: var(--azul-principal);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.horario-boton:hover {
+  background: var(--azul-principal);
+  border-color: var(--azul-principal);
+  color: var(--blanco);
+}
+
+.horario-boton:focus-visible {
+  outline: 2px solid var(--azul-oscuro);
+  outline-offset: 2px;
+}
+
+/* Pacientes: barra de filtros. */
+.filtros-pacientes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.filtros-pacientes .campo {
+  flex: 1 1 180px;
+}
+
+.filtros-pacientes .campo-ancho {
+  flex: 2 1 260px;
+}
+
+/* Agendas: el motivo del cancelado como texto, y el próximo turno resaltado. */
+.motivo-cancelacion {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--gris-texto);
+}
+
+.fila-proxima td {
+  background: #f1f8fc;
+}
+
+.fila-proxima td:first-child {
+  box-shadow: inset 4px 0 0 var(--azul-principal);
+}
+
+.etiqueta-proximo {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--azul-principal);
+}
+
+/* Inicio: resumen del día del Profesional y tarjeta destacada. */
+.resumen-dia {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--blanco);
+  box-shadow: var(--sombra);
+  border-left: 4px solid var(--verde);
+}
+
+.resumen-dia div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resumen-dia strong {
+  font-size: 18px;
+}
+
+.resumen-dia span {
+  color: var(--gris-texto);
+  font-size: 14px;
+}
+
+.tarjeta-destacada {
+  border-color: var(--azul-principal);
+  background: #f3f9fd;
+}
+
+.tarjeta-link:focus-visible {
+  outline: 2px solid var(--azul-principal);
+  outline-offset: 2px;
+}
+
+/* Celdas angostas: solo el número de horarios libres (el total se lee en aria-label). */
+.dia-calendario {
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .dia-libres-texto {
+    display: none;
+  }
+
+  .calendario {
+    border-spacing: 3px;
+  }
+
+  .dia-calendario {
+    padding: 6px 4px;
+  }
 }

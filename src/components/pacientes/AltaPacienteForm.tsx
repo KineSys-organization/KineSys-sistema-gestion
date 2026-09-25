@@ -7,11 +7,19 @@ import { ListaObrasSociales } from "@/components/pacientes/ListaObrasSociales";
 
 const vacio: EstadoFormulario = { ok: false, error: null };
 
-export function AltaPacienteForm({ obras }: { obras: ObraSocial[] }) {
+export function AltaPacienteForm({
+  obras,
+  volver = null,
+}: {
+  obras: ObraSocial[];
+  volver?: string | null;
+}) {
   const [estado, action, pending] = useActionState(registrarPaciente, vacio);
 
   return (
     <form className="login-form" action={action}>
+      {/* Otorgar turno: a dónde volver después del alta (lo revalida el servidor). */}
+      {volver && <input type="hidden" name="volver" value={volver} />}
       <div className="campo">
         <label htmlFor="nombre_paciente">Nombre</label>
         <input id="nombre_paciente" name="nombre_paciente" required />
@@ -47,7 +55,11 @@ export function AltaPacienteForm({ obras }: { obras: ObraSocial[] }) {
         <ListaObrasSociales obras={obras} />
       </fieldset>
 
-      {estado.error && <p className="mensaje-error">{estado.error}</p>}
+      {estado.error && (
+        <p className="mensaje-error" role="alert">
+          {estado.error}
+        </p>
+      )}
 
       <button className="boton-principal" type="submit" disabled={pending}>
         {pending ? "Guardando..." : "Registrar paciente"}

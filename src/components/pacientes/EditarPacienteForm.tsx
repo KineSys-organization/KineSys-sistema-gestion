@@ -83,7 +83,7 @@ export function EditarPacienteForm({
         <ListaObrasSociales obras={obras} seleccionadas={paciente.obras_sociales} />
       </fieldset>
 
-      {estado.error && <p className="mensaje-error">{estado.error}</p>}
+      {estado.error && <p className="mensaje-error" role="alert">{estado.error}</p>}
       {estado.ok && <p className="mensaje-ok">Datos actualizados</p>}
 
       <button className="boton-principal" type="submit" disabled={pending}>

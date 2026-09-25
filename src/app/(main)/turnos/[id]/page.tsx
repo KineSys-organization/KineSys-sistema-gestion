@@ -52,8 +52,10 @@ export default async function TurnoPage({ params }: Props) {
     return (
       <section className="modulo">
         <h2>Turno</h2>
-        <p className="mensaje-error">{error ?? "El turno no existe"}</p>
-        <Link href="/disponibilidad">Volver a disponibilidad</Link>
+        <p className="mensaje-error" role="alert">
+          {error ?? "El turno no existe"}
+        </p>
+        <Link href="/disponibilidad">Volver a otorgar turno</Link>
       </section>
     );
   }
@@ -115,12 +117,19 @@ export default async function TurnoPage({ params }: Props) {
         </dl>
       </div>
 
-      {turno.cancelable && <CancelarTurnoForm idTurno={turno.id_turno} />}
-
-      <div className="fila-acciones">
+      {/* Acciones: principal y secundaria a la izquierda, cancelar (riesgo) aparte a la
+          derecha. Todas con el mismo alto; el formulario de cancelación se abre abajo. */}
+      <div className="acciones-pie">
         <Link className="boton-principal boton-inline" href="/disponibilidad">
           Otorgar otro turno
         </Link>
+        <Link
+          className="boton-secundario boton-inline"
+          href={`/agenda?profesional=${turno.id_profesional}&fecha=${turno.fecha}`}
+        >
+          Ver agenda del día
+        </Link>
+        {turno.cancelable && <CancelarTurnoForm idTurno={turno.id_turno} />}
       </div>
     </section>
   );

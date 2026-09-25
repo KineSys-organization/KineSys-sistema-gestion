@@ -5,6 +5,7 @@ import { startTransition, useActionState, useState, type FormEvent } from "react
 import { otorgarTurno } from "@/lib/turnos/actions";
 import type { EstadoOtorgar } from "@/lib/turnos/tipos";
 import type { ObraSocialPaciente } from "@/lib/pacientes/tipos";
+import { urlDisponibilidad } from "@/lib/disponibilidad/calendario";
 import {
   coberturaInicial,
   MENSAJE_NO_DISPONIBLE,
@@ -79,12 +80,20 @@ export function OtorgarTurnoForm({
       </fieldset>
 
       {estado.error && (
-        <p className="mensaje-error">
+        <p className="mensaje-error" role="alert">
           {estado.error}
           {estado.error === MENSAJE_NO_DISPONIBLE && (
             <>
               {" "}
-              <Link href="/disponibilidad">Elegir otro horario</Link>
+              <Link
+                href={urlDisponibilidad({
+                  profesional: idProfesional,
+                  servicio: idServicio,
+                  fecha,
+                })}
+              >
+                Elegir otro horario
+              </Link>
             </>
           )}
         </p>

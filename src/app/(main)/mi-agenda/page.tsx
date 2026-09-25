@@ -2,25 +2,12 @@ import Link from "next/link";
 import { exigirProfesional } from "@/lib/auth";
 import { consultarMiAgenda } from "@/lib/atencion/actions";
 import { esFechaValida, hoyArgentina, sumarDias } from "@/lib/atencion/validar";
-import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
-import type { TurnoAgenda } from "@/lib/agenda/tipos";
+import { formatearFecha } from "@/lib/turnos/validar";
+import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 
 type Props = {
   searchParams: Promise<{ fecha?: string }>;
 };
-
-function EstadoTurno({ turno }: { turno: TurnoAgenda }) {
-  if (turno.estado === "atendido") return <span className="badge-atendido">Atendido</span>;
-  if (turno.estado === "cancelado") {
-    return (
-      <span className="badge-cancelado" title={etiquetaMotivo(turno.motivo_cancelacion)}>
-        Cancelado
-      </span>
-    );
-  }
-  if (turno.estado === "ausente") return <span className="badge-inactivo">Ausente</span>;
-  return <span className="badge-activo">Confirmado</span>;
-}
 
 // HU-12. Agenda del profesional logueado: solo sus turnos (lo garantiza la base).
 // La fecha va en la URL (?fecha=), así "Volver" y recargar mantienen el día.
@@ -37,6 +24,8 @@ export default async function MiAgendaPage({ searchParams }: Props) {
   const turnos = data?.turnos ?? [];
   const pendientes = turnos.filter((t) => t.atendible).length;
   const esHoy = fecha === hoy;
+  // El próximo a atender (el primero del día todavía sin atención) se resalta.
+  const proximo = turnos.find((t) => t.atendible)?.id_turno;
 
   return (
     <section className="modulo">
@@ -53,7 +42,7 @@ export default async function MiAgendaPage({ searchParams }: Props) {
             <label htmlFor="fecha">Fecha</label>
             <input id="fecha" name="fecha" type="date" defaultValue={fecha} required />
           </div>
-          <button className="boton-pill boton-pill-fuerte" type="submit">
+          <button className="boton-principal boton-inline" type="submit">
             Ver día
           </button>
           <div className="fila-acciones">
@@ -115,10 +104,19 @@ export default async function MiAgendaPage({ searchParams }: Props) {
                 {turnos.map((turno) => (
                   <tr
                     key={turno.id_turno}
-                    className={turno.estado === "cancelado" ? "fila-cancelada" : undefined}
+                    className={
+                      turno.estado === "cancelado"
+                        ? "fila-cancelada"
+                        : turno.id_turno === proximo
+                          ? "fila-proxima"
+                          : undefined
+                    }
                   >
                     <td>
                       {turno.hora_inicio} a {turno.hora_fin}
+                      {turno.id_turno === proximo && (
+                        <span className="etiqueta-proximo">Próximo</span>
+                      )}
                     </td>
                     <td>
                       {turno.apellido_paciente}, {turno.nombre_paciente}
@@ -126,12 +124,15 @@ export default async function MiAgendaPage({ searchParams }: Props) {
                     <td>{turno.dni_paciente}</td>
                     <td>{turno.nombre_servicio}</td>
                     <td>
-                      <EstadoTurno turno={turno} />
+                      <EstadoTurnoBadge
+                        estado={turno.estado}
+                        motivoCancelacion={turno.motivo_cancelacion}
+                      />
                     </td>
                     <td>
                       <Link
                         className={
-                          turno.atendible ? "boton-pill boton-pill-fuerte" : "boton-texto"
+                          turno.atendible ? "boton-pill boton-pill-fuerte" : "boton-pill"
                         }
                         href={`/mi-agenda/${turno.id_turno}`}
                       >

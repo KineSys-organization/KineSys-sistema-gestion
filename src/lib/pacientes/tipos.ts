@@ -20,6 +20,9 @@ export type Paciente = {
   obras_sociales: ObraSocialPaciente[];
 };
 
+// Fila del listado con filtros (fn_filtrar_pacientes): suma la edad calculada en la base.
+export type PacienteListado = Paciente & { edad: number | null };
+
 export type EstadoFormulario = {
   ok: boolean;
   error: string | null;

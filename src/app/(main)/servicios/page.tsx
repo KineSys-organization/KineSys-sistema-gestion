@@ -21,7 +21,7 @@ export default async function ServiciosPage() {
           </p>
         </div>
       </div>
-      {error && <p className="mensaje-error">{error}</p>}
+      {error && <p className="mensaje-error" role="alert">{error}</p>}
       <ServiciosPanel servicios={data} puedeGestionar={puedeGestionar} />
     </section>
   );

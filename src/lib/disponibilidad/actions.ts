@@ -4,7 +4,8 @@ import { exigirAccion } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Profesional } from "@/lib/profesionales/tipos";
 import type { Disponibilidad, EstadoConsulta } from "@/lib/disponibilidad/tipos";
-import { validarConsultaDisponibilidad } from "@/lib/disponibilidad/validar";
+import { esUuid, validarConsultaDisponibilidad } from "@/lib/disponibilidad/validar";
+import type { CalendarioDisponibilidad } from "@/lib/disponibilidad/calendario";
 
 function normalizar(data: Disponibilidad): Disponibilidad {
   return {
@@ -36,15 +37,38 @@ export async function listarProfesionalesParaDisponibilidad(): Promise<{
   return { data: activos, error: null };
 }
 
-export async function consultarDisponibilidad(
-  _prev: EstadoConsulta,
-  formData: FormData
-): Promise<EstadoConsulta> {
-  return obtenerDisponibilidad({
-    id_profesional: String(formData.get("id_profesional") ?? ""),
-    id_servicio: String(formData.get("id_servicio") ?? ""),
-    fecha: String(formData.get("fecha") ?? ""),
+// Calendario de los próximos 30 días: cuántos horarios libres hay cada día.
+export async function obtenerCalendario(campos: {
+  id_profesional: string;
+  id_servicio: string;
+}): Promise<{ data: CalendarioDisponibilidad | null; error: string | null }> {
+  const sinPermiso = await exigirAccion("disponibilidad.consultar");
+  if (sinPermiso) return { data: null, error: sinPermiso };
+
+  if (!esUuid(campos.id_profesional)) return { data: null, error: "Profesional inválido" };
+  if (!esUuid(campos.id_servicio)) return { data: null, error: "Servicio inválido" };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("fn_consultar_disponibilidad_calendario", {
+    p_id_profesional: campos.id_profesional,
+    p_id_servicio: campos.id_servicio,
   });
+
+  if (error) return { data: null, error: error.message };
+
+  const calendario = data as CalendarioDisponibilidad;
+  return {
+    data: {
+      ...calendario,
+      desde: String(calendario.desde).slice(0, 10),
+      hasta: String(calendario.hasta).slice(0, 10),
+      dias: (calendario.dias ?? []).map((d) => ({
+        fecha: String(d.fecha).slice(0, 10),
+        libres: Number(d.libres),
+      })),
+    },
+    error: null,
+  };
 }
 
 // También la usa HU-06 para mostrar el horario elegido antes de confirmar.
