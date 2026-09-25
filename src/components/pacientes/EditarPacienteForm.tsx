@@ -64,6 +64,10 @@ export function EditarPacienteForm({
           id="telefono_paciente"
           name="telefono_paciente"
           defaultValue={paciente.telefono_paciente}
+          type="tel"
+          inputMode="numeric"
+          maxLength={10}
+          placeholder="3874209876"
           required
         />
       </div>

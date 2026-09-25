@@ -30,7 +30,14 @@ export function AltaPacienteForm({
       </div>
       <div className="campo">
         <label htmlFor="dni_paciente">DNI</label>
-        <input id="dni_paciente" name="dni_paciente" inputMode="numeric" required />
+        <input
+          id="dni_paciente"
+          name="dni_paciente"
+          inputMode="numeric"
+          maxLength={8}
+          placeholder="45774284"
+          required
+        />
       </div>
       <div className="campo">
         <label htmlFor="fecha_nacimiento_paciente">Fecha de nacimiento</label>
@@ -43,7 +50,15 @@ export function AltaPacienteForm({
       </div>
       <div className="campo">
         <label htmlFor="telefono_paciente">Teléfono</label>
-        <input id="telefono_paciente" name="telefono_paciente" required />
+        <input
+          id="telefono_paciente"
+          name="telefono_paciente"
+          type="tel"
+          inputMode="numeric"
+          maxLength={10}
+          placeholder="3874209876"
+          required
+        />
       </div>
       <div className="campo">
         <label htmlFor="mail_paciente">Email</label>

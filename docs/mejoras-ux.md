@@ -11,7 +11,7 @@ Rama: `feature/mejoras-ux`. Revisión de toda la app con la rúbrica de *design-
 - Foco visible con teclado (verde claro sobre la barra oscura).
 
 ### Inicio
-- Recepción: la primera tarjeta es **Otorgar turno** (destacada).
+- Recepción: la primera tarjeta es **Otorgar turno** (sin resaltar: todas las tarjetas se ven iguales y solo cambian al pasar el mouse).
 - Profesional: **resumen del día** — "Hoy tenés N turnos · M por atender · Próximo: 10:00 Apellido" con botón **Atender al próximo**.
 
 ### Otorgar turno (antes "Disponibilidad")
