@@ -5,6 +5,7 @@ import { crearProfesional } from "@/lib/profesionales/actions";
 import type { EstadoFormulario } from "@/lib/profesionales/tipos";
 import type { Servicio } from "@/lib/servicios/tipos";
 import { ListaServiciosChecks } from "@/components/profesionales/ListaServiciosChecks";
+import { fechaNacimientoMaxima } from "@/lib/profesionales/validar";
 
 const vacio: EstadoFormulario = { ok: false, error: null };
 
@@ -32,15 +33,15 @@ export function AltaProfesionalForm({ servicios }: { servicios: Servicio[] }) {
       </div>
       <div className="campo">
         <label htmlFor="fecha_nacimiento_usuario">Fecha de nacimiento</label>
-        <input id="fecha_nacimiento_usuario" name="fecha_nacimiento_usuario" type="date" />
+        <input id="fecha_nacimiento_usuario" name="fecha_nacimiento_usuario" type="date" max={fechaNacimientoMaxima()} />
       </div>
       <div className="campo">
         <label htmlFor="dni_usuario">DNI</label>
-        <input id="dni_usuario" name="dni_usuario" inputMode="numeric" />
+        <input id="dni_usuario" name="dni_usuario" inputMode="numeric" maxLength={8} placeholder="45774284" />
       </div>
       <div className="campo">
         <label htmlFor="telefono_usuario">Teléfono</label>
-        <input id="telefono_usuario" name="telefono_usuario" />
+        <input id="telefono_usuario" name="telefono_usuario" type="tel" inputMode="numeric" maxLength={10} placeholder="3874209876" />
       </div>
       <div className="campo">
         <label htmlFor="matricula">Matrícula</label>
