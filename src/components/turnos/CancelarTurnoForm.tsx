@@ -9,6 +9,8 @@ const inicial: EstadoCancelar = { ok: false, error: null };
 
 // HU-10A. Botón "Cancelar turno" que despliega el formulario con el motivo.
 // Es cliente solo por el estado (abierto/cerrado y el resultado de la action).
+// Va dentro de la fila de acciones del resumen: cerrado es un botón de riesgo del
+// mismo alto que el resto; abierto ocupa todo el ancho debajo.
 export function CancelarTurnoForm({ idTurno }: { idTurno: string }) {
   const [abierto, setAbierto] = useState(false);
   const [estado, action, pending] = useActionState(cancelarTurno, inicial);
@@ -16,7 +18,7 @@ export function CancelarTurnoForm({ idTurno }: { idTurno: string }) {
   if (!abierto) {
     return (
       <button
-        className="boton-pill boton-peligro"
+        className="boton-secundario boton-inline boton-peligro accion-riesgo"
         type="button"
         onClick={() => setAbierto(true)}
       >
@@ -65,11 +67,15 @@ export function CancelarTurnoForm({ idTurno }: { idTurno: string }) {
       )}
 
       <div className="fila-acciones">
-        <button className="boton-pill boton-peligro" type="submit" disabled={pending}>
+        <button
+          className="boton-secundario boton-inline boton-peligro"
+          type="submit"
+          disabled={pending}
+        >
           {pending ? "Cancelando..." : "Confirmar cancelación"}
         </button>
         <button
-          className="boton-pill"
+          className="boton-secundario boton-inline"
           type="button"
           disabled={pending}
           onClick={() => setAbierto(false)}

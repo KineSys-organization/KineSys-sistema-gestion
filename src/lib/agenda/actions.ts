@@ -31,17 +31,15 @@ function normalizar(data: unknown, campos: { id_profesional: string; fecha: stri
   };
 }
 
-export async function consultarAgenda(
-  _prev: EstadoAgenda,
-  formData: FormData
-): Promise<EstadoAgenda> {
+// La pantalla /agenda lee profesional y fecha de la URL (así se puede linkear
+// desde el resumen del turno y "Volver" conserva el día).
+export async function obtenerAgenda(campos: {
+  id_profesional: string;
+  fecha: string;
+}): Promise<EstadoAgenda> {
   const sinPermiso = await exigirAccion("agenda.consultar");
   if (sinPermiso) return { ok: false, error: sinPermiso, data: null };
 
-  const campos = {
-    id_profesional: String(formData.get("id_profesional") ?? ""),
-    fecha: String(formData.get("fecha") ?? ""),
-  };
   const errorValidacion = validarConsultaAgenda(campos);
 
   if (errorValidacion) return { ok: false, error: errorValidacion, data: null };

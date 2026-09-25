@@ -4,12 +4,19 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigirAccion } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { EstadoFormulario, ObraSocial, Paciente } from "@/lib/pacientes/tipos";
+import type {
+  EstadoFormulario,
+  ObraSocial,
+  Paciente,
+  PacienteListado,
+} from "@/lib/pacientes/tipos";
 import {
   esIdPaciente,
   parsearObrasFormulario,
+  urlVolverTurno,
   validarAltaPaciente,
   validarEdicionPaciente,
+  type FiltrosPacientes,
 } from "@/lib/pacientes/validar";
 
 const PATH = "/pacientes";
@@ -119,7 +126,7 @@ export async function registrarPaciente(
   if (errorValidacion) return estadoError(errorValidacion);
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("fn_registrar_paciente", {
+  const { data: idNuevo, error } = await supabase.rpc("fn_registrar_paciente", {
     p_nombre: campos.nombre_paciente.trim(),
     p_apellido: campos.apellido_paciente.trim(),
     p_dni: Number(campos.dni_paciente),
@@ -135,7 +142,40 @@ export async function registrarPaciente(
   if (error) return estadoError(error.message);
 
   revalidatePath(PATH);
+
+  // Si el alta vino desde "Otorgar turno", vuelve a ese paso con el paciente elegido.
+  const volver = urlVolverTurno(String(formData.get("volver") ?? ""));
+  if (volver && idNuevo) {
+    redirect(`${volver}&paciente=${encodeURIComponent(String(idNuevo))}`);
+  }
   redirect("/pacientes");
+}
+
+// Listado de pacientes con filtros (texto, obra social y rango etario).
+// Sin filtros devuelve los primeros 100 por apellido.
+export async function filtrarPacientes(
+  filtros: FiltrosPacientes
+): Promise<{ data: PacienteListado[]; error: string | null }> {
+  const sinPermiso = await exigirAccion("pacientes.gestionar");
+  if (sinPermiso) return { data: [], error: sinPermiso };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("fn_filtrar_pacientes", {
+    p_texto: filtros.texto || null,
+    p_obra: filtros.obra,
+    p_edad_min: filtros.edadMin,
+    p_edad_max: filtros.edadMax,
+  });
+
+  if (error) return { data: [], error: error.message };
+
+  return {
+    data: ((data ?? []) as PacienteListado[]).map((fila) => ({
+      ...normalizarPaciente(fila),
+      edad: fila.edad,
+    })),
+    error: null,
+  };
 }
 
 export async function editarPaciente(

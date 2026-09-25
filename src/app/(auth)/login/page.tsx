@@ -35,7 +35,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {state.error && <p className="mensaje-error">{state.error}</p>}
+          {state.error && <p className="mensaje-error" role="alert">{state.error}</p>}
 
           <button className="boton-principal" type="submit" disabled={pending}>
             {pending ? "Ingresando..." : "Ingresar"}

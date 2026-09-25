@@ -58,7 +58,7 @@ export function HorariosPanel({
             alTerminar={terminarEdicion}
           />
         ) : (
-          <p className="mensaje-error">
+          <p className="mensaje-error" role="alert">
             El profesional debe tener al menos un servicio asociado para cargar horarios.
           </p>
         )}

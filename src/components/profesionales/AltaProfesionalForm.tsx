@@ -52,7 +52,7 @@ export function AltaProfesionalForm({ servicios }: { servicios: Servicio[] }) {
         <ListaServiciosChecks servicios={servicios} />
       </fieldset>
 
-      {state.error && <p className="mensaje-error">{state.error}</p>}
+      {state.error && <p className="mensaje-error" role="alert">{state.error}</p>}
 
       <button className="boton-principal" type="submit" disabled={pending || activos.length === 0}>
         {pending ? "Registrando..." : "Registrar profesional"}

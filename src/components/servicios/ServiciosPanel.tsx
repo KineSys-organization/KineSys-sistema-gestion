@@ -50,7 +50,7 @@ function ServiciosGestion({ servicios }: { servicios: Servicio[] }) {
           <form className="login-form" action={edicionAction} key={editando.id_servicio}>
             <input type="hidden" name="id_servicio" value={editando.id_servicio} />
             <CamposServicio servicio={editando} />
-            {edicionState.error && <p className="mensaje-error">{edicionState.error}</p>}
+            {edicionState.error && <p className="mensaje-error" role="alert">{edicionState.error}</p>}
             {edicionState.ok && <p className="mensaje-ok">Servicio actualizado</p>}
             <div className="fila-acciones">
               <button className="boton-principal" type="submit" disabled={edicionPending}>
@@ -64,7 +64,7 @@ function ServiciosGestion({ servicios }: { servicios: Servicio[] }) {
         ) : (
           <form className="login-form" action={altaAction}>
             <CamposServicio />
-            {altaState.error && <p className="mensaje-error">{altaState.error}</p>}
+            {altaState.error && <p className="mensaje-error" role="alert">{altaState.error}</p>}
             {altaState.ok && <p className="mensaje-ok">Servicio creado</p>}
             <button className="boton-principal" type="submit" disabled={altaPending}>
               {altaPending ? "Guardando..." : "Registrar servicio"}
@@ -75,7 +75,7 @@ function ServiciosGestion({ servicios }: { servicios: Servicio[] }) {
 
       <section className="tarjeta">
         <h3>Servicios cargados</h3>
-        {mensajeLista && <p className="mensaje-error">{mensajeLista}</p>}
+        {mensajeLista && <p className="mensaje-error" role="alert">{mensajeLista}</p>}
         <TablaServicios
           servicios={servicios}
           acciones={(servicio) => (

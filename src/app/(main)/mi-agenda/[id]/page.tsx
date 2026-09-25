@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { exigirProfesional } from "@/lib/auth";
 import { AtencionForm } from "@/components/atencion/AtencionForm";
-import { obtenerMiTurno } from "@/lib/atencion/actions";
+import { consultarMiAgenda, obtenerMiTurno } from "@/lib/atencion/actions";
 import { calcularEdad, hoyArgentina } from "@/lib/atencion/validar";
 import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
 
@@ -65,6 +65,14 @@ export default async function MiTurnoPage({ params, searchParams }: Props) {
   const hoy = hoyArgentina();
   const edad = calcularEdad(turno.fecha_nacimiento_paciente, hoy);
   const mensajeOk = ok ? MENSAJES_OK[ok] : undefined;
+
+  // Ya atendido (o cancelado): el próximo turno del día que falta atender.
+  const siguiente =
+    turno.atendible || turno.fecha !== hoy
+      ? null
+      : ((await consultarMiAgenda(turno.fecha)).data?.turnos ?? []).find(
+          (t) => t.atendible && t.id_turno !== turno.id_turno
+        ) ?? null;
 
   return (
     <section className="modulo modulo-angosto">
@@ -175,10 +183,19 @@ export default async function MiTurnoPage({ params, searchParams }: Props) {
         </p>
       )}
 
-      <div className="fila-acciones">
-        <Link className="boton-pill" href={`/mi-agenda?fecha=${turno.fecha}`}>
+      <div className="acciones-pie">
+        <Link
+          className="boton-secundario boton-inline"
+          href={`/mi-agenda?fecha=${turno.fecha}`}
+        >
           ← Volver a mi agenda
         </Link>
+        {/* Después de atender, seguir con el próximo paciente del día sin volver a la lista. */}
+        {siguiente && (
+          <Link className="boton-principal boton-inline" href={`/mi-agenda/${siguiente.id_turno}`}>
+            Siguiente paciente: {siguiente.hora_inicio} · {siguiente.apellido_paciente} →
+          </Link>
+        )}
       </div>
     </section>
   );

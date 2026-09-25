@@ -35,7 +35,7 @@ export default async function EditarPacientePage({ params }: Props) {
         </Link>
       </div>
 
-      {errorObras && <p className="mensaje-error">{errorObras}</p>}
+      {errorObras && <p className="mensaje-error" role="alert">{errorObras}</p>}
       <div className="tarjeta">
         <EditarPacienteForm paciente={paciente} obras={obras} />
       </div>

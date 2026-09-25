@@ -2,9 +2,11 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { exigirRecepcion } from "@/lib/auth";
 import { obtenerDisponibilidad } from "@/lib/disponibilidad/actions";
+import { urlDisponibilidad } from "@/lib/disponibilidad/calendario";
 import { buscarPacientes, obtenerPaciente } from "@/lib/pacientes/actions";
 import { formatearFecha, MENSAJE_NO_DISPONIBLE } from "@/lib/turnos/validar";
 import { OtorgarTurnoForm } from "@/components/turnos/OtorgarTurnoForm";
+import { PasosTurno } from "@/components/turnos/PasosTurno";
 
 type Props = {
   searchParams: Promise<{
@@ -28,13 +30,15 @@ export default async function OtorgarTurnoPage({ searchParams }: Props) {
     hora: params.hora ?? "",
   };
 
-  // Llegamos acá desde un horario de /disponibilidad.
+  // Volver al paso 1 con el profesional, el servicio y el día ya elegidos.
+  const cambiarHorario = urlDisponibilidad(horario);
+
+  // Llegamos acá desde un horario del paso 1 (/disponibilidad).
   if (!horario.profesional || !horario.servicio || !horario.fecha || !horario.hora) {
     return (
-      <Pantalla>
+      <Pantalla paso={1}>
         <p className="texto-suave">
-          Primero elegí un horario en{" "}
-          <Link href="/disponibilidad">Disponibilidad</Link>.
+          Primero elegí un horario en <Link href="/disponibilidad">Otorgar turno</Link>.
         </p>
       </Pantalla>
     );
@@ -54,10 +58,14 @@ export default async function OtorgarTurnoPage({ searchParams }: Props) {
 
   if (error || !data) {
     return (
-      <Pantalla>
-        <p className="mensaje-error">{error ?? MENSAJE_NO_DISPONIBLE}</p>
+      <Pantalla paso={1}>
+        <p className="mensaje-error" role="alert">
+          {error ?? MENSAJE_NO_DISPONIBLE}
+        </p>
         <p>
-          <Link href="/disponibilidad">Elegir otro horario</Link>
+          <Link className="boton-principal boton-inline" href={cambiarHorario}>
+            Elegir otro horario
+          </Link>
         </p>
       </Pantalla>
     );
@@ -68,7 +76,7 @@ export default async function OtorgarTurnoPage({ searchParams }: Props) {
   const consulta = (params.q ?? "").trim();
 
   return (
-    <Pantalla>
+    <Pantalla paso={params.paciente ? 3 : 2}>
       <div className="modulo-grid">
         <section className="tarjeta">
           <h3>Horario elegido</h3>
@@ -86,9 +94,9 @@ export default async function OtorgarTurnoPage({ searchParams }: Props) {
             <dt>Hora</dt>
             <dd>{horario.hora}</dd>
           </dl>
-          <p>
-            <Link href="/disponibilidad">Cambiar horario</Link>
-          </p>
+          <Link className="boton-secundario boton-inline" href={cambiarHorario}>
+            Cambiar horario
+          </Link>
         </section>
 
         <section className="tarjeta">
@@ -107,7 +115,7 @@ export default async function OtorgarTurnoPage({ searchParams }: Props) {
   );
 }
 
-function Pantalla({ children }: { children: ReactNode }) {
+function Pantalla({ paso, children }: { paso: 1 | 2 | 3; children: ReactNode }) {
   return (
     <section className="modulo">
       <div className="modulo-cabecera">
@@ -118,12 +126,13 @@ function Pantalla({ children }: { children: ReactNode }) {
           </p>
         </div>
       </div>
+      <PasosTurno actual={paso} />
       {children}
     </section>
   );
 }
 
-// Paso 1: localizar al paciente (reutiliza la búsqueda de HU-04).
+// Paso 2: localizar al paciente (reutiliza la búsqueda de HU-04).
 async function PasoPaciente({
   base,
   consulta,
@@ -139,6 +148,11 @@ async function PasoPaciente({
     return `/turnos/nuevo?${params.toString()}`;
   }
 
+  // Si el paciente no existe, el alta vuelve acá con el paciente ya elegido.
+  const registrarNuevo = `/pacientes/nuevo?volver=${encodeURIComponent(
+    `/turnos/nuevo?${base.toString()}`
+  )}`;
+
   return (
     <>
       <h3>Paciente</h3>
@@ -153,6 +167,7 @@ async function PasoPaciente({
             name="q"
             defaultValue={consulta}
             placeholder="DNI o nombre / apellido"
+            autoFocus
           />
         </div>
         <button className="boton-principal boton-inline" type="submit">
@@ -160,52 +175,66 @@ async function PasoPaciente({
         </button>
       </form>
 
-      {error && <p className="mensaje-error">{error}</p>}
+      {error && (
+        <p className="mensaje-error" role="alert">
+          {error}
+        </p>
+      )}
 
       {!consulta ? (
-        <p className="texto-suave">Ingresá un DNI o un nombre para buscar.</p>
-      ) : data.length === 0 ? (
         <p className="texto-suave">
-          No se encontraron pacientes.{" "}
-          <Link href="/pacientes/nuevo">Registrar nuevo</Link>
+          Ingresá un DNI o un nombre para buscar. ¿Es un paciente nuevo?{" "}
+          <Link href={registrarNuevo}>Registralo</Link> y volvés acá.
         </p>
+      ) : data.length === 0 ? (
+        <div className="aviso-accion">
+          <p>No se encontraron pacientes con “{consulta}”.</p>
+          <Link className="boton-principal boton-inline" href={registrarNuevo}>
+            Registrar paciente nuevo
+          </Link>
+        </div>
       ) : (
-        <table className="tabla">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>DNI</th>
-              <th>Obras sociales</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((paciente) => (
-              <tr key={paciente.id_paciente}>
-                <td>
-                  {paciente.apellido_paciente}, {paciente.nombre_paciente}
-                </td>
-                <td>{paciente.dni_paciente}</td>
-                <td>
-                  {paciente.obras_sociales
-                    .map((obra) => obra.nombre_obra_social)
-                    .join(", ") || "Particular"}
-                </td>
-                <td>
-                  <Link className="boton-pill" href={urlElegir(paciente.id_paciente)}>
-                    Elegir
-                  </Link>
-                </td>
+        <div className="tabla-scroll">
+          <table className="tabla">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>DNI</th>
+                <th>Obras sociales</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.map((paciente) => (
+                <tr key={paciente.id_paciente}>
+                  <td>
+                    {paciente.apellido_paciente}, {paciente.nombre_paciente}
+                  </td>
+                  <td>{paciente.dni_paciente}</td>
+                  <td>
+                    {paciente.obras_sociales
+                      .map((obra) => obra.nombre_obra_social)
+                      .join(", ") || "Particular"}
+                  </td>
+                  <td>
+                    <Link
+                      className="boton-pill boton-pill-fuerte"
+                      href={urlElegir(paciente.id_paciente)}
+                    >
+                      Elegir
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </>
   );
 }
 
-// Paso 2: cobertura y confirmación.
+// Paso 3: cobertura y confirmación.
 async function PasoConfirmar({
   idPaciente,
   horario,
@@ -220,7 +249,9 @@ async function PasoConfirmar({
   if (error || !paciente) {
     return (
       <>
-        <p className="mensaje-error">{error ?? "El paciente no existe"}</p>
+        <p className="mensaje-error" role="alert">
+          {error ?? "El paciente no existe"}
+        </p>
         <Link href={volver}>Elegir otro paciente</Link>
       </>
     );

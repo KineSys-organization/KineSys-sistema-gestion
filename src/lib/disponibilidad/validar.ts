@@ -1,6 +1,10 @@
 const UUID_OK =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+export function esUuid(valor: string): boolean {
+  return UUID_OK.test(valor.trim());
+}
+
 export function validarConsultaDisponibilidad(input: {
   id_profesional: string;
   id_servicio: string;

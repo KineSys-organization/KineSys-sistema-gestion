@@ -19,7 +19,7 @@ export default async function ProfesionalesPage() {
         </Link>
       </div>
 
-      {error && <p className="mensaje-error">{error}</p>}
+      {error && <p className="mensaje-error" role="alert">{error}</p>}
 
       {data.length === 0 ? (
         <p className="texto-suave">Todavía no hay profesionales registrados.</p>

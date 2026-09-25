@@ -115,7 +115,7 @@ src/
     (main)/pacientes
     (main)/pacientes/nuevo
     (main)/pacientes/[id]
-    (main)/disponibilidad
+    (main)/disponibilidad     → "Otorgar turno" paso 1: calendario de 30 días
     (main)/agenda
     (main)/turnos/nuevo
     (main)/turnos/[id]       → resumen + cancelar (HU-10A)
@@ -250,6 +250,16 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Helper interno `fn_exigir_turno_propio(uuid)` (revocado a `authenticated`).
 - Efectos en lo existente: `turno_estado_valido` suma `atendido`; un turno atendido sigue ocupando su horario (`turno_sin_superposicion` y `fn_consultar_disponibilidad` miran `confirmado` y `atendido`); `fn_cancelar_turno` rechaza atendidos; `/agenda` y `/turnos/[id]` muestran el estado Atendido.
 - SQL: `supabase/migrations/010_hu12_hu13_atencion.sql`. Pruebas: `supabase/tests/hu12_hu13_atencion.sql` y `tests/hu12-hu13-atencion.test.mjs` (`npm test`). Evidencia en `docs/hu-12-13-atencion.md`.
+
+### Mejoras de UX/UI (menú, otorgar turno, calendario, filtros)
+
+- Menú: cliente (`usePathname`) para marcar la sección activa. "Otorgar turno" apunta a `/disponibilidad` (paso 1).
+- `/disponibilidad`: calendario de 30 días (`fn_consultar_disponibilidad_calendario`) + horarios del día; estado en la URL (`?profesional&servicio&fecha`, helper `urlDisponibilidad`). Pasos con `PasosTurno`.
+- `/agenda`: profesional y fecha en la URL (sin `useActionState`).
+- `/pacientes`: listado con filtros (`fn_filtrar_pacientes`: texto, obra social o particular, rango etario). `fn_buscar_pacientes` sigue para el paso 2 de otorgar.
+- Alta de paciente con `?volver=` (solo `/turnos/nuevo`, `urlVolverTurno`) → vuelve al turno con el paciente elegido.
+- Botones de acción: `boton-principal` / `boton-secundario` (+ `boton-peligro`) con `boton-inline` = 44px. Fila de acciones al pie: `acciones-pie`.
+- SQL: `supabase/migrations/011_mejoras_pacientes_calendario.sql`. Pruebas: `tests/mejoras-ux.test.mjs`. Detalle en `docs/mejoras-ux.md`.
 
 ---
 
