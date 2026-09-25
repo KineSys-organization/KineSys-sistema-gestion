@@ -4,13 +4,13 @@ const MAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 // Solo letras (con acentos y ñ). Permite espacio, guion o apóstrofo entre palabras:
 // "María José", "Pérez-Gil", "D'Angelo". No acepta números ni símbolos.
-const NOMBRE_OK = /^\p{L}+(?:[ '-]\p{L}+)*$/u;
+export const NOMBRE_OK = /^\p{L}+(?:[ '-]\p{L}+)*$/u;
 
 // DNI argentino: 7 u 8 números, sin puntos (ej.: 45774284).
-const DNI_OK = /^\d{7,8}$/;
+export const DNI_OK = /^\d{7,8}$/;
 
 // Teléfono: 10 números con la característica, sin 0 ni 15 (ej.: 3874209876).
-const TELEFONO_OK = /^\d{10}$/;
+export const TELEFONO_OK = /^\d{10}$/;
 
 export const MENSAJE_NOMBRE = "El nombre solo puede tener letras";
 export const MENSAJE_APELLIDO = "El apellido solo puede tener letras";

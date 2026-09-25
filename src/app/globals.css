@@ -326,6 +326,12 @@ select {
   max-width: 560px;
 }
 
+/* Resumen del turno: un poco más ancho para que "Otorgar otro turno", "Ver agenda
+   del día" y "Cancelar turno" entren en la misma fila. */
+.modulo-turno {
+  max-width: 680px;
+}
+
 .modulo-cabecera {
   display: flex;
   align-items: flex-start;
@@ -1175,11 +1181,6 @@ a.badge-horario:hover {
 .resumen-dia span {
   color: var(--gris-texto);
   font-size: 14px;
-}
-
-.tarjeta-destacada {
-  border-color: var(--azul-principal);
-  background: #f3f9fd;
 }
 
 .tarjeta-link:focus-visible {

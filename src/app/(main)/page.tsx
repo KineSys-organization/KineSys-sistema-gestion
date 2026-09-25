@@ -31,7 +31,6 @@ export default async function InicioPage({
       href: "/disponibilidad",
       titulo: "Otorgar turno",
       texto: "Elegí profesional y servicio, mirá los días libres en el calendario y dá el turno.",
-      destacada: true,
     },
     {
       href: "/agenda",
@@ -106,7 +105,7 @@ export default async function InicioPage({
           {tarjetas.map((tarjeta) => (
             <Link
               key={tarjeta.href}
-              className={`tarjeta-link${"destacada" in tarjeta ? " tarjeta-destacada" : ""}`}
+              className="tarjeta-link"
               href={tarjeta.href}
             >
               <strong>{tarjeta.titulo}</strong>

@@ -61,7 +61,7 @@ export default async function TurnoPage({ params }: Props) {
   }
 
   return (
-    <section className="modulo modulo-angosto">
+    <section className="modulo modulo-turno">
       <div className="modulo-cabecera">
         <div>
           <h2>{TITULO_ESTADO[turno.estado] ?? "Turno"}</h2>
