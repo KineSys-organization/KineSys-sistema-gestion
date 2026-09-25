@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { validarEdicionProfesional } from '../src/lib/profesionales/validar.ts';
+import { MENSAJE_DNI, validarEdicionProfesional } from '../src/lib/profesionales/validar.ts';
 
 const datosValidos = {
   nombre_usuario: 'Ana',
@@ -23,10 +23,10 @@ test('rechaza campos obligatorios vacíos', () => {
   }
 });
 
-test('rechaza DNI no entero o menor o igual a cero', () => {
-  for (const dni of ['0', '-5', 'abc', '12.34', '']) {
+test('rechaza DNI que no tenga 7 u 8 números', () => {
+  for (const dni of ['0', '-5', 'abc', '12.34', '45.774.284', '123456', '123456789']) {
     const copia = { ...datosValidos, dni_usuario: dni };
-    assert.equal(validarEdicionProfesional(copia), 'El DNI debe ser un número entero mayor a cero');
+    assert.equal(validarEdicionProfesional(copia), MENSAJE_DNI);
   }
 });
 

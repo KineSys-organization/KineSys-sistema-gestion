@@ -6,6 +6,7 @@ import { editarProfesional } from "@/lib/profesionales/actions";
 import type { DetalleProfesionalEdicion, EstadoFormulario } from "@/lib/profesionales/tipos";
 import type { Servicio } from "@/lib/servicios/tipos";
 import { ListaServiciosChecks } from "@/components/profesionales/ListaServiciosChecks";
+import { fechaNacimientoMaxima } from "@/lib/profesionales/validar";
 
 const vacio: EstadoFormulario = { ok: false, error: null };
 
@@ -72,6 +73,7 @@ export function EdicionProfesionalForm({
           id="fecha_nacimiento_usuario"
           name="fecha_nacimiento_usuario"
           type="date"
+          max={fechaNacimientoMaxima()}
           defaultValue={profesional.fecha_nacimiento_usuario}
           required
         />
@@ -83,6 +85,7 @@ export function EdicionProfesionalForm({
           id="dni_usuario"
           name="dni_usuario"
           inputMode="numeric"
+          maxLength={8}
           defaultValue={profesional.dni_usuario}
           required
         />
@@ -93,6 +96,9 @@ export function EdicionProfesionalForm({
         <input
           id="telefono_usuario"
           name="telefono_usuario"
+          type="tel"
+          inputMode="numeric"
+          maxLength={10}
           defaultValue={profesional.telefono_usuario}
           required
         />
