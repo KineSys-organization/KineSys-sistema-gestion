@@ -28,6 +28,8 @@ const MATRIZ = {
   // HU-12/HU-13: la agenda propia y la atención son solo del Profesional.
   "/mi-agenda": [false, false, true],
   "/mi-agenda/abc": [false, false, true],
+  // HU-26: indicadores generales, solo Gerente.
+  "/indicadores": [true, false, false],
 };
 const ORDEN_ROLES = ["Gerente", "Mesa de Entradas", "Profesional"];
 
@@ -78,6 +80,7 @@ test("puedeHacer: cada acción según el rol", () => {
     "turnos.cancelar": [true, true, false],
     "atencion.agenda": [false, false, true],
     "atencion.registrar": [false, false, true],
+    "indicadores.consultar": [true, false, false],
   };
   assert.deepEqual(Object.keys(PERMISOS_ACCIONES).sort(), Object.keys(esperado).sort());
   for (const [accion, valores] of Object.entries(esperado)) {

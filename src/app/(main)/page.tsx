@@ -54,6 +54,11 @@ export default async function InicioPage({
         ? "Definir tratamientos, duración y precio."
         : "Consultar tratamientos, duración y precio.",
     },
+    {
+      href: "/indicadores",
+      titulo: "Indicadores",
+      texto: "Turnos por estado, ocupación de los profesionales y pacientes nuevos en un período.",
+    },
   ].filter((tarjeta) => puedeAcceder(rol, tarjeta.href));
 
   // HU-12: el Profesional ve de entrada cómo viene su día.

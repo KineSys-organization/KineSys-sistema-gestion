@@ -2,7 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06, **Agenda** HU-07, **Cancelar turno** HU-10A), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08). Pagos e indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06, **Agenda** HU-07, **Cancelar turno** HU-10A), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08) e **Indicadores generales** del Gerente (HU-26, Incremento 2). Pagos y el resto de los indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -121,6 +121,7 @@ src/
     (main)/turnos/[id]       → resumen + cancelar (HU-10A)
     (main)/mi-agenda         → agenda propia del Profesional (HU-12)
     (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13)
+    (main)/indicadores       → indicadores generales del centro (HU-26, solo Gerente)
   proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
 ```
 
@@ -260,6 +261,13 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Alta de paciente con `?volver=` (solo `/turnos/nuevo`, `urlVolverTurno`) → vuelve al turno con el paciente elegido.
 - Botones de acción: `boton-principal` / `boton-secundario` (+ `boton-peligro`) con `boton-inline` = 44px. Fila de acciones al pie: `acciones-pie`.
 - SQL: `supabase/migrations/011_mejoras_pacientes_calendario.sql`. Pruebas: `tests/mejoras-ux.test.mjs`. Detalle en `docs/mejoras-ux.md`.
+
+### HU-26 — Indicadores generales del centro (Incremento 2)
+
+- Pantalla: `/indicadores?desde&hasta` (por defecto el mes actual; atajos últimos 7 días / este mes / mes anterior). Solo **Gerente** (`exigirGerente`, acción `indicadores.consultar`).
+- RPC: `fn_consultar_indicadores_generales(desde, hasta)` (solo lectura, `fn_exigir_rol(['Gerente'])`, período ≤ 366 días).
+- Turnos del período: total y por estado. Ocupación = minutos de turnos `confirmado`/`atendido`/`ausente` dentro de las franjas ÷ minutos de franjas de profesionales activos (cada franja cuenta desde su `creado`); general y por profesional. Pacientes nuevos = `paciente.creado` (hora AR) en el período. Sin datos → todo en 0.
+- SQL: `supabase/migrations/013_hu26_indicadores_generales.sql`. Pruebas: `supabase/tests/hu26_indicadores.sql` y `tests/hu26-indicadores.test.mjs` (`npm test`). Detalle en `docs/hu-26-indicadores.md`.
 
 ---
 
