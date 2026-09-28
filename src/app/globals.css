@@ -1215,23 +1215,21 @@ a.badge-horario:hover {
   margin-top: 10px;
 }
 
-/* HU-26. Indicadores: tarjetas con un número grande y barra de ocupación por profesional. */
+/* HU-26. Indicadores: tarjetas con un número grande. */
 .indicadores-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: 16px;
 }
 
-.indicador,
-.indicador-general {
+.indicador {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.indicador-general {
-  align-items: flex-end;
-  text-align: right;
+.indicador-destacado {
+  border-left: 4px solid var(--azul-principal);
 }
 
 .indicador-titulo {
@@ -1249,26 +1247,4 @@ a.badge-horario:hover {
 .indicador-detalle {
   color: var(--gris-texto);
   font-size: 12px;
-}
-
-.ocupacion {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  white-space: nowrap;
-}
-
-.barra-ocupacion {
-  display: inline-block;
-  width: 120px;
-  height: 10px;
-  border-radius: 999px;
-  background: #e6eef4;
-  overflow: hidden;
-}
-
-.barra-ocupacion span {
-  display: block;
-  height: 100%;
-  background: var(--celeste);
 }

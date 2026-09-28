@@ -50,21 +50,8 @@ export function periodoPorDefecto(hoy: string): Periodo {
   return mesDe(hoy);
 }
 
-// 630 -> "10 h 30 min"; 45 -> "45 min"; 0 -> "0 h".
-export function formatearMinutos(minutos: number): string {
-  const horas = Math.floor(minutos / 60);
-  const resto = minutos % 60;
-  if (horas === 0) return resto === 0 ? "0 h" : `${resto} min`;
-  return resto === 0 ? `${horas} h` : `${horas} h ${resto} min`;
-}
-
 // "2026-09-01" -> "01/09/2026".
 export function formatearFechaCorta(fecha: string): string {
   const [anio, mes, dia] = fecha.slice(0, 10).split("-");
   return `${dia}/${mes}/${anio}`;
-}
-
-// 7 -> "7 %"; 24.1 -> "24,1 %".
-export function formatearPorcentaje(valor: number): string {
-  return `${String(valor).replace(".", ",")} %`;
 }

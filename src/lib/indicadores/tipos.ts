@@ -1,14 +1,4 @@
-// HU-26. Lo que devuelve fn_consultar_indicadores_generales.
-
-export type OcupacionProfesional = {
-  id_profesional: string;
-  nombre_profesional: string;
-  apellido_profesional: string;
-  turnos: number; // todos los turnos del período, cualquier estado
-  minutos_disponibles: number;
-  minutos_ocupados: number;
-  porcentaje: number;
-};
+// HU-26. Lo que devuelve fn_consultar_indicadores_generales (vista corta del Incremento 2).
 
 export type IndicadoresGenerales = {
   desde: string;
@@ -20,12 +10,6 @@ export type IndicadoresGenerales = {
     cancelados: number;
     ausentes: number;
   };
-  ocupacion: {
-    minutos_disponibles: number;
-    minutos_ocupados: number;
-    porcentaje: number;
-  };
-  profesionales: OcupacionProfesional[];
   pacientes_nuevos: number;
 };
 

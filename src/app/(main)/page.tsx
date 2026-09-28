@@ -57,7 +57,7 @@ export default async function InicioPage({
     {
       href: "/indicadores",
       titulo: "Indicadores",
-      texto: "Turnos por estado, ocupación de los profesionales y pacientes nuevos en un período.",
+      texto: "Turnos por estado y pacientes nuevos en un período.",
     },
   ].filter((tarjeta) => puedeAcceder(rol, tarjeta.href));
 

@@ -4,8 +4,6 @@ import test from "node:test";
 import {
   diasEntre,
   formatearFechaCorta,
-  formatearMinutos,
-  formatearPorcentaje,
   periodoPorDefecto,
   periodosRapidos,
   validarPeriodo,
@@ -47,14 +45,19 @@ test("atajos: últimos 7 días, este mes y mes anterior (cruza el año)", () => 
   assert.deepEqual(anterior.periodo, { desde: "2025-12-01", hasta: "2025-12-31" });
 });
 
-test("formatos de minutos, porcentaje y fecha", () => {
-  assert.equal(formatearMinutos(0), "0 h");
-  assert.equal(formatearMinutos(45), "45 min");
-  assert.equal(formatearMinutos(120), "2 h");
-  assert.equal(formatearMinutos(630), "10 h 30 min");
-  assert.equal(formatearPorcentaje(24.1), "24,1 %");
-  assert.equal(formatearPorcentaje(0), "0 %");
+test("formato corto de la fecha del período", () => {
   assert.equal(formatearFechaCorta("2026-09-01"), "01/09/2026");
+});
+
+test("vista corta: sin ocupación ni desglose por profesional (son de HU-18)", () => {
+  const pagina = readFileSync("src/app/(main)/indicadores/page.tsx", "utf8");
+  const migracion = readFileSync("supabase/migrations/013_hu26_indicadores_generales.sql", "utf8");
+  for (const codigo of [pagina, migracion]) {
+    assert.doesNotMatch(codigo, /ocupaci[oó]n'|minutos_|franja_profesional|profesionales\./i);
+  }
+  for (const estado of ["Confirmados", "Atendidos", "Cancelados", "Ausentes", "Pacientes nuevos"]) {
+    assert.match(pagina, new RegExp(estado));
+  }
 });
 
 test("la pantalla es solo del Gerente y la action chequea el rol antes de consultar", () => {
