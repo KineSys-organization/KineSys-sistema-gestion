@@ -23,6 +23,7 @@ export const PERMISOS_RUTAS: { prefijo: string; roles: readonly Rol[] }[] = [
   { prefijo: "/agenda", roles: RECEPCION },
   { prefijo: "/turnos", roles: RECEPCION },
   { prefijo: "/mi-agenda", roles: SOLO_PROFESIONAL }, // HU-12/HU-13: incluye /mi-agenda/[id]
+  { prefijo: "/indicadores", roles: SOLO_GERENTE }, // HU-26
 ];
 
 // Acciones que ejecutan las server actions (src/lib/*/actions.ts).
@@ -38,6 +39,7 @@ export const PERMISOS_ACCIONES = {
   "turnos.cancelar": RECEPCION, // HU-10A
   "atencion.agenda": SOLO_PROFESIONAL, // HU-12: su agenda y sus turnos (la base filtra por auth.uid())
   "atencion.registrar": SOLO_PROFESIONAL, // HU-13: registrar y editar la atención
+  "indicadores.consultar": SOLO_GERENTE, // HU-26: indicadores generales del centro
 } satisfies Record<string, readonly Rol[]>;
 
 export type Accion = keyof typeof PERMISOS_ACCIONES;
