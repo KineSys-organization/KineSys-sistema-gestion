@@ -12,6 +12,7 @@ export const LINKS_MENU = [
   { href: "/", texto: "Inicio" },
   { href: "/disponibilidad", texto: "Otorgar turno" },
   { href: "/agenda", texto: "Agenda" },
+  { href: "/turnos", texto: "Turnos" }, // HU-09: buscar y filtrar
   { href: "/mi-agenda", texto: "Mi agenda" }, // HU-12: solo Profesional
   { href: "/pacientes", texto: "Pacientes" },
   { href: "/profesionales", texto: "Profesionales" },
@@ -19,10 +20,12 @@ export const LINKS_MENU = [
 ];
 
 // La sección activa: "/" solo en Inicio; el resto también en sus subrutas.
-// El paso 2 de otorgar (/turnos/nuevo) cuenta como "Otorgar turno".
+// El paso 2 de otorgar (/turnos/nuevo) cuenta como "Otorgar turno", no como "Turnos".
 function estaActivo(href: string, ruta: string) {
   if (href === "/") return ruta === "/";
-  if (href === "/disponibilidad" && ruta.startsWith("/turnos/nuevo")) return true;
+  const otorgando = ruta.startsWith("/turnos/nuevo");
+  if (href === "/disponibilidad" && otorgando) return true;
+  if (href === "/turnos" && otorgando) return false;
   return ruta === href || ruta.startsWith(href + "/");
 }
 

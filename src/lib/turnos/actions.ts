@@ -8,6 +8,7 @@ import type {
   EstadoAccionTurno,
   EstadoCancelar,
   EstadoOtorgar,
+  ResultadoBusquedaTurnos,
   Turno,
 } from "@/lib/turnos/tipos";
 import {
@@ -17,6 +18,9 @@ import {
   validarOtorgarTurno,
   validarReprogramacion,
 } from "@/lib/turnos/validar";
+import { validarFiltrosTurnos, type FiltrosTurnos } from "@/lib/turnos/busqueda";
+import type { Profesional } from "@/lib/profesionales/tipos";
+import type { Servicio } from "@/lib/servicios/tipos";
 
 export async function otorgarTurno(
   _prev: EstadoOtorgar,
@@ -185,4 +189,66 @@ export async function reprogramarTurno(
   revalidatePath("/agenda");
   revalidatePath("/disponibilidad");
   redirect(`/turnos/${campos.idTurno}?reprogramado=1`);
+}
+
+// HU-09. Listado de turnos con filtros. La página lee los filtros de la URL; acá se
+// validan y se pasan a fn_buscar_turnos (que filtra, ordena y pagina).
+export async function buscarTurnos(filtros: FiltrosTurnos): Promise<{
+  data: ResultadoBusquedaTurnos | null;
+  error: string | null;
+}> {
+  const sinPermiso = await exigirAccion("turnos.buscar");
+  if (sinPermiso) return { data: null, error: sinPermiso };
+
+  const errorValidacion = validarFiltrosTurnos(filtros);
+  if (errorValidacion) return { data: null, error: errorValidacion };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("fn_buscar_turnos", {
+    p_texto: filtros.texto || null,
+    p_id_profesional: filtros.profesional,
+    p_id_servicio: filtros.servicio,
+    p_desde: filtros.desde,
+    p_hasta: filtros.hasta,
+    p_estado: filtros.estado,
+    p_pagina: filtros.pagina,
+  });
+
+  if (error) return { data: null, error: error.message };
+
+  const resultado = data as ResultadoBusquedaTurnos;
+  return {
+    data: {
+      ...resultado,
+      total: Number(resultado.total),
+      turnos: (resultado.turnos ?? []).map((t) => ({
+        ...t,
+        fecha: String(t.fecha).slice(0, 10),
+      })),
+    },
+    error: null,
+  };
+}
+
+// HU-09. Opciones de los desplegables: todos los profesionales (también los inactivos,
+// porque sus turnos siguen existiendo) y el catálogo de servicios de HU-01.
+export async function listarOpcionesFiltroTurnos(): Promise<{
+  profesionales: Profesional[];
+  servicios: Servicio[];
+  error: string | null;
+}> {
+  const sinPermiso = await exigirAccion("turnos.buscar");
+  if (sinPermiso) return { profesionales: [], servicios: [], error: sinPermiso };
+
+  const supabase = await createClient();
+  const [profesionales, servicios] = await Promise.all([
+    supabase.rpc("fn_listar_profesionales"),
+    supabase.rpc("fn_listar_servicios"),
+  ]);
+
+  return {
+    profesionales: (profesionales.data ?? []) as Profesional[],
+    servicios: (servicios.data ?? []) as Servicio[],
+    error: profesionales.error?.message ?? servicios.error?.message ?? null,
+  };
 }

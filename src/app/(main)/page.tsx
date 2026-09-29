@@ -38,6 +38,11 @@ export default async function InicioPage({
       texto: "Los turnos de un profesional para un día.",
     },
     {
+      href: "/turnos",
+      titulo: "Turnos",
+      texto: "Buscá un turno por paciente, profesional, fechas o estado.",
+    },
+    {
       href: "/pacientes",
       titulo: "Pacientes",
       texto: "Buscar y filtrar por obra social o edad, registrar y editar.",
