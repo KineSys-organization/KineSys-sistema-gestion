@@ -1215,6 +1215,73 @@ a.badge-horario:hover {
   margin-top: 10px;
 }
 
+/* ===== HU-10B / HU-10C / HU-09: ausencia, reprogramar y listado de turnos ===== */
+
+/* Ausente: ámbar, distinto de cancelado (rojo) y de confirmado (verde). */
+.badge-ausente {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #fff4e0;
+  color: #8a5300; /* 5.9:1 sobre el fondo */
+}
+
+/* HU-10C: en los horarios, el actual del turno se ve pero no se puede elegir. */
+.horario-boton.horario-actual,
+.horario-boton.horario-actual:hover {
+  background: #eef1f4;
+  border-color: var(--borde);
+  border-style: dashed;
+  color: var(--gris-texto);
+  font-weight: 600;
+  cursor: default;
+}
+
+/* Resumen de reprogramar: el horario que se deja, tachado. */
+.horario-anterior {
+  color: var(--gris-texto);
+  text-decoration: line-through;
+}
+
+/* HU-09: barra de filtros del listado de turnos (misma idea que la de pacientes). */
+.filtros-turnos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.filtros-turnos .campo {
+  flex: 1 1 160px;
+  margin: 0;
+}
+
+.filtros-turnos .campo-ancho {
+  flex: 2 1 240px;
+}
+
+/* El aviso de rango inválido ocupa toda la fila, debajo de las fechas. */
+.filtros-turnos .mensaje-error {
+  flex: 1 1 100%;
+  margin: 0;
+}
+
+/* Paginación: anterior · página x de y · siguiente. */
+.paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.paginacion-inactiva {
+  opacity: 0.45;
+  pointer-events: none;
 /* HU-26. Indicadores: tarjetas con un número grande. */
 .indicadores-grid {
   display: grid;

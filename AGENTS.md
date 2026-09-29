@@ -2,6 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08). Pagos e indicadores siguen pendientes.
 Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06, **Agenda** HU-07, **Cancelar turno** HU-10A), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08) e **Indicadores generales** del Gerente (HU-26, vista corta del Incremento 2). Pagos y el resto de los indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
@@ -117,8 +118,10 @@ src/
     (main)/pacientes/[id]
     (main)/disponibilidad     → "Otorgar turno" pasos 2 y 3 (HU-28): profesional/servicio + calendario de 30 días; exige ?paciente
     (main)/agenda
+    (main)/turnos             → listado con filtros y paginación (HU-09)
     (main)/turnos/nuevo       → "Otorgar turno" paso 1 (paciente) y pasos 4-5 (cobertura y confirmar)
-    (main)/turnos/[id]       → resumen + cancelar (HU-10A)
+    (main)/turnos/[id]       → resumen + cancelar (HU-10A) + ausencia (HU-10B)
+    (main)/turnos/[id]/reprogramar → nuevo día y horario del mismo turno (HU-10C)
     (main)/mi-agenda         → agenda propia del Profesional (HU-12)
     (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13)
     (main)/indicadores       → indicadores generales del centro (HU-26, solo Gerente)
@@ -200,7 +203,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 ### HU-05 — Disponibilidad
 
 - Pantalla: `/disponibilidad`. Solo **Gerente** y **Mesa de Entradas**.
-- RPC: `fn_consultar_disponibilidad(profesional, servicio, fecha)`.
+- RPC: `fn_consultar_disponibilidad(profesional, servicio, fecha, excluir_turno)` (el último es opcional, desde HU-10C: no cuenta a ese turno como ocupado).
 - Calcula slots = franjas del día × duración/granularidad del servicio − turnos `confirmado` (antes `otorgado`, cambiado en HU-06). Un turno `cancelado` (HU-10A) no ocupa.
 - No horarios pasados; ventana máxima 30 días; solo profesional activo con servicio asociado.
 - Tabla mínima `turno` (ocupación). El alta de turnos es HU-06.
@@ -221,13 +224,13 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 
 - Pantalla: `/agenda`. Solo **Gerente** y **Mesa de Entradas**.
 - RPC: `fn_consultar_agenda_profesional(profesional, fecha)`.
-- Muestra los turnos `confirmado` y `cancelado` (este último desde HU-10A, identificado y con su motivo) del profesional para la fecha, ordenados por horario, con paciente, DNI, servicio, horario, estado y link a `/turnos/[id]`.
+- Muestra los turnos `confirmado`, `cancelado` (desde HU-10A, identificado y con su motivo), `atendido` (HU-13) y `ausente` (HU-10B) del profesional para la fecha, ordenados por horario, con paciente, DNI, servicio, horario, estado y link a `/turnos/[id]`.
 - Una fecha sin turnos se muestra vacía, sin error.
 - SQL: `supabase/migrations/007_hu07_agenda_profesional.sql`. Pruebas: `tests/agenda.test.mjs` (`npm test`).
 
 ### HU-08 — Autenticación y acceso interno
 
-- Matriz: Inicio todos; `/servicios` Gerente + Mesa de Entradas (**solo lectura** para Mesa); `/profesionales/*` solo Gerente; pacientes, disponibilidad, agenda y turnos Gerente + Mesa de Entradas; `/mi-agenda/*` solo Profesional (HU-12/13, `exigirProfesional`).
+- Matriz: Inicio todos; `/servicios` Gerente + Mesa de Entradas (**solo lectura** para Mesa); `/profesionales/*` solo Gerente; pacientes, disponibilidad, agenda y turnos (incluye `/turnos` y `/turnos/[id]/reprogramar`) Gerente + Mesa de Entradas; `/mi-agenda/*` solo Profesional (HU-12/13, `exigirProfesional`).
 - Defensa en 3 capas: página (`exigirGerente` / `exigirRecepcion`, sin permiso → `/?error=sin-permiso` con aviso en Inicio), server action (`exigirAccion`) y RPC (`fn_*` valida rol con usuario activo).
 - `fn_exigir_rol(text[])` (interna, revocada a `authenticated`): exige usuario activo con uno de los roles; un `NULL` siempre se rechaza. Reemplaza a `rol_actual()` en las funciones de servicios y `fn_listar_profesionales`. Mensaje: *No tenés permisos para realizar esta acción*.
 - Menú y tarjetas de Inicio se filtran con `puedeAcceder` (solo UX). El header muestra "Nombre Apellido · Rol".
@@ -251,6 +254,27 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Helper interno `fn_exigir_turno_propio(uuid)` (revocado a `authenticated`).
 - Efectos en lo existente: `turno_estado_valido` suma `atendido`; un turno atendido sigue ocupando su horario (`turno_sin_superposicion` y `fn_consultar_disponibilidad` miran `confirmado` y `atendido`); `fn_cancelar_turno` rechaza atendidos; `/agenda` y `/turnos/[id]` muestran el estado Atendido.
 - SQL: `supabase/migrations/010_hu12_hu13_atencion.sql`. Pruebas: `supabase/tests/hu12_hu13_atencion.sql` y `tests/hu12-hu13-atencion.test.mjs` (`npm test`). Evidencia en `docs/hu-12-13-atencion.md`.
+
+### HU-10B — Marcar ausencia de un turno
+
+- Desde `/turnos/[id]`: botón "Marcar ausente" si `marcable_ausente` (confirmado, sin fila en `atencion` y con la **hora de fin** pasada, hora de Argentina) y "Corregir ausencia" si `ausencia_corregible`. Siempre con confirmación, sin motivo. Solo **Gerente** y **Mesa de Entradas** (acción `turnos.ausente`).
+- RPCs: `fn_marcar_ausente(turno)` y `fn_corregir_ausencia(turno)` (únicamente `ausente → confirmado`; no cambia nada más ni habilita atender fuera del día). Mismo lock que otorgar/cancelar.
+- Un turno `ausente` sigue ocupando su horario: `turno_sin_superposicion` mira `confirmado`, `atendido` y `ausente`. La agenda muestra los ausentes.
+- SQL: `supabase/migrations/014_hu10b_marcar_ausencia.sql`. Pruebas: `supabase/tests/hu10b_marcar_ausencia.sql`. Evidencia en `docs/hu-10b-marcar-ausencia.md`.
+
+### HU-10C — Reprogramar un turno
+
+- Desde `/turnos/[id]` ("Reprogramar" si `reprogramable`: confirmado y no empezó) → `/turnos/[id]/reprogramar?fecha&hora` (calendario, horarios, resumen anterior/nuevo, confirmar). Solo **Gerente** y **Mesa de Entradas** (acción `turnos.reprogramar`).
+- RPC: `fn_reprogramar_turno(turno, fecha, hora)`: actualiza **el mismo** turno (solo `fecha`, `hora_inicio`, `hora_fin`). Lock de los dos días (en orden fijo), revalida con `fn_consultar_disponibilidad(..., excluir_turno)` y `EXCLUDE` como última defensa. Rechaza cancelado, atendido, ausente, turno ya empezado, destino pasado y el mismo horario.
+- `fn_consultar_disponibilidad` y `fn_consultar_disponibilidad_calendario` suman `p_excluir_turno` (default null): permite mover un turno a un horario que se superpone con el suyo. Se recrearon con `drop` + `create` (no dejar dos versiones).
+- SQL: `supabase/migrations/015_hu10c_reprogramar_turno.sql`. Pruebas: `supabase/tests/hu10c_reprogramar_turno.sql` y `tests/hu10c-reprogramar-turno.test.mjs`. Evidencia en `docs/hu-10c-reprogramar-turno.md`.
+
+### HU-09 — Buscar y filtrar turnos
+
+- Pantalla: `/turnos` (menú "Turnos"). Solo **Gerente** y **Mesa de Entradas** (acción `turnos.buscar`). Listado transversal (todos los profesionales); la vista semanal de un profesional es HU-11.
+- RPC: `fn_buscar_turnos(texto, profesional, servicio, desde, hasta, estado, pagina)` → `{ total, pagina, por_pagina, turnos }`. Filtros opcionales en AND; texto por palabras (nombre, apellido o comienzo de DNI); 10 por página en orden cronológico.
+- Filtros en la URL (`leerFiltrosTurnos` / `urlTurnos` en `src/lib/turnos/busqueda.ts`). Sin `desde`/`hasta` en la URL = hoy; vacíos = sin límite ("Limpiar filtros"). `RangoFechas` (cliente) impide Hasta < Desde.
+- SQL: `supabase/migrations/016_hu09_buscar_turnos.sql`. Pruebas: `supabase/tests/hu09_buscar_turnos.sql` y `tests/hu09-buscar-turnos.test.mjs`. Evidencia en `docs/hu-09-buscar-turnos.md`.
 
 ### Mejoras de UX/UI (menú, otorgar turno, calendario, filtros)
 
