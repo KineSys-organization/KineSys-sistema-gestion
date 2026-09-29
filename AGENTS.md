@@ -115,9 +115,9 @@ src/
     (main)/pacientes
     (main)/pacientes/nuevo
     (main)/pacientes/[id]
-    (main)/disponibilidad     → "Otorgar turno" paso 1: calendario de 30 días
+    (main)/disponibilidad     → "Otorgar turno" pasos 2 y 3 (HU-28): profesional/servicio + calendario de 30 días; exige ?paciente
     (main)/agenda
-    (main)/turnos/nuevo
+    (main)/turnos/nuevo       → "Otorgar turno" paso 1 (paciente) y pasos 4-5 (cobertura y confirmar)
     (main)/turnos/[id]       → resumen + cancelar (HU-10A)
     (main)/mi-agenda         → agenda propia del Profesional (HU-12)
     (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13)
@@ -204,12 +204,12 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Calcula slots = franjas del día × duración/granularidad del servicio − turnos `confirmado` (antes `otorgado`, cambiado en HU-06). Un turno `cancelado` (HU-10A) no ocupa.
 - No horarios pasados; ventana máxima 30 días; solo profesional activo con servicio asociado.
 - Tabla mínima `turno` (ocupación). El alta de turnos es HU-06.
-- Cada horario libre es un link a `/turnos/nuevo` (HU-06).
+- Cada horario libre es un link a `/turnos/nuevo` (HU-06), con el paciente ya elegido (HU-28).
 - SQL: `supabase/migrations/004_hu05_disponibilidad.sql`.
 
 ### HU-06 — Otorgar turno
 
-- Pantallas: `/turnos/nuevo?profesional&servicio&fecha&hora` (buscar paciente → cobertura → confirmar) y `/turnos/[id]` (resumen). Solo **Gerente** y **Mesa de Entradas**.
+- Pantallas: `/turnos/nuevo` y `/turnos/[id]` (resumen). Solo **Gerente** y **Mesa de Entradas**. El orden de los pasos lo define HU-28 (paciente primero).
 - RPCs: `fn_otorgar_turno(paciente, profesional, servicio, fecha, hora, obra_social)` y `fn_obtener_turno(id)`.
 - Estado del turno: `confirmado` (también `cancelado`, `ausente` y, desde HU-13, `atendido`).
 - Concurrencia: al confirmar se revalida el horario (lock por profesional+día + `fn_consultar_disponibilidad`). Restricción `EXCLUDE` (GiST) `turno_sin_superposicion` como última defensa. Error: *El horario seleccionado ya no está disponible*.
@@ -254,11 +254,11 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 
 ### Mejoras de UX/UI (menú, otorgar turno, calendario, filtros)
 
-- Menú: cliente (`usePathname`) para marcar la sección activa. "Otorgar turno" apunta a `/disponibilidad` (paso 1).
-- `/disponibilidad`: calendario de 30 días (`fn_consultar_disponibilidad_calendario`) + horarios del día; estado en la URL (`?profesional&servicio&fecha`, helper `urlDisponibilidad`). Pasos con `PasosTurno`.
+- Menú: cliente (`usePathname`) para marcar la sección activa. "Otorgar turno" apunta a `/turnos/nuevo` (paso 1, HU-28).
+- `/disponibilidad`: calendario de 30 días (`fn_consultar_disponibilidad_calendario`) + horarios del día; estado en la URL (`?paciente&profesional&servicio&fecha`, helpers en `src/lib/turnos/flujo.ts`). Pasos con `PasosTurno`.
 - `/agenda`: profesional y fecha en la URL (sin `useActionState`).
-- `/pacientes`: listado con filtros (`fn_filtrar_pacientes`: texto, obra social o particular, rango etario). `fn_buscar_pacientes` sigue para el paso 2 de otorgar.
-- Alta de paciente con `?volver=` (solo `/turnos/nuevo`, `urlVolverTurno`) → vuelve al turno con el paciente elegido.
+- `/pacientes`: listado con filtros (`fn_filtrar_pacientes`: texto, obra social o particular, rango etario). `fn_buscar_pacientes` sigue para el paso 1 de otorgar.
+- Alta de paciente con `?volver=` (solo `/turnos/nuevo`, `urlVolverTurno` + `urlVolverConPaciente`) → vuelve al turno con el paciente elegido.
 - Botones de acción: `boton-principal` / `boton-secundario` (+ `boton-peligro`) con `boton-inline` = 44px. Fila de acciones al pie: `acciones-pie`.
 - SQL: `supabase/migrations/011_mejoras_pacientes_calendario.sql`. Pruebas: `tests/mejoras-ux.test.mjs`. Detalle en `docs/mejoras-ux.md`.
 
