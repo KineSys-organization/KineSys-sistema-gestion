@@ -2,7 +2,8 @@ import Link from "next/link";
 import { exigirRecepcion } from "@/lib/auth";
 import { listarProfesionalesParaAgenda, obtenerAgenda } from "@/lib/agenda/actions";
 import { esFechaValida, hoyArgentina, sumarDias } from "@/lib/atencion/validar";
-import { urlDisponibilidad } from "@/lib/disponibilidad/calendario";
+// HU-28: "Otorgar turno" desde la agenda va al paso 1 (paciente) con profesional y día ya elegidos.
+import { urlPasoPaciente } from "@/lib/turnos/flujo";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 
@@ -42,7 +43,7 @@ export default async function AgendaPage({ searchParams }: Props) {
         {profesional && (
           <Link
             className="boton-principal boton-inline"
-            href={urlDisponibilidad({ profesional: profesional.id_usuario, fecha })}
+            href={urlPasoPaciente({ profesional: profesional.id_usuario, fecha })}
           >
             Otorgar turno
           </Link>

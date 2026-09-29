@@ -2,16 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import type { Profesional } from "@/lib/profesionales/tipos";
-import { urlDisponibilidad } from "@/lib/disponibilidad/calendario";
+import { urlPasoHorario } from "@/lib/turnos/flujo";
 
-// Paso 1 de otorgar turno: profesional y servicio. Al cambiar cualquiera se
-// actualiza la URL y el calendario se recalcula (sin botón "Consultar").
+// Paso 2 de otorgar turno (HU-28): profesional y servicio. Al cambiar cualquiera se
+// actualiza la URL (sin perder al paciente) y el calendario se recalcula (sin botón "Consultar").
 // Es cliente solo porque el servicio depende del profesional elegido.
 export function SelectorProfesionalServicio({
+  paciente,
   profesionales,
   profesional,
   servicio,
 }: {
+  paciente: string;
   profesionales: Profesional[];
   profesional: string;
   servicio: string;
@@ -24,7 +26,7 @@ export function SelectorProfesionalServicio({
     // Al cambiar de profesional arranca con su primer servicio.
     const primero =
       profesionales.find((p) => p.id_usuario === id)?.servicios?.[0]?.id_servicio ?? "";
-    router.push(urlDisponibilidad({ profesional: id, servicio: primero }));
+    router.push(urlPasoHorario({ paciente, profesional: id, servicio: primero }));
   }
 
   return (
@@ -50,7 +52,7 @@ export function SelectorProfesionalServicio({
           id="servicio"
           value={servicio}
           onChange={(e) =>
-            router.push(urlDisponibilidad({ profesional, servicio: e.target.value }))
+            router.push(urlPasoHorario({ paciente, profesional, servicio: e.target.value }))
           }
         >
           {servicios.map((s) => (

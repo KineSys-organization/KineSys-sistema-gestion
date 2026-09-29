@@ -2,6 +2,7 @@ import Link from "next/link";
 import { exigirRecepcion } from "@/lib/auth";
 import { CancelarTurnoForm } from "@/components/turnos/CancelarTurnoForm";
 import { obtenerTurno } from "@/lib/turnos/actions";
+import { urlPasoHorario, urlPasoPaciente } from "@/lib/turnos/flujo";
 import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
 
 type Props = {
@@ -55,7 +56,7 @@ export default async function TurnoPage({ params }: Props) {
         <p className="mensaje-error" role="alert">
           {error ?? "El turno no existe"}
         </p>
-        <Link href="/disponibilidad">Volver a otorgar turno</Link>
+        <Link href={urlPasoPaciente()}>Volver a otorgar turno</Link>
       </section>
     );
   }
@@ -120,8 +121,19 @@ export default async function TurnoPage({ params }: Props) {
       {/* Acciones: principal y secundaria a la izquierda, cancelar (riesgo) aparte a la
           derecha. Todas con el mismo alto; el formulario de cancelación se abre abajo. */}
       <div className="acciones-pie">
-        <Link className="boton-principal boton-inline" href="/disponibilidad">
-          Otorgar otro turno
+        {/* HU-28: seguir con el mismo paciente (pasos 2 y 3) o arrancar con otro (paso 1). */}
+        <Link
+          className="boton-principal boton-inline"
+          href={urlPasoHorario({
+            paciente: turno.id_paciente,
+            profesional: turno.id_profesional,
+            servicio: turno.id_servicio,
+          })}
+        >
+          Otro turno para este paciente
+        </Link>
+        <Link className="boton-secundario boton-inline" href={urlPasoPaciente()}>
+          Otorgar turno a otro paciente
         </Link>
         <Link
           className="boton-secundario boton-inline"

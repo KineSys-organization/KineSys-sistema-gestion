@@ -1,11 +1,12 @@
-// Indicador de pasos de "Otorgar turno": 1 horario → 2 paciente → 3 confirmar.
-// Muestra dónde está Recepción y qué falta. Es solo visual (una lista ordenada).
-const PASOS = ["Horario", "Paciente", "Confirmar"];
+import { PASOS_TURNO, type NumeroPaso } from "@/lib/turnos/flujo";
 
-export function PasosTurno({ actual }: { actual: 1 | 2 | 3 }) {
+// Indicador de pasos de "Otorgar turno" (HU-28): 1 paciente → 2 servicio y profesional →
+// 3 fecha y horario → 4 cobertura → 5 confirmar.
+// Muestra dónde está Recepción y qué falta. Es solo visual (una lista ordenada).
+export function PasosTurno({ actual }: { actual: NumeroPaso }) {
   return (
     <ol className="pasos-turno" aria-label="Pasos para otorgar un turno">
-      {PASOS.map((paso, i) => {
+      {PASOS_TURNO.map((paso, i) => {
         const numero = i + 1;
         const estado = numero < actual ? "hecho" : numero === actual ? "actual" : "pendiente";
         return (

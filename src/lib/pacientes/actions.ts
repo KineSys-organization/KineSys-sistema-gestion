@@ -13,6 +13,7 @@ import type {
 import {
   esIdPaciente,
   parsearObrasFormulario,
+  urlVolverConPaciente,
   urlVolverTurno,
   validarAltaPaciente,
   validarEdicionPaciente,
@@ -146,7 +147,7 @@ export async function registrarPaciente(
   // Si el alta vino desde "Otorgar turno", vuelve a ese paso con el paciente elegido.
   const volver = urlVolverTurno(String(formData.get("volver") ?? ""));
   if (volver && idNuevo) {
-    redirect(`${volver}&paciente=${encodeURIComponent(String(idNuevo))}`);
+    redirect(urlVolverConPaciente(volver, String(idNuevo)));
   }
   redirect("/pacientes");
 }
