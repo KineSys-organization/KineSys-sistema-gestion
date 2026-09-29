@@ -7,10 +7,10 @@ import { puedeAcceder, type Rol } from "@/lib/auth/permisos";
 
 // Links del menú, en el orden de uso diario. Solo UX: el bloqueo real está en
 // páginas, server actions y fn_* de la base.
-// "Otorgar turno" arranca en /disponibilidad (paso 1: elegir el horario).
+// "Otorgar turno" arranca en /turnos/nuevo (HU-28, paso 1: elegir el paciente).
 export const LINKS_MENU = [
   { href: "/", texto: "Inicio" },
-  { href: "/disponibilidad", texto: "Otorgar turno" },
+  { href: "/turnos/nuevo", texto: "Otorgar turno" },
   { href: "/agenda", texto: "Agenda" },
   { href: "/mi-agenda", texto: "Mi agenda" }, // HU-12: solo Profesional
   { href: "/pacientes", texto: "Pacientes" },
@@ -19,10 +19,10 @@ export const LINKS_MENU = [
 ];
 
 // La sección activa: "/" solo en Inicio; el resto también en sus subrutas.
-// El paso 2 de otorgar (/turnos/nuevo) cuenta como "Otorgar turno".
+// Los pasos 2 y 3 de otorgar (/disponibilidad) cuentan como "Otorgar turno".
 function estaActivo(href: string, ruta: string) {
   if (href === "/") return ruta === "/";
-  if (href === "/disponibilidad" && ruta.startsWith("/turnos/nuevo")) return true;
+  if (href === "/turnos/nuevo" && ruta.startsWith("/disponibilidad")) return true;
   return ruta === href || ruta.startsWith(href + "/");
 }
 

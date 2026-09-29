@@ -1,4 +1,4 @@
-// Calendario de disponibilidad (paso 1 de otorgar turno).
+// Calendario de disponibilidad (paso 3 de otorgar turno, HU-28).
 // Lógica pura (sin Supabase ni Next) para poder testearla con `npm test`.
 
 // Lo que devuelve fn_consultar_disponibilidad_calendario.
@@ -63,16 +63,4 @@ export function diaSeleccionado(dias: DiaCalendario[], pedido: string): string |
   return dias.find((d) => d.libres > 0)?.fecha ?? null;
 }
 
-// URL de /disponibilidad conservando la consulta (para volver sin perder lo elegido).
-export function urlDisponibilidad(campos: {
-  profesional?: string;
-  servicio?: string;
-  fecha?: string;
-}): string {
-  const params = new URLSearchParams();
-  if (campos.profesional) params.set("profesional", campos.profesional);
-  if (campos.servicio) params.set("servicio", campos.servicio);
-  if (campos.fecha) params.set("fecha", campos.fecha);
-  const query = params.toString();
-  return query ? `/disponibilidad?${query}` : "/disponibilidad";
-}
+// Las URLs del flujo (con el paciente) están en src/lib/turnos/flujo.ts (HU-28).
