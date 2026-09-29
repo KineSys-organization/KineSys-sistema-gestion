@@ -15,6 +15,7 @@ import {
   esIdTurno,
   validarCancelacion,
   validarOtorgarTurno,
+  validarReprogramacion,
 } from "@/lib/turnos/validar";
 
 export async function otorgarTurno(
@@ -149,4 +150,39 @@ export async function corregirAusencia(
   const sinPermiso = await exigirAccion("turnos.ausente");
   if (sinPermiso) return { ok: false, error: sinPermiso };
   return cambiarAusencia("fn_corregir_ausencia", formData);
+}
+
+// HU-10C. Reprogramar: actualiza el mismo turno. La base revalida el horario al
+// confirmar (lock + disponibilidad sin contar a este turno).
+export async function reprogramarTurno(
+  _prev: EstadoAccionTurno,
+  formData: FormData
+): Promise<EstadoAccionTurno> {
+  const sinPermiso = await exigirAccion("turnos.reprogramar");
+  if (sinPermiso) return { ok: false, error: sinPermiso };
+
+  const campos = {
+    idTurno: String(formData.get("id_turno") ?? "").trim(),
+    fecha: String(formData.get("fecha") ?? "").trim(),
+    hora: String(formData.get("hora") ?? "").trim(),
+  };
+
+  const errorValidacion = validarReprogramacion(campos);
+  if (errorValidacion) return { ok: false, error: errorValidacion };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("fn_reprogramar_turno", {
+    p_id_turno: campos.idTurno,
+    p_fecha: campos.fecha,
+    p_hora: campos.hora,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  // Cambió el horario: se libera el anterior y se ocupa el nuevo.
+  revalidatePath(`/turnos/${campos.idTurno}`);
+  revalidatePath("/turnos");
+  revalidatePath("/agenda");
+  revalidatePath("/disponibilidad");
+  redirect(`/turnos/${campos.idTurno}?reprogramado=1`);
 }

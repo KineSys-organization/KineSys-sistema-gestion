@@ -106,3 +106,37 @@ export function etiquetaMotivo(valor: string | null): string {
   const motivo = MOTIVOS_CANCELACION.find((m) => m.valor === valor);
   return motivo ? motivo.etiqueta : (valor ?? "");
 }
+
+// HU-10C. Reprogramar: solo cambian fecha y hora. Las reglas (estado, que no haya
+// empezado, que el horario siga libre) las valida fn_reprogramar_turno.
+export type CamposReprogramar = {
+  idTurno: string;
+  fecha: string;
+  hora: string;
+};
+
+export function validarReprogramacion(input: CamposReprogramar): string | null {
+  if (!UUID_OK.test(input.idTurno.trim())) return "Turno inválido";
+  if (!input.fecha.trim() || !input.hora.trim()) return "Elegí el nuevo día y horario";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.fecha.trim())) return "La fecha no es válida";
+  if (!HORA_OK.test(input.hora.trim())) return "La hora no es válida";
+
+  const dia = new Date(`${input.fecha.trim()}T00:00:00Z`);
+  if (Number.isNaN(dia.getTime()) || dia.toISOString().slice(0, 10) !== input.fecha.trim()) {
+    return "La fecha no es válida";
+  }
+
+  return null;
+}
+
+// URL de la pantalla de reprogramar conservando el día y el horario elegidos.
+export function urlReprogramar(
+  idTurno: string,
+  campos: { fecha?: string; hora?: string } = {}
+): string {
+  const params = new URLSearchParams();
+  if (campos.fecha) params.set("fecha", campos.fecha);
+  if (campos.hora) params.set("hora", campos.hora);
+  const query = params.toString();
+  return `/turnos/${idTurno}/reprogramar${query ? `?${query}` : ""}`;
+}

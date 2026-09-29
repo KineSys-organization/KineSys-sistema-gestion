@@ -1228,3 +1228,20 @@ a.badge-horario:hover {
   background: #fff4e0;
   color: #8a5300; /* 5.9:1 sobre el fondo */
 }
+
+/* HU-10C: en los horarios, el actual del turno se ve pero no se puede elegir. */
+.horario-boton.horario-actual,
+.horario-boton.horario-actual:hover {
+  background: #eef1f4;
+  border-color: var(--borde);
+  border-style: dashed;
+  color: var(--gris-texto);
+  font-weight: 600;
+  cursor: default;
+}
+
+/* Resumen de reprogramar: el horario que se deja, tachado. */
+.horario-anterior {
+  color: var(--gris-texto);
+  text-decoration: line-through;
+}
