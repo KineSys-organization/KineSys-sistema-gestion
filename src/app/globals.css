@@ -1214,3 +1214,17 @@ a.badge-horario:hover {
   gap: 8px;
   margin-top: 10px;
 }
+
+/* ===== HU-10B / HU-10C / HU-09: ausencia, reprogramar y listado de turnos ===== */
+
+/* Ausente: ámbar, distinto de cancelado (rojo) y de confirmado (verde). */
+.badge-ausente {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #fff4e0;
+  color: #8a5300; /* 5.9:1 sobre el fondo */
+}

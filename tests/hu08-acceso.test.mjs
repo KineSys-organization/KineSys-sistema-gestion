@@ -25,6 +25,8 @@ const MATRIZ = {
   "/agenda": [true, true, false],
   "/turnos/nuevo": [true, true, false],
   "/turnos/abc": [true, true, false],
+  "/turnos": [true, true, false], // HU-09: listado
+  "/turnos/abc/reprogramar": [true, true, false], // HU-10C
   // HU-12/HU-13: la agenda propia y la atención son solo del Profesional.
   "/mi-agenda": [false, false, true],
   "/mi-agenda/abc": [false, false, true],
@@ -76,6 +78,9 @@ test("puedeHacer: cada acción según el rol", () => {
     "agenda.consultar": [true, true, false],
     "turnos.gestionar": [true, true, false],
     "turnos.cancelar": [true, true, false],
+    "turnos.ausente": [true, true, false],
+    "turnos.reprogramar": [true, true, false],
+    "turnos.buscar": [true, true, false],
     "atencion.agenda": [false, false, true],
     "atencion.registrar": [false, false, true],
   };

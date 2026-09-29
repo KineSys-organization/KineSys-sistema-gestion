@@ -36,6 +36,9 @@ export const PERMISOS_ACCIONES = {
   "agenda.consultar": RECEPCION,
   "turnos.gestionar": RECEPCION, // otorgar y ver el resumen
   "turnos.cancelar": RECEPCION, // HU-10A
+  "turnos.ausente": RECEPCION, // HU-10B: marcar y corregir ausencia
+  "turnos.reprogramar": RECEPCION, // HU-10C
+  "turnos.buscar": RECEPCION, // HU-09: listado con filtros
   "atencion.agenda": SOLO_PROFESIONAL, // HU-12: su agenda y sus turnos (la base filtra por auth.uid())
   "atencion.registrar": SOLO_PROFESIONAL, // HU-13: registrar y editar la atención
 } satisfies Record<string, readonly Rol[]>;

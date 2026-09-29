@@ -38,6 +38,11 @@ export type Turno = {
   cancelado_en: string | null;
   // Confirmado y todavía no pasó (lo calcula la base con la hora de Argentina).
   cancelable: boolean;
+  // HU-10B: confirmado, sin atención y ya terminó / está ausente (se puede volver atrás).
+  marcable_ausente: boolean;
+  ausencia_corregible: boolean;
+  // HU-10C: confirmado y todavía no empezó.
+  reprogramable: boolean;
   // HU-13: confirmado y del día (se le puede registrar la atención).
   atendible: boolean;
   atencion: Atencion | null;
@@ -49,6 +54,12 @@ export type EstadoOtorgar = {
 };
 
 export type EstadoCancelar = {
+  ok: boolean;
+  error: string | null;
+};
+
+// HU-10B (marcar / corregir ausencia) y HU-10C (reprogramar).
+export type EstadoAccionTurno = {
   ok: boolean;
   error: string | null;
 };

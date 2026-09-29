@@ -11,7 +11,7 @@ const ETIQUETA: Record<EstadoTurno, string> = {
 const CLASE: Record<EstadoTurno, string> = {
   confirmado: "badge-activo",
   cancelado: "badge-cancelado",
-  ausente: "badge-inactivo",
+  ausente: "badge-ausente", // HU-10B
   atendido: "badge-atendido",
 };
 

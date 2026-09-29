@@ -4,7 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigirAccion } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { EstadoCancelar, EstadoOtorgar, Turno } from "@/lib/turnos/tipos";
+import type {
+  EstadoAccionTurno,
+  EstadoCancelar,
+  EstadoOtorgar,
+  Turno,
+} from "@/lib/turnos/tipos";
 import {
   coberturaParaRpc,
   esIdTurno,
@@ -106,4 +111,42 @@ export async function cancelarTurno(
   revalidatePath("/agenda");
   revalidatePath("/disponibilidad");
   return { ok: true, error: null };
+}
+
+// HU-10B. Marcar ausencia y corregirla. Sin motivo: solo el id del turno.
+// Las reglas (estado, sin atención, ya terminó) las valida la fn_*.
+async function cambiarAusencia(
+  rpc: "fn_marcar_ausente" | "fn_corregir_ausencia",
+  formData: FormData
+): Promise<EstadoAccionTurno> {
+  const idTurno = String(formData.get("id_turno") ?? "").trim();
+  if (!esIdTurno(idTurno)) return { ok: false, error: "Turno inválido" };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc(rpc, { p_id_turno: idTurno });
+  if (error) return { ok: false, error: error.message };
+
+  // El estado nuevo se ve en el detalle, la agenda y el listado de turnos (HU-09).
+  revalidatePath(`/turnos/${idTurno}`);
+  revalidatePath("/turnos");
+  revalidatePath("/agenda");
+  return { ok: true, error: null };
+}
+
+export async function marcarAusente(
+  _prev: EstadoAccionTurno,
+  formData: FormData
+): Promise<EstadoAccionTurno> {
+  const sinPermiso = await exigirAccion("turnos.ausente");
+  if (sinPermiso) return { ok: false, error: sinPermiso };
+  return cambiarAusencia("fn_marcar_ausente", formData);
+}
+
+export async function corregirAusencia(
+  _prev: EstadoAccionTurno,
+  formData: FormData
+): Promise<EstadoAccionTurno> {
+  const sinPermiso = await exigirAccion("turnos.ausente");
+  if (sinPermiso) return { ok: false, error: sinPermiso };
+  return cambiarAusencia("fn_corregir_ausencia", formData);
 }
