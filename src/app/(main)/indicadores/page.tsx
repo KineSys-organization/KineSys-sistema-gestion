@@ -10,8 +10,11 @@ import {
 import { hoyArgentina } from "@/lib/atencion/validar";
 
 type Props = {
-  searchParams: Promise<{ desde?: string; hasta?: string }>;
+  searchParams: Promise<{ desde?: string | string[]; hasta?: string | string[] }>;
 };
+
+// Si el parámetro viene repetido en la URL (?desde=a&desde=b), Next manda un array: usamos el primero.
+const primero = (valor?: string | string[]) => (Array.isArray(valor) ? valor[0] : valor);
 
 const urlPeriodo = (periodo: Periodo) =>
   `/indicadores?desde=${periodo.desde}&hasta=${periodo.hasta}`;
@@ -26,8 +29,8 @@ export default async function IndicadoresPage({ searchParams }: Props) {
   const hoy = hoyArgentina();
   const porDefecto = periodoPorDefecto(hoy);
   const periodo: Periodo = {
-    desde: params.desde ?? porDefecto.desde,
-    hasta: params.hasta ?? porDefecto.hasta,
+    desde: primero(params.desde) ?? porDefecto.desde,
+    hasta: primero(params.hasta) ?? porDefecto.hasta,
   };
 
   const { data, error } = await obtenerIndicadores(periodo);
