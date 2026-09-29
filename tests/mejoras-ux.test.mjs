@@ -1,11 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import {
-  armarSemanas,
-  diaSeleccionado,
-  urlDisponibilidad,
-} from "../src/lib/disponibilidad/calendario.ts";
+import { armarSemanas, diaSeleccionado } from "../src/lib/disponibilidad/calendario.ts";
 import {
   leerFiltrosPacientes,
   OBRA_PARTICULAR,
@@ -50,24 +46,20 @@ test("calendario: día elegido = el pedido, o el primero con horarios libres", (
   assert.equal(diaSeleccionado(ventana(), ""), null);
 });
 
-test("calendario: la URL conserva profesional, servicio y fecha", () => {
-  assert.equal(urlDisponibilidad({}), "/disponibilidad");
-  assert.equal(
-    urlDisponibilidad({ profesional: "a", servicio: "b", fecha: "2026-09-25", hora: "10:00" }),
-    "/disponibilidad?profesional=a&servicio=b&fecha=2026-09-25"
-  );
-});
+// Las URLs del flujo de otorgar (con paciente) se prueban en tests/hu28-flujo-turno.test.mjs.
 
 test("alta desde otorgar turno: solo vuelve a /turnos/nuevo", () => {
-  const ok = "/turnos/nuevo?profesional=a&servicio=b&fecha=2026-09-25&hora=10%3A00";
+  const ok = "/turnos/nuevo?profesional=a&servicio=b&fecha=2026-09-25";
   assert.equal(urlVolverTurno(ok), ok);
+  // HU-28: el paso 1 sin nada elegido todavía también es un regreso válido.
+  assert.equal(urlVolverTurno("/turnos/nuevo"), "/turnos/nuevo");
   for (const malo of [
     "",
     null,
     undefined,
     "https://otro-sitio.com/turnos/nuevo?x=1",
     "//otro-sitio.com/turnos/nuevo?x=1",
-    "/turnos/nuevo",
+    "/turnos/nuevos",
     "/pacientes?x=1",
     "/turnos/nuevo/../../admin?x=1",
   ]) {

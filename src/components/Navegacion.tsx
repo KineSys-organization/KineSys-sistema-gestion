@@ -7,10 +7,10 @@ import { puedeAcceder, type Rol } from "@/lib/auth/permisos";
 
 // Links del menú, en el orden de uso diario. Solo UX: el bloqueo real está en
 // páginas, server actions y fn_* de la base.
-// "Otorgar turno" arranca en /disponibilidad (paso 1: elegir el horario).
+// "Otorgar turno" arranca en /turnos/nuevo (HU-28, paso 1: elegir el paciente).
 export const LINKS_MENU = [
   { href: "/", texto: "Inicio" },
-  { href: "/disponibilidad", texto: "Otorgar turno" },
+  { href: "/turnos/nuevo", texto: "Otorgar turno" },
   { href: "/agenda", texto: "Agenda" },
   { href: "/turnos", texto: "Turnos" }, // HU-09: buscar y filtrar
   { href: "/mi-agenda", texto: "Mi agenda" }, // HU-12: solo Profesional
@@ -20,12 +20,12 @@ export const LINKS_MENU = [
 ];
 
 // La sección activa: "/" solo en Inicio; el resto también en sus subrutas.
-// El paso 2 de otorgar (/turnos/nuevo) cuenta como "Otorgar turno", no como "Turnos".
+// Los pasos 2 y 3 de otorgar (/disponibilidad) cuentan como "Otorgar turno".
+// "Turnos" (HU-09) cubre /turnos y /turnos/[id], pero no /turnos/nuevo (es "Otorgar turno").
 function estaActivo(href: string, ruta: string) {
   if (href === "/") return ruta === "/";
-  const otorgando = ruta.startsWith("/turnos/nuevo");
-  if (href === "/disponibilidad" && otorgando) return true;
-  if (href === "/turnos" && otorgando) return false;
+  if (href === "/turnos/nuevo" && ruta.startsWith("/disponibilidad")) return true;
+  if (href === "/turnos" && ruta.startsWith("/turnos/nuevo")) return false;
   return ruta === href || ruta.startsWith(href + "/");
 }
 

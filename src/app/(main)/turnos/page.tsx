@@ -11,6 +11,7 @@ import {
   urlTurnos,
   type ParamsTurnos,
 } from "@/lib/turnos/busqueda";
+import { urlPasoPaciente } from "@/lib/turnos/flujo";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 import { RangoFechas } from "@/components/turnos/RangoFechas";
@@ -51,7 +52,7 @@ export default async function TurnosPage({ searchParams }: Props) {
             Buscá un turno por paciente, profesional, servicio, fechas o estado.
           </p>
         </div>
-        <Link className="boton-principal boton-inline" href="/disponibilidad">
+        <Link className="boton-principal boton-inline" href={urlPasoPaciente()}>
           Otorgar turno
         </Link>
       </div>

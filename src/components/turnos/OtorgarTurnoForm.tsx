@@ -5,7 +5,7 @@ import { startTransition, useActionState, useState, type FormEvent } from "react
 import { otorgarTurno } from "@/lib/turnos/actions";
 import type { EstadoOtorgar } from "@/lib/turnos/tipos";
 import type { ObraSocialPaciente } from "@/lib/pacientes/tipos";
-import { urlDisponibilidad } from "@/lib/disponibilidad/calendario";
+import { urlPasoHorario } from "@/lib/turnos/flujo";
 import {
   coberturaInicial,
   MENSAJE_NO_DISPONIBLE,
@@ -86,7 +86,8 @@ export function OtorgarTurnoForm({
             <>
               {" "}
               <Link
-                href={urlDisponibilidad({
+                href={urlPasoHorario({
+                  paciente: idPaciente,
                   profesional: idProfesional,
                   servicio: idServicio,
                   fecha,

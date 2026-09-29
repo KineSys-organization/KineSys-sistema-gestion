@@ -28,9 +28,9 @@ export default async function InicioPage({
       texto: "Tus turnos y pacientes del día. Registrá cada atención.",
     },
     {
-      href: "/disponibilidad",
+      href: "/turnos/nuevo",
       titulo: "Otorgar turno",
-      texto: "Elegí profesional y servicio, mirá los días libres en el calendario y dá el turno.",
+      texto: "Buscá al paciente, elegí profesional y servicio, mirá los días libres y dá el turno.",
     },
     {
       href: "/agenda",

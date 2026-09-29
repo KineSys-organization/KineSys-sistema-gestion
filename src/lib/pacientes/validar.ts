@@ -111,9 +111,10 @@ export function esIdPaciente(id: string): boolean {
 
 // Otorgar turno → "Registrar paciente nuevo" → vuelve al paso del paciente.
 // Solo se acepta volver a /turnos/nuevo (evita usar ?volver= para mandar a otro sitio).
+// HU-28: el paso 1 puede no tener parámetros, así que "/turnos/nuevo" solo también vale.
 export function urlVolverTurno(volver: string | null | undefined): string | null {
   const valor = (volver ?? "").trim();
-  if (!valor.startsWith("/turnos/nuevo?")) return null;
+  if (valor !== "/turnos/nuevo" && !valor.startsWith("/turnos/nuevo?")) return null;
   try {
     const url = new URL(valor, "http://kinesys.local");
     if (url.origin !== "http://kinesys.local" || url.pathname !== "/turnos/nuevo") return null;
@@ -121,6 +122,14 @@ export function urlVolverTurno(volver: string | null | undefined): string | null
   } catch {
     return null;
   }
+}
+
+// Después del alta: la URL de regreso con el paciente nuevo ya elegido.
+// Se arma con URLSearchParams (no pegando "&paciente=") porque el paso 1 puede no tener "?".
+export function urlVolverConPaciente(volver: string, idPaciente: string): string {
+  const url = new URL(volver, "http://kinesys.local");
+  url.searchParams.set("paciente", idPaciente);
+  return `${url.pathname}${url.search}`;
 }
 
 // Filtros del listado de pacientes. El rango etario va como "18-39" o "65-" (sin tope).

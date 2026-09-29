@@ -4,6 +4,7 @@ import { AusenciaTurnoForm } from "@/components/turnos/AusenciaTurnoForm";
 import { CancelarTurnoForm } from "@/components/turnos/CancelarTurnoForm";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 import { obtenerTurno } from "@/lib/turnos/actions";
+import { urlPasoHorario, urlPasoPaciente } from "@/lib/turnos/flujo";
 import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
 
 type Props = {
@@ -117,8 +118,19 @@ export default async function TurnoPage({ params, searchParams }: Props) {
       {/* Acciones: principal y secundarias a la izquierda, cancelar (riesgo) aparte a la
           derecha. Todas con el mismo alto; los formularios de confirmación se abren abajo. */}
       <div className="acciones-pie">
-        <Link className="boton-principal boton-inline" href="/disponibilidad">
-          Otorgar otro turno
+        {/* HU-28: seguir con el mismo paciente (pasos 2 y 3) o arrancar con otro (paso 1). */}
+        <Link
+          className="boton-principal boton-inline"
+          href={urlPasoHorario({
+            paciente: turno.id_paciente,
+            profesional: turno.id_profesional,
+            servicio: turno.id_servicio,
+          })}
+        >
+          Otro turno para este paciente
+        </Link>
+        <Link className="boton-secundario boton-inline" href={urlPasoPaciente()}>
+          Otorgar turno a otro paciente
         </Link>
         {turno.reprogramable && (
           <Link
@@ -133,9 +145,6 @@ export default async function TurnoPage({ params, searchParams }: Props) {
           href={`/agenda?profesional=${turno.id_profesional}&fecha=${turno.fecha}`}
         >
           Ver agenda del día
-        </Link>
-        <Link className="boton-secundario boton-inline" href="/turnos">
-          Ver turnos
         </Link>
         {turno.marcable_ausente && (
           <AusenciaTurnoForm idTurno={turno.id_turno} modo="marcar" />
