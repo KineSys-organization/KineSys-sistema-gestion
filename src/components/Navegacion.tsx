@@ -17,6 +17,7 @@ export const LINKS_MENU = [
   { href: "/pacientes", texto: "Pacientes" },
   { href: "/profesionales", texto: "Profesionales" },
   { href: "/servicios", texto: "Servicios" },
+  { href: "/indicadores", texto: "Indicadores" }, // HU-26: solo Gerente
 ];
 
 // La sección activa: "/" solo en Inicio; el resto también en sus subrutas.

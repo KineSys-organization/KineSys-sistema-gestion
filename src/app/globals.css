@@ -1282,4 +1282,36 @@ a.badge-horario:hover {
 .paginacion-inactiva {
   opacity: 0.45;
   pointer-events: none;
+/* HU-26. Indicadores: tarjetas con un número grande. */
+.indicadores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 16px;
+}
+
+.indicador {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.indicador-destacado {
+  border-left: 4px solid var(--azul-principal);
+}
+
+.indicador-titulo {
+  color: var(--gris-texto);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.indicador-valor {
+  color: var(--azul-oscuro);
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+.indicador-detalle {
+  color: var(--gris-texto);
+  font-size: 12px;
 }

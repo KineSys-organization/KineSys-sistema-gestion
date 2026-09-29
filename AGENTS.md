@@ -3,6 +3,7 @@
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
 Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08). Pagos e indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06, **Agenda** HU-07, **Cancelar turno** HU-10A), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08) e **Indicadores generales** del Gerente (HU-26, vista corta del Incremento 2). Pagos y el resto de los indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -123,6 +124,7 @@ src/
     (main)/turnos/[id]/reprogramar → nuevo día y horario del mismo turno (HU-10C)
     (main)/mi-agenda         → agenda propia del Profesional (HU-12)
     (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13)
+    (main)/indicadores       → indicadores generales del centro (HU-26, solo Gerente)
   proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
 ```
 
@@ -284,14 +286,13 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Botones de acción: `boton-principal` / `boton-secundario` (+ `boton-peligro`) con `boton-inline` = 44px. Fila de acciones al pie: `acciones-pie`.
 - SQL: `supabase/migrations/011_mejoras_pacientes_calendario.sql`. Pruebas: `tests/mejoras-ux.test.mjs`. Detalle en `docs/mejoras-ux.md`.
 
-### HU-28 — Otorgar turno empezando por el paciente
+### HU-26 — Indicadores generales del centro (vista corta, Incremento 2)
 
-- Reemplaza el orden de HU-06 (horario → paciente). Pasos: **1 Paciente → 2 Servicio y profesional → 3 Fecha y horario → 4 Cobertura → 5 Confirmar** (`PASOS_TURNO`, `PasosTurno`).
-- `/turnos/nuevo` sin `paciente` = paso 1 (`fn_buscar_pacientes` + alta con `?volver=`). Con paciente y sin horario → redirige a `/disponibilidad`. Con todo → cobertura y confirmar.
-- `/disponibilidad` = pasos 2 y 3; sin `?paciente` redirige al paso 1 (no se elige hueco "a ciegas"). Muestra el paciente con "Cambiar".
-- Todas las URLs del flujo salen de `src/lib/turnos/flujo.ts` (`urlPasoPaciente`, `urlPasoHorario`, `urlPasoConfirmar`), así ningún link pierde al paciente. Menú, Inicio y Agenda abren el paso 1; `/turnos/[id]` ofrece "Otro turno para este paciente" (base para HU-25).
-- Solo UI y navegación: **sin migración**, no cambian `fn_otorgar_turno`, `fn_consultar_disponibilidad`, estados ni cobertura. Permisos: Gerente y Mesa de Entradas.
-- Pruebas: `tests/hu28-flujo-turno.test.mjs` (`npm test`). Evidencia en `docs/hu-28-otorgar-turno-paciente-primero.md`.
+- Pantalla: `/indicadores?desde&hasta` (por defecto el mes actual; atajos últimos 7 días / este mes / mes anterior). Solo **Gerente** (`exigirGerente`, acción `indicadores.consultar`).
+- RPC: `fn_consultar_indicadores_generales(desde, hasta)` (solo lectura, `fn_exigir_rol(['Gerente'])`, período ≤ 366 días).
+- Turnos cuyo día cae en el período: total y por estado. Pacientes nuevos = `paciente.creado` (hora AR) en el período. Sin datos → todo en 0.
+- **No** incluye ocupación, desglose por profesional/servicio ni pacientes recurrentes: eso es HU-18 (#18, Incremento 3).
+- SQL: `supabase/migrations/013_hu26_indicadores_generales.sql`. Pruebas: `supabase/tests/hu26_indicadores.sql` y `tests/hu26-indicadores.test.mjs` (`npm test`). Detalle en `docs/hu-26-indicadores.md`.
 
 ---
 
