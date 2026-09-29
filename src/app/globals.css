@@ -1282,6 +1282,8 @@ a.badge-horario:hover {
 .paginacion-inactiva {
   opacity: 0.45;
   pointer-events: none;
+}
+
 /* HU-26. Indicadores: tarjetas con un número grande. */
 .indicadores-grid {
   display: grid;
