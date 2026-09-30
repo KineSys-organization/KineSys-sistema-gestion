@@ -2,8 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08). Pagos e indicadores siguen pendientes.
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06, **Agenda** HU-07, **Cancelar turno** HU-10A), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08) e **Indicadores generales** del Gerente (HU-26, vista corta del Incremento 2). Pagos y el resto de los indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08) e **Indicadores generales** del Gerente (HU-26, vista corta del Incremento 2). Pagos y el resto de los indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -107,7 +106,7 @@ src/
   app/
     (auth)/login            → /login
     (auth)/logout/actions
-    (main)/                 → /   (protegido)
+    (main)/                 → /   (protegido; al Profesional le muestra su dashboard, HU-15)
     (main)/servicios
     (main)/profesionales
     (main)/profesionales/nuevo
@@ -285,6 +284,14 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Alta de paciente con `?volver=` (solo `/turnos/nuevo`, `urlVolverTurno` + `urlVolverConPaciente`) → vuelve al turno con el paciente elegido.
 - Botones de acción: `boton-principal` / `boton-secundario` (+ `boton-peligro`) con `boton-inline` = 44px. Fila de acciones al pie: `acciones-pie`.
 - SQL: `supabase/migrations/011_mejoras_pacientes_calendario.sql`. Pruebas: `tests/mejoras-ux.test.mjs`. Detalle en `docs/mejoras-ux.md`.
+
+### HU-15 — Dashboard del profesional
+
+- En `/` (Inicio), solo para el **Profesional** (acción `atencion.dashboard`); Recepción y Gerente no lo ven (usan `/agenda`). Mes y día elegido en la URL: `/?mes=2026-10&dia=2026-10-05`.
+- RPC: `fn_consultar_dashboard_profesional(mes)` (solo lectura, `fn_exigir_rol(['Profesional'])`, profesional = `auth.uid()`, sin parámetro de profesional). Devuelve `dia` (total sin cancelados, atendidos, pendientes = confirmados), `semana` (lunes a domingo de hoy, hora AR: cancelaciones y ausencias) y `mes` (sus turnos de ese mes, todos los estados).
+- Calendario mensual de lunes a domingo (sábado y domingo incluidos), hasta 3 turnos por día (hora + estado en texto) y la lista del día con link a `/mi-agenda/[id]`.
+- Color por proximidad solo en confirmados de hoy o futuros (`proximidad` en `src/lib/dashboard/calendario.ts`): hoy rojo, 1-3 días naranja, 4-7 verde, más de 7 azul; el resto gris.
+- SQL: `supabase/migrations/017_hu15_dashboard_profesional.sql`. Pruebas: `supabase/tests/hu15_dashboard_profesional.sql` y `tests/hu15-dashboard.test.mjs` (`npm test`). Evidencia en `docs/hu-15-dashboard-profesional.md`.
 
 ### HU-26 — Indicadores generales del centro (vista corta, Incremento 2)
 

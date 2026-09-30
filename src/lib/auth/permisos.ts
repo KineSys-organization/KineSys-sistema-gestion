@@ -42,6 +42,7 @@ export const PERMISOS_ACCIONES = {
   "turnos.buscar": RECEPCION, // HU-09: listado con filtros
   "atencion.agenda": SOLO_PROFESIONAL, // HU-12: su agenda y sus turnos (la base filtra por auth.uid())
   "atencion.registrar": SOLO_PROFESIONAL, // HU-13: registrar y editar la atención
+  "atencion.dashboard": SOLO_PROFESIONAL, // HU-15: su dashboard en Inicio (la base filtra por auth.uid())
   "indicadores.consultar": SOLO_GERENTE, // HU-26: indicadores generales del centro
 } satisfies Record<string, readonly Rol[]>;
 
