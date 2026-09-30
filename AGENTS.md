@@ -123,7 +123,7 @@ src/
     (main)/turnos/[id]       → resumen + cancelar (HU-10A) + ausencia (HU-10B)
     (main)/turnos/[id]/reprogramar → nuevo día y horario del mismo turno (HU-10C)
     (main)/mi-agenda         → agenda propia del Profesional (HU-12)
-    (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13)
+    (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13) con orden médica (HU-24A)
     (main)/indicadores       → indicadores generales del centro (HU-26, solo Gerente)
   proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
 ```
@@ -254,6 +254,15 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Helper interno `fn_exigir_turno_propio(uuid)` (revocado a `authenticated`).
 - Efectos en lo existente: `turno_estado_valido` suma `atendido`; un turno atendido sigue ocupando su horario (`turno_sin_superposicion` y `fn_consultar_disponibilidad` miran `confirmado` y `atendido`); `fn_cancelar_turno` rechaza atendidos; `/agenda` y `/turnos/[id]` muestran el estado Atendido.
 - SQL: `supabase/migrations/010_hu12_hu13_atencion.sql`. Pruebas: `supabase/tests/hu12_hu13_atencion.sql` y `tests/hu12-hu13-atencion.test.mjs` (`npm test`). Evidencia en `docs/hu-12-13-atencion.md`.
+
+### HU-24A — Orden médica al atender un turno
+
+- En `/mi-agenda/[id]`, dentro del formulario de la atención (registrar y editar): campo **Orden médica (opcional)** aparte de motivo y observaciones, con contador `x / 2000`. En la atención registrada se muestra en su propia sección y solo si tiene contenido. Solo **Profesional** (mismas acciones `atencion.registrar` / `atencion.agenda`).
+- Columna `atencion.orden_medica` (null = sin orden, ≤ 2000 con `check`). Reutiliza `registrado_en` / `editado_en` y la relación 1:1 con el turno.
+- `fn_registrar_atencion` y `fn_editar_atencion` suman `p_orden_medica text default null` (trim; vacía → `null`; > 2000 → *La orden médica no puede superar los 2000 caracteres*). Se hizo `drop` de las firmas de 3 parámetros: **no dejar dos versiones**.
+- `fn_obtener_turno` la devuelve solo dentro de `atencion` (profesional que atendió). Recepción recibe `atencion: null`.
+- El historial de órdenes del paciente es HU-24B (Incremento 3): leer `atencion` por `id_paciente`.
+- SQL: `supabase/migrations/019_hu24a_orden_medica.sql`. Pruebas: `supabase/tests/hu24a_orden_medica.sql` y `tests/hu24a-orden-medica.test.mjs`. Evidencia en `docs/hu-24a-orden-medica.md`.
 
 ### HU-10B — Marcar ausencia de un turno
 
