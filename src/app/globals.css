@@ -1323,6 +1323,7 @@ a.badge-horario:hover {
 /* Abierto ocupa todo el ancho debajo de la fila de acciones (como cancelar). */
 .acciones-pie .form-repetir {
   flex: 1 1 100%;
+  min-width: 0; /* si no, la tabla ensancha la página en celular (scrollea adentro) */
   margin: 8px 0 0;
 }
 

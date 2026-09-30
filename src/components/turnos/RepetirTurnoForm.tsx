@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState, type FormEvent } from "react";
 import { confirmarRepeticion, previsualizarRepeticion } from "@/lib/turnos/actions";
 import type { EstadoConfirmarRepetir, EstadoPreviaRepetir } from "@/lib/turnos/tipos";
 import { MAXIMO_SEMANAS_REPETIR } from "@/lib/turnos/validar";
@@ -17,9 +17,12 @@ function diaSemana(fecha: string): string {
 }
 
 function fechaCorta(fecha: string): string {
-  return new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeZone: "UTC" }).format(
-    new Date(`${fecha}T00:00:00Z`)
-  );
+  return new Intl.DateTimeFormat("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${fecha}T00:00:00Z`));
 }
 
 // HU-25. Repetir el turno las próximas semanas (mismo día y hora).
@@ -34,8 +37,17 @@ export function RepetirTurnoForm({
   abiertoInicial?: boolean;
 }) {
   const [abierto, setAbierto] = useState(abiertoInicial);
+  const [semanas, setSemanas] = useState(inicialPrevia.semanas);
   const [previa, verFechas, buscando] = useActionState(previsualizarRepeticion, inicialPrevia);
   const [final, confirmar, confirmando] = useActionState(confirmarRepeticion, inicialConfirmar);
+
+  // "Ver fechas" se envía a mano (no con <form action>): React 19 resetea el form al
+  // terminar una action y el input volvía a mostrar el valor inicial.
+  function enviarPrevia(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    const datos = new FormData(evento.currentTarget);
+    startTransition(() => verFechas(datos));
+  }
 
   // Mientras corre cualquiera de los dos pasos no se puede enviar nada (evita el doble envío).
   const ocupado = buscando || confirmando;
@@ -53,6 +65,8 @@ export function RepetirTurnoForm({
   }
 
   const disponibles = previa.fechas?.filter((f) => f.disponible).length ?? 0;
+  // Si cambiaron las semanas después del preview, la tabla ya no corresponde.
+  const previewViejo = previa.fechas !== null && semanas.trim() !== previa.semanas;
   const resultado = final.resultado;
 
   return (
@@ -112,7 +126,7 @@ export function RepetirTurnoForm({
       ) : (
         <>
           {/* ---------- Pasos 1 y 2: semanas + preview ---------- */}
-          <form className="form-semanas" action={verFechas}>
+          <form className="form-semanas" onSubmit={enviarPrevia}>
             <input type="hidden" name="id_turno" value={idTurno} />
             <div className="campo">
               <label htmlFor="semanas">Semanas a repetir (1 a {MAXIMO_SEMANAS_REPETIR})</label>
@@ -123,7 +137,8 @@ export function RepetirTurnoForm({
                 min={1}
                 max={MAXIMO_SEMANAS_REPETIR}
                 step={1}
-                defaultValue={previa.semanas}
+                value={semanas}
+                onChange={(e) => setSemanas(e.target.value)}
                 required
               />
             </div>
@@ -187,9 +202,11 @@ export function RepetirTurnoForm({
                 {/* Las semanas del preview que se está viendo, no las del input. */}
                 <input type="hidden" name="semanas" value={previa.semanas} />
                 <p className="texto-suave">
-                  {disponibles === 0
-                    ? "No hay fechas disponibles para crear."
-                    : "Se crean solo las fechas disponibles. Cada una se vuelve a validar al confirmar."}
+                  {previewViejo
+                    ? "Cambiaste las semanas: tocá «Ver fechas» para actualizar la lista."
+                    : disponibles === 0
+                      ? "No hay fechas disponibles para crear."
+                      : "Se crean solo las fechas disponibles. Cada una se vuelve a validar al confirmar."}
                 </p>
                 {final.error && (
                   <p className="mensaje-error" role="alert">
@@ -200,7 +217,7 @@ export function RepetirTurnoForm({
                   <button
                     className="boton-principal boton-inline"
                     type="submit"
-                    disabled={ocupado || disponibles === 0}
+                    disabled={ocupado || disponibles === 0 || previewViejo}
                   >
                     {confirmando
                       ? "Creando turnos..."
