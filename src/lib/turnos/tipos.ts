@@ -89,3 +89,30 @@ export type EstadoAccionTurno = {
   ok: boolean;
   error: string | null;
 };
+
+// HU-25: una fila del preview (fn_turno_repetir_preview).
+export type FechaRepeticion = {
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
+  disponible: boolean;
+  motivo: string | null; // null si está disponible
+};
+
+// HU-25: lo que devuelve fn_turno_repetir_confirmar.
+export type ResultadoRepeticion = {
+  id_serie: string | null; // null si no se creó ningún turno
+  creados: { id_turno: string; fecha: string }[];
+  omitidos: { fecha: string; motivo: string }[];
+};
+
+export type EstadoPreviaRepetir = {
+  error: string | null;
+  semanas: string; // las semanas del preview que se está mostrando
+  fechas: FechaRepeticion[] | null;
+};
+
+export type EstadoConfirmarRepetir = {
+  error: string | null;
+  resultado: ResultadoRepeticion | null;
+};
