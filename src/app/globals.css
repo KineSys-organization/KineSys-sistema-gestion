@@ -956,27 +956,75 @@ a.badge-horario:hover {
 }
 
 .bloque-impresion {
-  page-break-inside: avoid;
+  page-break-inside: auto;
   background: var(--blanco);
-  border: 1px solid var(--borde);
-  border-radius: 16px;
-  padding: 24px;
   color: var(--azul-oscuro);
 }
 
-.titulo-profesional {
-  margin: 0 0 16px;
-  font-size: 1.4rem;
+.encabezado-impresion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--azul-principal);
+}
+
+.marca-impresion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--azul-principal);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.marca-impresion img {
+  width: 38px;
+  height: 38px;
+}
+
+.encabezado-impresion > p {
+  margin: 0;
+  color: var(--gris-texto);
+  font-size: 0.9rem;
+}
+
+.titulo-horario-impresion {
+  margin: 24px 0;
+  padding-left: 16px;
+  border-left: 4px solid #17a58b;
+}
+
+.etiqueta-impresion {
+  margin: 0 0 6px;
+  color: var(--gris-texto);
+  font-size: 0.75rem;
   font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.titulo-profesional {
+  margin: 0;
+  color: var(--azul-oscuro);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.servicios-impresion,
+.franjas-impresion {
+  margin-top: 24px;
 }
 
 .servicios-impresion h4,
 .franjas-impresion h4 {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
+  color: var(--azul-principal);
+  font-size: 1rem;
 }
 
 .servicios-impresion ul {
-  margin: 0 0 16px;
+  margin: 0;
   padding-left: 20px;
 }
 
@@ -984,28 +1032,55 @@ a.badge-horario:hover {
   box-shadow: none;
 }
 
+.pie-impresion {
+  margin-top: 30px;
+  padding-top: 12px;
+  border-top: 1px solid var(--borde);
+  color: var(--gris-texto);
+  font-size: 0.8rem;
+}
+
 @media print {
-  body {
-    background: var(--blanco);
+  @page {
+    margin: 18mm;
   }
 
-  .no-imprimir,
-  .dashboard-barra,
-  .nav-app,
-  .modulo-cabecera .boton-principal,
-  .modulo-cabecera .boton-secundario,
-  .modulo-cabecera .boton-pill,
-  .bloque,
-  .tarjeta,
-  .tabla-scroll,
-  .acciones-pie,
-  form,
-  .fila-acciones {
-    display: none !important;
+  body {
+    background: var(--blanco);
+    color: #123b5d;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .solo-impresion,
+  .solo-impresion * {
+    visibility: visible !important;
   }
 
   .solo-impresion {
     display: block !important;
+    position: fixed;
+    inset: 0 auto auto 0;
+    width: 100%;
+    background: var(--blanco);
+  }
+
+  .bloque-impresion {
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .tabla-impresion thead {
+    display: table-header-group;
+  }
+
+  .tabla-impresion tr {
+    page-break-inside: avoid;
   }
 
   .modulo {

@@ -29,10 +29,20 @@ export function DescargarHorarioPdfButton({ nombre, apellido, servicios, franjas
       </button>
 
       <section className="solo-impresion bloque-impresion">
-        <h3>Horario de atención</h3>
-        <p className="titulo-profesional">
-          {apellido}, {nombre}
-        </p>
+        <header className="encabezado-impresion">
+          <div className="marca-impresion">
+            <img src="/logo-kinesys.svg" alt="" />
+            <span>KineSys</span>
+          </div>
+          <p>Consultorio de kinesiología</p>
+        </header>
+
+        <div className="titulo-horario-impresion">
+          <p className="etiqueta-impresion">HORARIO PROFESIONAL</p>
+          <h2 className="titulo-profesional">
+            {apellido}, {nombre}
+          </h2>
+        </div>
 
         <div className="servicios-impresion">
           <h4>Servicios asociados</h4>
@@ -72,6 +82,10 @@ export function DescargarHorarioPdfButton({ nombre, apellido, servicios, franjas
             </table>
           )}
         </div>
+
+        <footer className="pie-impresion">
+          Horarios de atención · KineSys
+        </footer>
       </section>
     </>
   );

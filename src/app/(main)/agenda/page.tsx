@@ -113,13 +113,19 @@ export default async function AgendaPage({ searchParams }: Props) {
               <DescargarHorarioPdfButton
                 nombre={profesional.nombre_usuario}
                 apellido={profesional.apellido_usuario}
-                servicios={(profesional.servicios ?? []).map((s) => s.nombre_servicio)}
+                servicios={(profesional.servicios ?? []).map((servicio) => servicio.nombre_servicio)}
                 franjas={horarioProfesional.data.franjas ?? []}
               />
             )}
           </div>
         )}
       </div>
+
+      {horarioProfesional?.error && (
+        <p className="mensaje-error" role="alert">
+          No se pudo cargar el horario para imprimir: {horarioProfesional.error}
+        </p>
+      )}
 
       {errorProfesionales && (
         <p className="mensaje-error" role="alert">
