@@ -59,6 +59,11 @@ export default async function InicioPage({
       texto: "Registrar profesionales, sus servicios y horarios.",
     },
     {
+      href: "/usuarios",
+      titulo: "Personal interno",
+      texto: "Registrar Gerentes y usuarios de Mesa de Entradas.",
+    },
+    {
       href: "/servicios",
       titulo: "Servicios",
       texto: puedeHacer(rol, "servicios.gestionar")

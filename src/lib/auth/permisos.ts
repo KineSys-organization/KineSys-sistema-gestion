@@ -18,6 +18,7 @@ const SOLO_PROFESIONAL: readonly Rol[] = ["Profesional"];
 export const PERMISOS_RUTAS: { prefijo: string; roles: readonly Rol[] }[] = [
   { prefijo: "/servicios", roles: RECEPCION }, // Mesa de Entradas: solo lectura
   { prefijo: "/profesionales", roles: SOLO_GERENTE }, // incluye nuevo, editar y horarios
+  { prefijo: "/usuarios", roles: SOLO_GERENTE }, // HU-29: personal interno
   { prefijo: "/pacientes", roles: RECEPCION },
   { prefijo: "/disponibilidad", roles: RECEPCION },
   { prefijo: "/agenda", roles: RECEPCION },
@@ -32,6 +33,7 @@ export const PERMISOS_ACCIONES = {
   "servicios.ver": RECEPCION,
   "servicios.gestionar": SOLO_GERENTE, // alta, edición y baja
   "profesionales.gestionar": SOLO_GERENTE, // listar, alta, edición, estado
+  "usuarios.gestionar": SOLO_GERENTE, // HU-29: listar y alta de Gerentes / Mesa de Entradas
   "horarios.gestionar": SOLO_GERENTE, // franjas del profesional
   "pacientes.gestionar": RECEPCION, // buscar, alta, edición, obras sociales
   "disponibilidad.consultar": RECEPCION,
