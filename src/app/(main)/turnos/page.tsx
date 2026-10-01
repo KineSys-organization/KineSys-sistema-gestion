@@ -171,7 +171,7 @@ export default async function TurnosPage({ searchParams }: Props) {
                     />
                   </td>
                   <td>
-                    <Link className="boton-pill" href={`/turnos/${turno.id_turno}`}>
+                    <Link className="boton-pill" href={`/turnos/${turno.id_turno}?desde=turnos`}>
                       Ver detalle
                     </Link>
                   </td>

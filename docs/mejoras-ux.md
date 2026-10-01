@@ -65,9 +65,9 @@ Aplicada el 25/09/2026 como `mejoras_pacientes_calendario`. **Solo agrega dos fu
 - Navegador como Mesa de Entradas: menú; Otorgar turno completo hasta el paso 3 (sin confirmar, para no crear datos); "Cambiar horario" conserva lo elegido; resumen del turno con botones alineados; formulario de cancelación (sin confirmar); "Ver agenda del día"; filtros de pacientes combinados, vacío y URL manipulada.
 
 ## Relación con issues abiertas (revisado el 25/09/2026)
-Ninguna issue abierta queda completa ni en conflicto con estos cambios.
+HU-11 se completó después de esta revisión; el resto de las issues mencionadas sigue pendiente.
 - **HU-15 (#15, dashboard del profesional):** el resumen del día en el Inicio del Profesional (turnos de hoy, por atender, próximo) es una **base**; HU-15 le suma atendidos, cancelaciones/ausencias de la semana y los contadores en cero.
-- **HU-11 (#11):** la agenda diaria ya tiene navegación por días; la **vista semanal sigue pendiente**.
+- **HU-11 (#11):** `/agenda` permite alternar entre vista diaria y semanal (lunes a domingo), conservando profesional, fecha y vista en la URL.
 - **HU-09 (#9):** los filtros nuevos son de **pacientes**; filtrar **turnos** sigue pendiente (puede reutilizar el patrón de filtros en la URL).
 - **HU-10B, HU-14, HU-25:** sus acciones (reprogramar, ausente, pago, repetir) entran en la fila `acciones-pie` del resumen del turno. Aviso previo a estos cambios: HU-25 pide hasta 24 semanas y HU-05 limita la disponibilidad a 30 días.
 - **HU-16, HU-20, HU-24, HU-18, HU-23:** tocan las mismas pantallas sin superponerse.

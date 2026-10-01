@@ -13,7 +13,7 @@ import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ reprogramado?: string; nuevo?: string }>;
+  searchParams: Promise<{ reprogramado?: string; nuevo?: string; desde?: string }>;
 };
 
 const TITULO_ESTADO = {
@@ -43,7 +43,7 @@ function formatearMomento(valor: string): string {
 export default async function TurnoPage({ params, searchParams }: Props) {
   const usuario = await exigirRecepcion();
   const { id } = await params;
-  const { reprogramado, nuevo } = await searchParams;
+  const { reprogramado, nuevo, desde } = await searchParams;
   // HU-14: el pago va en su propia consulta (el turno no cambia por cobrarlo).
   const [{ data: turno, error }, { data: detallePago, error: errorPago }] = await Promise.all([
     obtenerTurno(id),
@@ -69,7 +69,19 @@ export default async function TurnoPage({ params, searchParams }: Props) {
           <h2>{TITULO_ESTADO[turno.estado] ?? "Turno"}</h2>
           <p className="texto-suave">Resumen para informarle al paciente.</p>
         </div>
-        <EstadoTurnoBadge estado={turno.estado} />
+        <div className="fila-acciones">
+          <EstadoTurnoBadge estado={turno.estado} />
+          <Link
+            className="boton-secundario boton-inline"
+            href={
+              desde === "agenda"
+                ? `/agenda?profesional=${turno.id_profesional}&fecha=${turno.fecha}`
+                : "/turnos"
+            }
+          >
+            Volver
+          </Link>
+        </div>
       </div>
 
       {/* HU-10C: vuelve acá después de reprogramar. */}
@@ -144,14 +156,14 @@ export default async function TurnoPage({ params, searchParams }: Props) {
             Cobrado <strong>{formatearPesos(detallePago.pago.importe_final)}</strong> ·{" "}
             {etiquetaMedio(detallePago.pago.medio_pago)} ·{" "}
             {formatearMomento(detallePago.pago.registrado_en)}{" "}
-            <Link href={`/turnos/${turno.id_turno}/pago`}>Ver o corregir</Link>
+            <Link href={`/turnos/${turno.id_turno}/pago?volver=turno`}>Ver o corregir</Link>
           </p>
         ) : detallePago?.cobrable ? (
           <p>
             Sin pago registrado.{" "}
             <Link
               className="boton-principal boton-inline"
-              href={`/turnos/${turno.id_turno}/pago`}
+              href={`/turnos/${turno.id_turno}/pago?volver=turno`}
             >
               Registrar pago
             </Link>
