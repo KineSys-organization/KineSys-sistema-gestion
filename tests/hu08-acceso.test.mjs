@@ -86,6 +86,7 @@ test("puedeHacer: cada acción según el rol", () => {
     "turnos.repetir": [true, true, false], // HU-25
     "atencion.agenda": [false, false, true],
     "atencion.registrar": [false, false, true],
+    "atencion.dashboard": [false, false, true],
     "indicadores.consultar": [true, false, false],
   };
   assert.deepEqual(Object.keys(PERMISOS_ACCIONES).sort(), Object.keys(esperado).sort());

@@ -4,11 +4,12 @@ import { obtenerUsuarioGestion } from "@/lib/auth";
 import { MENSAJE_SIN_PERMISO, puedeAcceder, puedeHacer } from "@/lib/auth/permisos";
 import { consultarMiAgenda } from "@/lib/atencion/actions";
 import { hoyArgentina } from "@/lib/atencion/validar";
+import { DashboardProfesional } from "@/components/dashboard/DashboardProfesional";
 
 export default async function InicioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; mes?: string; dia?: string }>;
 }) {
   const usuario = await obtenerUsuarioGestion();
   if (!usuario) {
@@ -16,7 +17,7 @@ export default async function InicioPage({
   }
 
   // HU-08: exigirGerente / exigirRecepcion mandan acá con ?error=sin-permiso.
-  const { error } = await searchParams;
+  const { error, mes, dia } = await searchParams;
   const sinPermiso = error === "sin-permiso";
 
   const rol = usuario.rol_usuario;
@@ -108,6 +109,15 @@ export default async function InicioPage({
             {proximo ? "Atender al próximo" : "Ver mi agenda"}
           </Link>
         </div>
+      )}
+
+      {/* HU-15: dashboard propio del Profesional (Recepción y Gerente usan /agenda). */}
+      {rol === "Profesional" && (
+        <DashboardProfesional
+          hoy={hoyArgentina()}
+          mesPedido={typeof mes === "string" ? mes : ""}
+          diaPedido={typeof dia === "string" ? dia : ""}
+        />
       )}
 
       {tarjetas.length > 0 && (

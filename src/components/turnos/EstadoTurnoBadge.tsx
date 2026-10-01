@@ -28,7 +28,9 @@ export function EstadoTurnoBadge({
     <>
       <span className={CLASE[estado] ?? "badge-inactivo"}>{ETIQUETA[estado] ?? estado}</span>
       {estado === "cancelado" && motivoCancelacion && (
-        <span className="motivo-cancelacion">{etiquetaMotivo(motivoCancelacion)}</span>
+        <span className="motivo-cancelacion">
+          Motivo: {etiquetaMotivo(motivoCancelacion)}
+        </span>
       )}
     </>
   );
