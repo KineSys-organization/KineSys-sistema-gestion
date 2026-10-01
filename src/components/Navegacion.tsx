@@ -16,6 +16,7 @@ export const LINKS_MENU = [
   { href: "/pagos", texto: "Pagos" }, // HU-14: listado de cobros
   { href: "/mi-agenda", texto: "Mi agenda" }, // HU-12: solo Profesional
   { href: "/pacientes", texto: "Pacientes" },
+  { href: "/obras-sociales", texto: "Obras sociales" }, // HU-31: solo Gerente
   { href: "/profesionales", texto: "Profesionales" },
   { href: "/usuarios", texto: "Personal interno" }, // HU-29: Gerente y Mesa de Entradas
   { href: "/servicios", texto: "Servicios" },

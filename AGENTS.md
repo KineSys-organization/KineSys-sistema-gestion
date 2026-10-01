@@ -3,6 +3,7 @@
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
 Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Personal interno** HU-29/HU-30, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08). Estados de pago, reembolsos y el resto de los indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Obras sociales** HU-31, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08). Estados de pago, reembolsos y el resto de los indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -108,6 +109,7 @@ src/
     (auth)/logout/actions
     (main)/                 → /   (protegido; al Profesional le muestra su dashboard, HU-15)
     (main)/servicios
+    (main)/obras-sociales       → catálogo de obras sociales (HU-31, solo Gerente)
     (main)/profesionales
     (main)/profesionales/nuevo
     (main)/profesionales/[id]/editar
@@ -183,7 +185,6 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Web de pacientes (login del paciente)
 - Historia clínica, estados de pago y pagos parciales (HU-17), billetera virtual (HU-21), reembolsos (HU-22), facturar a la obra social, resto de los indicadores (HU-18)
 - Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
-- Administración del catálogo de obras sociales desde la app
 - RLS cerrado en tablas históricas (las nuevas de HU-04 van con RLS + revoke; el acceso es solo por `fn_*`)
 
 ### HU-01 / HU-02A / HU-02B / HU-03
@@ -211,6 +212,14 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Obra social opcional; sin ninguna = particular. Varias obras con nº de afiliado; misma obra dos veces → rechazo.
 - DNI duplicado → error que sugiere el paciente existente.
 - SQL: `supabase/migrations/003_hu04_pacientes.sql`.
+
+### HU-31 — Catálogo de obras sociales
+
+- Pantalla `/obras-sociales`, solo Gerente (`exigirGerente`); permite registrar y listar nombre y estado.
+- Alta con nombre recortado de espacios y longitud de 2 a 80 caracteres. La base rechaza duplicados ignorando mayúsculas y espacios periféricos.
+- RPCs: `fn_registrar_obra_social` y `fn_listar_obras_sociales_gestion`, ambas con `fn_exigir_rol(['Gerente'])`.
+- `fn_listar_obras_sociales` sigue siendo el catálogo activo que usa Recepción en Pacientes; Particular continúa sin fila.
+- Edición y activación/desactivación quedan para HU-32. SQL: `supabase/migrations/021_hu31_catalogo_obras_sociales.sql`.
 
 ### HU-05 — Disponibilidad
 

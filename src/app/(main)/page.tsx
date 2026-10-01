@@ -54,6 +54,11 @@ export default async function InicioPage({
       texto: "Buscar y filtrar por obra social o edad, registrar y editar.",
     },
     {
+      href: "/obras-sociales",
+      titulo: "Obras sociales",
+      texto: "Administrar las obras sociales disponibles para los pacientes.",
+    },
+    {
       href: "/profesionales",
       titulo: "Profesionales",
       texto: "Registrar profesionales, sus servicios y horarios.",
