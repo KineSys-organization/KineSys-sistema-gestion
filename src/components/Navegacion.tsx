@@ -13,6 +13,7 @@ export const LINKS_MENU = [
   { href: "/turnos/nuevo", texto: "Otorgar turno" },
   { href: "/agenda", texto: "Agenda" },
   { href: "/turnos", texto: "Turnos" }, // HU-09: buscar y filtrar
+  { href: "/pagos", texto: "Pagos" }, // HU-14: listado de cobros
   { href: "/mi-agenda", texto: "Mi agenda" }, // HU-12: solo Profesional
   { href: "/pacientes", texto: "Pacientes" },
   { href: "/profesionales", texto: "Profesionales" },

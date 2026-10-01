@@ -44,6 +44,11 @@ export default async function InicioPage({
       texto: "Buscá un turno por paciente, profesional, fechas o estado.",
     },
     {
+      href: "/pagos",
+      titulo: "Pagos",
+      texto: "Cobros registrados por paciente y período. Se cobra desde el detalle del turno.",
+    },
+    {
       href: "/pacientes",
       titulo: "Pacientes",
       texto: "Buscar y filtrar por obra social o edad, registrar y editar.",
