@@ -4,6 +4,8 @@ import { AusenciaTurnoForm } from "@/components/turnos/AusenciaTurnoForm";
 import { CancelarTurnoForm } from "@/components/turnos/CancelarTurnoForm";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 import { obtenerTurno } from "@/lib/turnos/actions";
+import { obtenerPagoTurno } from "@/lib/pagos/actions";
+import { etiquetaMedio, formatearPesos } from "@/lib/pagos/validar";
 import { urlPasoHorario, urlPasoPaciente } from "@/lib/turnos/flujo";
 import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
 
@@ -39,7 +41,11 @@ export default async function TurnoPage({ params, searchParams }: Props) {
   await exigirRecepcion();
   const { id } = await params;
   const { reprogramado } = await searchParams;
-  const { data: turno, error } = await obtenerTurno(id);
+  // HU-14: el pago va en su propia consulta (el turno no cambia por cobrarlo).
+  const [{ data: turno, error }, { data: detallePago, error: errorPago }] = await Promise.all([
+    obtenerTurno(id),
+    obtenerPagoTurno(id),
+  ]);
 
   if (error || !turno) {
     return (
@@ -113,6 +119,36 @@ export default async function TurnoPage({ params, searchParams }: Props) {
             </>
           )}
         </dl>
+      </div>
+
+      {/* HU-14: pago del turno. Cobrar es posterior a reservar; el pago se conserva
+          aunque después se cancele, se marque ausente o se reprograme. */}
+      <div className="tarjeta bloque-pago">
+        <h3>Pago</h3>
+        {errorPago ? (
+          <p className="mensaje-error" role="alert">
+            {errorPago}
+          </p>
+        ) : detallePago?.pago ? (
+          <p>
+            Cobrado <strong>{formatearPesos(detallePago.pago.importe_final)}</strong> ·{" "}
+            {etiquetaMedio(detallePago.pago.medio_pago)} ·{" "}
+            {formatearMomento(detallePago.pago.registrado_en)}{" "}
+            <Link href={`/turnos/${turno.id_turno}/pago`}>Ver o corregir</Link>
+          </p>
+        ) : detallePago?.cobrable ? (
+          <p>
+            Sin pago registrado.{" "}
+            <Link
+              className="boton-principal boton-inline"
+              href={`/turnos/${turno.id_turno}/pago`}
+            >
+              Registrar pago
+            </Link>
+          </p>
+        ) : (
+          <p className="texto-suave">Sin pago registrado.</p>
+        )}
       </div>
 
       {/* Acciones: principal y secundarias a la izquierda, cancelar (riesgo) aparte a la

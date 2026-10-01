@@ -1317,3 +1317,28 @@ a.badge-horario:hover {
   color: var(--gris-texto);
   font-size: 12px;
 }
+
+/* HU-14: pagos. Importe final destacado (se ve antes de guardar) y bloque en el detalle del turno. */
+.importe-final {
+  margin: 4px 0 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #eef7fc;
+  color: var(--azul-oscuro);
+}
+
+.importe-final strong {
+  font-size: 1.2rem;
+}
+
+.bloque-pago {
+  margin-top: 16px;
+}
+
+.bloque-pago p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}

@@ -2,8 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08). Pagos e indicadores siguen pendientes.
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06, **Agenda** HU-07, **Cancelar turno** HU-10A), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08) e **Indicadores generales** del Gerente (HU-26, vista corta del Incremento 2). Pagos y el resto de los indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Pagos** HU-14), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08) e **Indicadores generales** del Gerente (HU-26, vista corta del Incremento 2). Estados de pago, reembolsos y el resto de los indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -125,6 +124,8 @@ src/
     (main)/mi-agenda         → agenda propia del Profesional (HU-12)
     (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13)
     (main)/indicadores       → indicadores generales del centro (HU-26, solo Gerente)
+    (main)/pagos             → listado de pagos con filtros (HU-14)
+    (main)/turnos/[id]/pago  → registrar, consultar y corregir el pago del turno (HU-14)
   proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
 ```
 
@@ -177,7 +178,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 ## Fuera de alcance (todavía)
 
 - Web de pacientes (login del paciente)
-- Historia clínica, pagos, indicadores
+- Historia clínica, estados de pago y pagos parciales (HU-17), billetera virtual (HU-21), reembolsos (HU-22), facturar a la obra social, resto de los indicadores (HU-18)
 - Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
 - Administración del catálogo de obras sociales desde la app
 - RLS cerrado en tablas históricas (las nuevas de HU-04 van con RLS + revoke; el acceso es solo por `fn_*`)
@@ -230,7 +231,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 
 ### HU-08 — Autenticación y acceso interno
 
-- Matriz: Inicio todos; `/servicios` Gerente + Mesa de Entradas (**solo lectura** para Mesa); `/profesionales/*` solo Gerente; pacientes, disponibilidad, agenda y turnos (incluye `/turnos` y `/turnos/[id]/reprogramar`) Gerente + Mesa de Entradas; `/mi-agenda/*` solo Profesional (HU-12/13, `exigirProfesional`).
+- Matriz: Inicio todos; `/servicios` Gerente + Mesa de Entradas (**solo lectura** para Mesa); `/profesionales/*` solo Gerente; pacientes, disponibilidad, agenda, turnos (incluye `/turnos` y `/turnos/[id]/reprogramar`) y pagos (`/pagos`, `/turnos/[id]/pago`, HU-14) Gerente + Mesa de Entradas; `/mi-agenda/*` solo Profesional (HU-12/13, `exigirProfesional`).
 - Defensa en 3 capas: página (`exigirGerente` / `exigirRecepcion`, sin permiso → `/?error=sin-permiso` con aviso en Inicio), server action (`exigirAccion`) y RPC (`fn_*` valida rol con usuario activo).
 - `fn_exigir_rol(text[])` (interna, revocada a `authenticated`): exige usuario activo con uno de los roles; un `NULL` siempre se rechaza. Reemplaza a `rol_actual()` en las funciones de servicios y `fn_listar_profesionales`. Mensaje: *No tenés permisos para realizar esta acción*.
 - Menú y tarjetas de Inicio se filtran con `puedeAcceder` (solo UX). El header muestra "Nombre Apellido · Rol".
@@ -285,6 +286,17 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Alta de paciente con `?volver=` (solo `/turnos/nuevo`, `urlVolverTurno` + `urlVolverConPaciente`) → vuelve al turno con el paciente elegido.
 - Botones de acción: `boton-principal` / `boton-secundario` (+ `boton-peligro`) con `boton-inline` = 44px. Fila de acciones al pie: `acciones-pie`.
 - SQL: `supabase/migrations/011_mejoras_pacientes_calendario.sql`. Pruebas: `tests/mejoras-ux.test.mjs`. Detalle en `docs/mejoras-ux.md`.
+
+### HU-14 — Registrar y consultar pagos
+
+- Pantallas: `/turnos/[id]/pago` (registrar, ver y corregir; `?corregir=1`) y `/pagos` (listado). El detalle del turno muestra el bloque "Pago". Solo **Gerente** y **Mesa de Entradas** (acciones `pagos.registrar`, `pagos.consultar`, `pagos.corregir`).
+- Tablas `pago` (una por turno, `unique(id_turno)`; `importe_base`, `descuento`, `importe_final = base - descuento > 0`, `medio_pago` en `efectivo|transferencia|debito|credito`, `registrado_en/por`, `corregido_en`) y `pago_correccion` (valores anteriores y nuevos, motivo 1..200, usuario y fecha). RLS y sin grants.
+- RPCs: `fn_obtener_pago(turno)` (turno + precio actual del servicio como sugerencia + `cobrable` + pago + historial), `fn_registrar_pago(turno, base, descuento, medio)`, `fn_corregir_pago(turno, base, descuento, medio, motivo)` y `fn_listar_pagos(texto, desde, hasta, pagina)`. Rol con `fn_exigir_rol`. Validación común en `fn_validar_importes_pago` (interna).
+- Se cobran turnos `confirmado` o `atendido`. Registrar bloquea el turno (`for update`): un doble envío no duplica (*Este turno ya tiene un pago registrado*). Descuento manual solo si el turno tiene obra social.
+- Cancelar, marcar ausente o reprogramar **no** tocan el pago (está en otra tabla, atado al mismo turno): se conserva sin devolución automática. No se modificó ninguna función existente.
+- Listado: paciente (como HU-09) y período por **fecha del pago** (hora de Argentina), del más nuevo al más viejo, de a 10.
+- Front: importes en centavos (`src/lib/pagos/validar.ts`), coma o punto decimal, sin separador de miles; final en vivo en `PagoForm`.
+- SQL: `supabase/migrations/017_hu14_pagos.sql`. Pruebas: `supabase/tests/hu14_pagos.sql` y `tests/hu14-pagos.test.mjs` (`npm test`). Evidencia en `docs/hu-14-pagos.md`.
 
 ### HU-26 — Indicadores generales del centro (vista corta, Incremento 2)
 
