@@ -56,6 +56,7 @@ function ShellGerente({
   children: React.ReactNode;
 }) {
   const [abierto, setAbierto] = useState(true);
+  const [montado, setMontado] = useState(false);
   const ruta = usePathname();
   const primerRender = useRef(true);
 
@@ -64,6 +65,7 @@ function ShellGerente({
     if (guardado === "cerrado") setAbierto(false);
     else if (guardado === "abierto") setAbierto(true);
     else setAbierto(window.matchMedia("(min-width: 900px)").matches);
+    setMontado(true);
   }, []);
 
   useEffect(() => {
@@ -102,7 +104,7 @@ function ShellGerente({
       </header>
 
       <div className="shell-gerente-cuerpo">
-        {abierto && (
+        {montado && abierto && (
           <button
             type="button"
             className="menu-fondo"
