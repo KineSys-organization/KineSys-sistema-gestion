@@ -140,3 +140,27 @@ export function urlReprogramar(
   const query = params.toString();
   return `/turnos/${idTurno}/reprogramar${query ? `?${query}` : ""}`;
 }
+
+// HU-25. Repetir un turno semanalmente: mismo día de la semana y misma hora.
+// Las reglas (turno confirmado con paciente, franjas, ocupación) las valida la base.
+export const MAXIMO_SEMANAS_REPETIR = 24;
+
+export type CamposRepetir = {
+  idTurno: string;
+  semanas: string;
+};
+
+export function validarRepetir(input: CamposRepetir): string | null {
+  if (!UUID_OK.test(input.idTurno.trim())) return "Turno inválido";
+
+  const semanas = input.semanas.trim();
+  if (!semanas) return "Indicá cuántas semanas repetir";
+  if (!/^\d+$/.test(semanas)) return "La cantidad de semanas tiene que ser un número entero";
+
+  const numero = Number(semanas);
+  if (numero < 1 || numero > MAXIMO_SEMANAS_REPETIR) {
+    return "Podés repetir el turno entre 1 y 24 semanas";
+  }
+
+  return null;
+}

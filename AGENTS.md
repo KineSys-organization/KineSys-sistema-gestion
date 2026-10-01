@@ -2,7 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Pagos** HU-14), módulo del Profesional (**Mi agenda** HU-12 y **Registrar atención** HU-13), con control de acceso por rol (HU-08) e **Indicadores generales** del Gerente (HU-26, vista corta del Incremento 2). Estados de pago, reembolsos y el resto de los indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08). Estados de pago, reembolsos y el resto de los indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -106,7 +106,7 @@ src/
   app/
     (auth)/login            → /login
     (auth)/logout/actions
-    (main)/                 → /   (protegido)
+    (main)/                 → /   (protegido; al Profesional le muestra su dashboard, HU-15)
     (main)/servicios
     (main)/profesionales
     (main)/profesionales/nuevo
@@ -119,10 +119,10 @@ src/
     (main)/agenda
     (main)/turnos             → listado con filtros y paginación (HU-09)
     (main)/turnos/nuevo       → "Otorgar turno" paso 1 (paciente) y pasos 4-5 (cobertura y confirmar)
-    (main)/turnos/[id]       → resumen + cancelar (HU-10A) + ausencia (HU-10B)
+    (main)/turnos/[id]       → resumen + cancelar (HU-10A) + repetir (HU-25) + ausencia (HU-10B) + pago (HU-14)
     (main)/turnos/[id]/reprogramar → nuevo día y horario del mismo turno (HU-10C)
     (main)/mi-agenda         → agenda propia del Profesional (HU-12)
-    (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13)
+    (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13) con orden médica (HU-24A)
     (main)/indicadores       → indicadores generales del centro (HU-26, solo Gerente)
     (main)/pagos             → listado de pagos con filtros (HU-14)
     (main)/turnos/[id]/pago  → registrar, consultar y corregir el pago del turno (HU-14)
@@ -256,6 +256,15 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Efectos en lo existente: `turno_estado_valido` suma `atendido`; un turno atendido sigue ocupando su horario (`turno_sin_superposicion` y `fn_consultar_disponibilidad` miran `confirmado` y `atendido`); `fn_cancelar_turno` rechaza atendidos; `/agenda` y `/turnos/[id]` muestran el estado Atendido.
 - SQL: `supabase/migrations/010_hu12_hu13_atencion.sql`. Pruebas: `supabase/tests/hu12_hu13_atencion.sql` y `tests/hu12-hu13-atencion.test.mjs` (`npm test`). Evidencia en `docs/hu-12-13-atencion.md`.
 
+### HU-24A — Orden médica al atender un turno
+
+- En `/mi-agenda/[id]`, dentro del formulario de la atención (registrar y editar): campo **Orden médica (opcional)** aparte de motivo y observaciones, con contador `x / 2000`. En la atención registrada se muestra en su propia sección y solo si tiene contenido. Solo **Profesional** (mismas acciones `atencion.registrar` / `atencion.agenda`).
+- Columna `atencion.orden_medica` (null = sin orden, ≤ 2000 con `check`). Reutiliza `registrado_en` / `editado_en` y la relación 1:1 con el turno.
+- `fn_registrar_atencion` y `fn_editar_atencion` suman `p_orden_medica text default null` (trim; vacía → `null`; > 2000 → *La orden médica no puede superar los 2000 caracteres*). Se hizo `drop` de las firmas de 3 parámetros: **no dejar dos versiones**.
+- `fn_obtener_turno` la devuelve solo dentro de `atencion` (profesional que atendió). Recepción recibe `atencion: null`.
+- El historial de órdenes del paciente es HU-24B (Incremento 3): leer `atencion` por `id_paciente`.
+- SQL: `supabase/migrations/019_hu24a_orden_medica.sql`. Pruebas: `supabase/tests/hu24a_orden_medica.sql` y `tests/hu24a-orden-medica.test.mjs`. Evidencia en `docs/hu-24a-orden-medica.md`.
+
 ### HU-10B — Marcar ausencia de un turno
 
 - Desde `/turnos/[id]`: botón "Marcar ausente" si `marcable_ausente` (confirmado, sin fila en `atencion` y con la **hora de fin** pasada, hora de Argentina) y "Corregir ausencia" si `ausencia_corregible`. Siempre con confirmación, sin motivo. Solo **Gerente** y **Mesa de Entradas** (acción `turnos.ausente`).
@@ -277,6 +286,16 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Filtros en la URL (`leerFiltrosTurnos` / `urlTurnos` en `src/lib/turnos/busqueda.ts`). Sin `desde`/`hasta` en la URL = hoy; vacíos = sin límite ("Limpiar filtros"). `RangoFechas` (cliente) impide Hasta < Desde.
 - SQL: `supabase/migrations/016_hu09_buscar_turnos.sql`. Pruebas: `supabase/tests/hu09_buscar_turnos.sql` y `tests/hu09-buscar-turnos.test.mjs`. Evidencia en `docs/hu-09-buscar-turnos.md`.
 
+### HU-25 — Repetir un turno en las próximas semanas
+
+- Desde `/turnos/[id]` (botón "Repetir semanalmente" si el turno está `confirmado`) y justo después de otorgar (`otorgarTurno` redirige a `/turnos/[id]?nuevo=1`, que abre el formulario). Solo **Gerente** y **Mesa de Entradas** (acción `turnos.repetir`).
+- Flujo: semanas (1 a 24) → **Ver fechas** (`fn_turno_repetir_preview`, no escribe) → **Confirmar** (`fn_turno_repetir_confirmar`) → "Se crearon X turnos" + las omitidas con su motivo.
+- Mismo día de la semana y hora, mismo paciente, profesional, servicio y cobertura. **No es todo-o-nada**: crea solo las fechas libres y cada una se revalida al confirmar. Motivos: *Horario ocupado*, *Fuera de la franja del profesional*, *Profesional inactivo*, mensaje de HU-05 si el servicio ya no está asociado.
+- Serie: tabla `serie_turno` (RLS cerrada) + `turno.id_serie` (el original también). Se crea con el primer turno nuevo; si el turno ya tenía serie, se suma a esa. Cada turno es independiente para cancelar / ausente / reprogramar.
+- Regla única: el cuerpo de la disponibilidad está en `fn_horarios_del_dia` (interna, sin rol ni ventana; suma `en_franja`). `fn_consultar_disponibilidad` es el envoltorio con rol + fecha pasada + **30 días** y responde igual que antes. La serie **no** usa la ventana de 30 días (decisión del equipo): el resto de las reglas son las de HU-05/HU-06.
+- Lock: el mismo `pg_advisory_xact_lock(profesional + día)` de otorgar, para el día original y todas las fechas nuevas, tomados juntos en orden por hash (como reprogramar). `EXCLUDE` como última defensa: omite la fecha, no aborta la serie.
+- SQL: `supabase/migrations/018_hu25_repetir_turno.sql`. Pruebas: `supabase/tests/hu25_repetir_turno.sql` y `tests/hu25-repetir-turno.test.mjs`. Evidencia en `docs/hu-25-repetir-turno.md`.
+
 ### Mejoras de UX/UI (menú, otorgar turno, calendario, filtros)
 
 - Menú: cliente (`usePathname`) para marcar la sección activa. "Otorgar turno" apunta a `/turnos/nuevo` (paso 1, HU-28).
@@ -297,6 +316,14 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Listado: paciente (como HU-09) y período por **fecha del pago** (hora de Argentina), del más nuevo al más viejo, de a 10.
 - Front: importes en centavos (`src/lib/pagos/validar.ts`), coma o punto decimal, sin separador de miles; final en vivo en `PagoForm`.
 - SQL: `supabase/migrations/017_hu14_pagos.sql`. Pruebas: `supabase/tests/hu14_pagos.sql` y `tests/hu14-pagos.test.mjs` (`npm test`). Evidencia en `docs/hu-14-pagos.md`.
+
+### HU-15 — Dashboard del profesional
+
+- En `/` (Inicio), solo para el **Profesional** (acción `atencion.dashboard`); Recepción y Gerente no lo ven (usan `/agenda`). Mes y día elegido en la URL: `/?mes=2026-10&dia=2026-10-05`.
+- RPC: `fn_consultar_dashboard_profesional(mes)` (solo lectura, `fn_exigir_rol(['Profesional'])`, profesional = `auth.uid()`, sin parámetro de profesional). Devuelve `dia` (total sin cancelados, atendidos, pendientes = confirmados), `semana` (lunes a domingo de hoy, hora AR: cancelaciones y ausencias) y `mes` (sus turnos de ese mes, todos los estados).
+- Calendario mensual de lunes a domingo (sábado y domingo incluidos), hasta 3 turnos por día (hora + estado en texto) y la lista del día con link a `/mi-agenda/[id]`.
+- Color por proximidad solo en confirmados de hoy o futuros (`proximidad` en `src/lib/dashboard/calendario.ts`): hoy rojo, 1-3 días naranja, 4-7 verde, más de 7 azul; el resto gris.
+- SQL: `supabase/migrations/017_hu15_dashboard_profesional.sql`. Pruebas: `supabase/tests/hu15_dashboard_profesional.sql` y `tests/hu15-dashboard.test.mjs` (`npm test`). Evidencia en `docs/hu-15-dashboard-profesional.md`.
 
 ### HU-26 — Indicadores generales del centro (vista corta, Incremento 2)
 

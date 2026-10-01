@@ -156,6 +156,13 @@ export default async function MiTurnoPage({ params, searchParams }: Props) {
               </>
             )}
           </dl>
+          {/* HU-24A: la orden médica en su propia sección, solo si se cargó. */}
+          {turno.atencion.orden_medica && (
+            <div className="bloque-orden-medica">
+              <h4>Orden médica</h4>
+              <p className="texto-observaciones">{turno.atencion.orden_medica}</p>
+            </div>
+          )}
           <AtencionForm
             // key: si cambia la atención guardada, el formulario arranca con los datos nuevos.
             key={turno.atencion.editado_en ?? turno.atencion.registrado_en}
@@ -163,6 +170,7 @@ export default async function MiTurnoPage({ params, searchParams }: Props) {
             modo="editar"
             observaciones={turno.atencion.observaciones}
             motivo={turno.atencion.motivo_consulta}
+            ordenMedica={turno.atencion.orden_medica}
           />
         </div>
       )}

@@ -879,6 +879,33 @@ a.badge-horario:hover {
   margin: 16px 0;
 }
 
+/* HU-24A: contador "x / 2000" debajo de la orden médica. */
+.contador-caracteres {
+  display: block;
+  margin-top: 4px;
+  text-align: right;
+  font-size: 0.85rem;
+  color: var(--gris-texto);
+}
+
+/* HU-24A: la orden médica registrada, separada de la lista de la atención. */
+.bloque-orden-medica {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-left: 4px solid var(--celeste);
+  background: var(--fondo);
+  border-radius: 6px;
+}
+
+.bloque-orden-medica h4 {
+  margin: 0 0 6px;
+  color: var(--azul-oscuro);
+}
+
+.bloque-orden-medica p {
+  margin: 0;
+}
+
 .aviso-atencion {
   margin: 16px 0;
 }
@@ -1341,4 +1368,160 @@ a.badge-horario:hover {
   align-items: center;
   gap: 8px;
   margin: 0;
+}
+
+/* ===== HU-25: repetir un turno semanalmente ===== */
+
+/* Abierto ocupa todo el ancho debajo de la fila de acciones (como cancelar). */
+.acciones-pie .form-repetir {
+  flex: 1 1 100%;
+  min-width: 0; /* si no, la tabla ensancha la página en celular (scrollea adentro) */
+  margin: 8px 0 0;
+}
+
+.form-repetir .form-semanas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.form-repetir .form-semanas .campo {
+  margin: 0;
+  max-width: 260px;
+}
+
+.form-repetir .tabla-repetir {
+  margin-bottom: 12px;
+  box-shadow: none;
+  border: 1px solid var(--borde);
+}
+
+.form-repetir .mensaje-error,
+.form-repetir .mensaje-ok {
+  margin-bottom: 12px;
+}
+
+.lista-repetir {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.lista-repetir li::first-letter {
+  text-transform: uppercase;
+}
+
+/* HU-15: dashboard del Profesional en Inicio. */
+.dashboard-contadores {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.mes-titulo::first-letter {
+  text-transform: uppercase;
+}
+
+.calendario-mes td {
+  height: 96px;
+}
+
+.dia-mes {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  height: 100%;
+  padding: 6px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: var(--blanco);
+  color: var(--azul-oscuro);
+  text-decoration: none;
+  overflow: hidden;
+}
+
+.dia-mes:hover {
+  border-color: var(--celeste);
+}
+
+.dia-mes:focus-visible {
+  outline: 2px solid var(--azul-principal);
+  outline-offset: 2px;
+}
+
+.dia-mes-con-turnos {
+  background: #f1f7fb;
+}
+
+.dia-mes-hoy .dia-numero {
+  color: var(--azul-principal);
+  text-decoration: underline;
+}
+
+.dia-mes-elegido,
+.dia-mes-elegido:hover {
+  border: 2px solid var(--azul-principal);
+}
+
+/* Cada turno del día: hora + estado en texto; el color de la izquierda es la proximidad. */
+.turno-chip {
+  display: block;
+  padding: 1px 6px;
+  border-style: solid;
+  border-width: 0 0 0 4px;
+  border-radius: 4px;
+  background: #f7fafc;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.turno-chip-estado {
+  color: var(--gris-texto);
+}
+
+.turno-chip-mas {
+  font-size: 11px;
+  color: var(--gris-texto);
+}
+
+.prox-hoy { border-color: #d64545; background-color: #fdecec; }
+.prox-pronto { border-color: #e8871e; background-color: #fdf1e3; }
+.prox-semana { border-color: #1b7a45; background-color: #e5f7ec; }
+.prox-lejos { border-color: #0066a1; background-color: #e6f1f8; }
+.prox-gris { border-color: #9aa5ad; background-color: #f0f2f4; }
+
+.referencias-proximidad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--gris-texto);
+  font-size: 13px;
+}
+
+.referencias-proximidad li {
+  display: flex;
+  align-items: center;
+}
+
+.referencia-color {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border-style: solid;
+  border-width: 0 0 0 12px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.proximidad-texto {
+  display: block;
+  font-size: 12px;
 }

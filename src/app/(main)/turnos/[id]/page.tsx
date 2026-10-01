@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { exigirRecepcion } from "@/lib/auth";
+import { puedeHacer } from "@/lib/auth/permisos";
 import { AusenciaTurnoForm } from "@/components/turnos/AusenciaTurnoForm";
 import { CancelarTurnoForm } from "@/components/turnos/CancelarTurnoForm";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
+import { RepetirTurnoForm } from "@/components/turnos/RepetirTurnoForm";
 import { obtenerTurno } from "@/lib/turnos/actions";
 import { obtenerPagoTurno } from "@/lib/pagos/actions";
 import { etiquetaMedio, formatearPesos } from "@/lib/pagos/validar";
@@ -11,7 +13,7 @@ import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ reprogramado?: string }>;
+  searchParams: Promise<{ reprogramado?: string; nuevo?: string }>;
 };
 
 const TITULO_ESTADO = {
@@ -36,11 +38,12 @@ function formatearMomento(valor: string): string {
 // recargarla no vuelve a confirmar el turno.
 // HU-10A: desde acá se cancela, y si está cancelado se muestra el motivo.
 // HU-10B: marcar ausencia (ya terminó) o corregirla. HU-10C: reprogramar (no empezó).
+// HU-25: repetir un turno confirmado las próximas semanas (también justo después de otorgarlo).
 // Qué botón aparece lo decide la base (cancelable, marcable_ausente, ...), no el navegador.
 export default async function TurnoPage({ params, searchParams }: Props) {
-  await exigirRecepcion();
+  const usuario = await exigirRecepcion();
   const { id } = await params;
-  const { reprogramado } = await searchParams;
+  const { reprogramado, nuevo } = await searchParams;
   // HU-14: el pago va en su propia consulta (el turno no cambia por cobrarlo).
   const [{ data: turno, error }, { data: detallePago, error: errorPago }] = await Promise.all([
     obtenerTurno(id),
@@ -73,6 +76,13 @@ export default async function TurnoPage({ params, searchParams }: Props) {
       {reprogramado && turno.estado === "confirmado" && (
         <p className="mensaje-ok" role="status">
           Turno reprogramado. El horario anterior quedó libre.
+        </p>
+      )}
+
+      {/* HU-25: recién otorgado (viene de otorgarTurno) → se ofrece repetirlo. */}
+      {nuevo && turno.estado === "confirmado" && (
+        <p className="mensaje-ok" role="status">
+          Turno otorgado. Si el paciente viene todas las semanas, podés repetirlo abajo.
         </p>
       )}
 
@@ -182,6 +192,10 @@ export default async function TurnoPage({ params, searchParams }: Props) {
         >
           Ver agenda del día
         </Link>
+        {/* HU-25: solo desde un turno confirmado (la base lo vuelve a validar). */}
+        {turno.estado === "confirmado" && puedeHacer(usuario.rol_usuario, "turnos.repetir") && (
+          <RepetirTurnoForm idTurno={turno.id_turno} abiertoInicial={Boolean(nuevo)} />
+        )}
         {turno.marcable_ausente && (
           <AusenciaTurnoForm idTurno={turno.id_turno} modo="marcar" />
         )}

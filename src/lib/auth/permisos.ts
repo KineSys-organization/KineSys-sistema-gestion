@@ -41,8 +41,10 @@ export const PERMISOS_ACCIONES = {
   "turnos.ausente": RECEPCION, // HU-10B: marcar y corregir ausencia
   "turnos.reprogramar": RECEPCION, // HU-10C
   "turnos.buscar": RECEPCION, // HU-09: listado con filtros
+  "turnos.repetir": RECEPCION, // HU-25: repetir un turno las próximas semanas
   "atencion.agenda": SOLO_PROFESIONAL, // HU-12: su agenda y sus turnos (la base filtra por auth.uid())
   "atencion.registrar": SOLO_PROFESIONAL, // HU-13: registrar y editar la atención
+  "atencion.dashboard": SOLO_PROFESIONAL, // HU-15: su dashboard en Inicio (la base filtra por auth.uid())
   "indicadores.consultar": SOLO_GERENTE, // HU-26: indicadores generales del centro
   "pagos.registrar": RECEPCION, // HU-14: cobrar un turno
   "pagos.consultar": RECEPCION, // HU-14: ver el pago de un turno y el listado
