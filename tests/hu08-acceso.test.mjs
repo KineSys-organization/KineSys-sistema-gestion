@@ -14,6 +14,7 @@ import {
 const MATRIZ = {
   "/": [true, true, true],
   "/servicios": [true, true, false],
+  "/obras-sociales": [true, false, false], // HU-31: catálogo, solo Gerente
   "/profesionales": [true, false, false],
   "/profesionales/nuevo": [true, false, false],
   "/profesionales/abc/editar": [true, false, false],
@@ -77,6 +78,7 @@ test("puedeHacer: cada acción según el rol", () => {
   const esperado = {
     "servicios.ver": [true, true, false],
     "servicios.gestionar": [true, false, false],
+    "catalogo.gestionar": [true, false, false], // HU-31
     "profesionales.gestionar": [true, false, false],
     "usuarios.gestionar": [true, false, false], // HU-29
     "horarios.gestionar": [true, false, false],

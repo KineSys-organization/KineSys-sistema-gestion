@@ -17,6 +17,7 @@ const SOLO_PROFESIONAL: readonly Rol[] = ["Profesional"];
 // Un prefijo cubre también sus subrutas: "/pacientes" incluye "/pacientes/nuevo".
 export const PERMISOS_RUTAS: { prefijo: string; roles: readonly Rol[] }[] = [
   { prefijo: "/servicios", roles: RECEPCION }, // Mesa de Entradas: solo lectura
+  { prefijo: "/obras-sociales", roles: SOLO_GERENTE }, // HU-31: administración del catálogo
   { prefijo: "/profesionales", roles: SOLO_GERENTE }, // incluye nuevo, editar y horarios
   { prefijo: "/usuarios", roles: SOLO_GERENTE }, // HU-29: personal interno
   { prefijo: "/pacientes", roles: RECEPCION },
@@ -32,6 +33,7 @@ export const PERMISOS_RUTAS: { prefijo: string; roles: readonly Rol[] }[] = [
 export const PERMISOS_ACCIONES = {
   "servicios.ver": RECEPCION,
   "servicios.gestionar": SOLO_GERENTE, // alta, edición y baja
+  "catalogo.gestionar": SOLO_GERENTE, // HU-31: obras sociales
   "profesionales.gestionar": SOLO_GERENTE, // listar, alta, edición, estado
   "usuarios.gestionar": SOLO_GERENTE, // HU-29: listar y alta de Gerentes / Mesa de Entradas
   "horarios.gestionar": SOLO_GERENTE, // franjas del profesional
