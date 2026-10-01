@@ -54,7 +54,7 @@ export async function updateSession(request: NextRequest) {
     const { data, error } = await supabase.rpc("fn_acceso_gestion");
     if (!error && data && data.length > 0) {
       const url = request.nextUrl.clone();
-      url.pathname = "/";
+      url.pathname = data[0]?.rol_usuario === "Gerente" ? "/indicadores" : "/";
       url.search = "";
       return NextResponse.redirect(url);
     }

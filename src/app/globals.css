@@ -189,8 +189,6 @@ select {
   color: inherit;
 }
 
-/* El logo es a dos colores: en la barra oscura va sobre un cuadrado blanco
-   (como ícono de app) para que el azul no se pierda. */
 .dashboard-marca img {
   width: 36px;
   height: 36px;
@@ -201,6 +199,15 @@ select {
 
 .dashboard-marca .marca-sys {
   color: var(--verde-claro);
+}
+
+.dashboard-marca small {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #d6e6f2;
 }
 
 .boton-salida {
@@ -257,20 +264,12 @@ select {
   font-weight: 600;
 }
 
-@media (max-width: 700px) {
-  .usuario-conectado {
-    display: none;
-  }
-}
-
-/* Menú: sin subrayado, la sección activa resaltada y en un solo renglón. */
 .nav-app {
   display: flex;
   flex-wrap: nowrap;
   gap: 4px;
   min-width: 0;
   font-size: 14px;
-  /* En pantallas angostas el menú se desliza de costado, sin barra de scroll visible. */
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -301,7 +300,10 @@ select {
 
 .nav-app a:focus-visible,
 .boton-salida:focus-visible,
-.dashboard-marca:focus-visible {
+.dashboard-marca:focus-visible,
+.menu-grupo-btn:focus-visible,
+.menu-ocultar:focus-visible,
+.menu-plegar:focus-visible {
   outline: 2px solid var(--verde-claro);
   outline-offset: 2px;
 }
@@ -311,7 +313,227 @@ select {
     gap: 12px;
   }
 
-  .dashboard-marca span {
+  .dashboard-barra .dashboard-marca span {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-barra .usuario-conectado {
+    display: none;
+  }
+}
+
+/* Shell del Gerente: barra superior + menú lateral claro, como el ERP. */
+.shell-gerente {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell-gerente-barra {
+  background: var(--azul-oscuro);
+  color: var(--blanco);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  z-index: 40;
+}
+
+.shell-gerente-usuario {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.shell-gerente .usuario-conectado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.usuario-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.shell-gerente-cuerpo {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.menu-lateral-claro {
+  width: 248px;
+  flex-shrink: 0;
+  background: var(--blanco);
+  border-right: 1px solid var(--borde);
+  position: relative;
+  min-height: calc(100vh - 60px);
+}
+
+.menu-cerrado .menu-lateral-claro {
+  width: 28px;
+}
+
+.menu-gerente {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 12px 40px;
+  font-size: 14px;
+}
+
+.menu-gerente-seccion {
+  margin: 16px 8px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gris-texto);
+}
+
+.menu-gerente a,
+.menu-grupo-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--azul-oscuro);
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.menu-gerente a:hover,
+.menu-grupo-btn:hover {
+  background: #eef5f9;
+}
+
+.menu-gerente a.activo,
+.menu-grupo-btn.activo-grupo {
+  background: #e3f0f8;
+  font-weight: 600;
+  color: var(--azul-principal);
+}
+
+.menu-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 0 8px 12px;
+}
+
+.menu-sub a {
+  font-size: 13px;
+  color: var(--gris-texto);
+}
+
+.menu-plegar {
+  position: absolute;
+  right: -12px;
+  top: 12px;
+  width: 24px;
+  height: 36px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: var(--blanco);
+  color: var(--gris-texto);
+  font-size: 10px;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.menu-plegar:hover {
+  background: #eef5f9;
+}
+
+.menu-fondo {
+  display: none;
+}
+
+.dashboard-contenido {
+  flex: 1;
+  min-width: 0;
+}
+
+.barra-movil {
+  display: none;
+}
+
+.menu-ocultar {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: var(--blanco);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+@media (max-width: 899px) {
+  .menu-lateral-claro {
+    position: fixed;
+    left: 0;
+    top: 60px;
+    bottom: 0;
+    transform: translateX(-100%);
+    width: 248px;
+    z-index: 30;
+    box-shadow: 8px 0 24px rgba(18, 59, 93, 0.18);
+  }
+
+  .shell-gerente:not(.menu-cerrado) .menu-lateral-claro {
+    transform: translateX(0);
+  }
+
+  .menu-cerrado .menu-lateral-claro {
+    width: 248px;
+  }
+
+  .menu-fondo {
+    display: block;
+    position: fixed;
+    inset: 60px 0 0;
+    border: 0;
+    background: rgba(18, 59, 93, 0.35);
+    z-index: 25;
+    cursor: pointer;
+  }
+
+  .barra-movil {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--azul-oscuro);
+    color: var(--blanco);
+    padding: 12px 16px;
+  }
+
+  .shell-gerente-barra {
+    display: none;
+  }
+
+  .menu-plegar {
     display: none;
   }
 }

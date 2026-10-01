@@ -20,6 +20,9 @@ export default async function InicioPage({
   const { error, mes, dia } = await searchParams;
   const sinPermiso = error === "sin-permiso";
 
+  if (usuario.rol_usuario === "Gerente" && !sinPermiso) {
+    redirect("/indicadores");
+  }
   const rol = usuario.rol_usuario;
   // Ordenadas por uso diario: lo primero que hace cada rol va arriba.
   const tarjetas = [

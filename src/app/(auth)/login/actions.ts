@@ -36,5 +36,6 @@ export async function login(_prevState: EstadoLogin, formData: FormData): Promis
     };
   }
 
-  redirect("/");
+  const sesion = data[0] as { rol_usuario?: string };
+  redirect(sesion.rol_usuario === "Gerente" ? "/indicadores" : "/");
 }

@@ -13,10 +13,9 @@ export default async function MainLayout({
   }
 
   return (
-    <div className="dashboard">
-      <BarraGestion usuario={usuario} />
+    <BarraGestion usuario={usuario}>
       {/* Landmark principal: los lectores de pantalla saltan directo al contenido. */}
       <main id="contenido">{children}</main>
-    </div>
+    </BarraGestion>
   );
 }

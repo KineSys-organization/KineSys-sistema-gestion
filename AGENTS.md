@@ -326,7 +326,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 
 ### Mejoras de UX/UI (menú, otorgar turno, calendario, filtros)
 
-- Menú: cliente (`usePathname`) para marcar la sección activa. "Otorgar turno" apunta a `/turnos/nuevo` (paso 1, HU-28).
+- Menú: Mesa y Profesional siguen con la barra superior. El **Gerente** usa barra superior + menú lateral plegable (estilo ERP): Indicadores; **Atención** (Otorgar turno, Agenda, Turnos, Pagos); **Información** (Profesionales, Pacientes, Obras sociales, Servicios); Personal interno. Al entrar, el Gerente abre `/indicadores`. "Otorgar turno" apunta a `/turnos/nuevo` (paso 1, HU-28).
 - `/disponibilidad`: calendario de 30 días (`fn_consultar_disponibilidad_calendario`) + horarios del día; estado en la URL (`?paciente&profesional&servicio&fecha`, helpers en `src/lib/turnos/flujo.ts`). Pasos con `PasosTurno`.
 - `/agenda`: profesional y fecha en la URL (sin `useActionState`).
 - `/pacientes`: listado con filtros (`fn_filtrar_pacientes`: texto, obra social o particular, rango etario). `fn_buscar_pacientes` sigue para el paso 1 de otorgar.
