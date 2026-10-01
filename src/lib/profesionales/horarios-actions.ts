@@ -10,8 +10,11 @@ export async function consultarHorarios(id: string): Promise<{
   data: HorariosProfesional | null;
   error: string | null;
 }> {
-  const sinPermiso = await exigirAccion("horarios.gestionar");
-  if (sinPermiso) return { data: null, error: sinPermiso };
+  const sinPermisoLectura = await exigirAccion("horarios.consultar");
+  const sinPermisoGestion = await exigirAccion("horarios.gestionar");
+  if (sinPermisoLectura && sinPermisoGestion) {
+    return { data: null, error: sinPermisoLectura };
+  }
   if (!esIdProfesional(id)) return { data: null, error: "Profesional inválido" };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_consultar_horarios_profesional", { p_id_usuario: id });

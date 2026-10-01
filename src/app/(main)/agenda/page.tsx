@@ -2,6 +2,8 @@ import Link from "next/link";
 import { exigirRecepcion } from "@/lib/auth";
 import { listarProfesionalesParaAgenda, obtenerAgenda } from "@/lib/agenda/actions";
 import { esFechaValida, hoyArgentina, sumarDias } from "@/lib/atencion/validar";
+import { consultarHorarios } from "@/lib/profesionales/horarios-actions";
+import { DescargarHorarioPdfButton } from "@/components/profesionales/DescargarHorarioPdfButton";
 // HU-28: "Otorgar turno" desde la agenda va al paso 1 (paciente) con profesional y día ya elegidos.
 import { urlPasoPaciente } from "@/lib/turnos/flujo";
 import { formatearFecha } from "@/lib/turnos/validar";
@@ -28,6 +30,7 @@ export default async function AgendaPage({ searchParams }: Props) {
   const agenda = profesional
     ? await obtenerAgenda({ id_profesional: profesional.id_usuario, fecha })
     : null;
+  const horarioProfesional = profesional ? await consultarHorarios(profesional.id_usuario) : null;
   const turnos = agenda?.data?.turnos ?? [];
 
   const urlDia = (dia: string) =>
@@ -41,12 +44,22 @@ export default async function AgendaPage({ searchParams }: Props) {
           <p className="texto-suave">Turnos de un profesional para un día.</p>
         </div>
         {profesional && (
-          <Link
-            className="boton-principal boton-inline"
-            href={urlPasoPaciente({ profesional: profesional.id_usuario, fecha })}
-          >
-            Otorgar turno
-          </Link>
+          <div className="fila-acciones">
+            <Link
+              className="boton-principal boton-inline"
+              href={urlPasoPaciente({ profesional: profesional.id_usuario, fecha })}
+            >
+              Otorgar turno
+            </Link>
+            {horarioProfesional?.data && (
+              <DescargarHorarioPdfButton
+                nombre={profesional.nombre_usuario}
+                apellido={profesional.apellido_usuario}
+                servicios={(profesional.servicios ?? []).map((s) => s.nombre_servicio)}
+                franjas={horarioProfesional.data.franjas ?? []}
+              />
+            )}
+          </div>
         )}
       </div>
 

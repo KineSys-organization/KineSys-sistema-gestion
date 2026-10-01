@@ -14,6 +14,7 @@ export type HorariosProfesional = {
   apellido_usuario: string;
   tiene_servicios: boolean;
   habilitado_turnos: boolean;
+  servicios?: { id_servicio: string; nombre_servicio: string }[];
   franjas: FranjaProfesional[];
 };
 

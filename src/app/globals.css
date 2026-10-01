@@ -925,6 +925,74 @@ a.badge-horario:hover {
   overflow-x: auto;
 }
 
+.no-imprimir {
+  display: inline-flex;
+}
+
+.solo-impresion {
+  display: none;
+}
+
+.bloque-impresion {
+  page-break-inside: avoid;
+  background: var(--blanco);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 24px;
+  color: var(--azul-oscuro);
+}
+
+.titulo-profesional {
+  margin: 0 0 16px;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.servicios-impresion h4,
+.franjas-impresion h4 {
+  margin: 0 0 8px;
+}
+
+.servicios-impresion ul {
+  margin: 0 0 16px;
+  padding-left: 20px;
+}
+
+.tabla-impresion {
+  box-shadow: none;
+}
+
+@media print {
+  body {
+    background: var(--blanco);
+  }
+
+  .no-imprimir,
+  .dashboard-barra,
+  .nav-app,
+  .modulo-cabecera .boton-principal,
+  .modulo-cabecera .boton-secundario,
+  .modulo-cabecera .boton-pill,
+  .bloque,
+  .tarjeta,
+  .tabla-scroll,
+  .acciones-pie,
+  form,
+  .fila-acciones {
+    display: none !important;
+  }
+
+  .solo-impresion {
+    display: block !important;
+  }
+
+  .modulo {
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+}
+
 /* ===== Mejoras UX: acciones, otorgar turno, calendario, filtros, inicio ===== */
 
 /* Fila de acciones al pie de una pantalla: mismas alturas y separación.
