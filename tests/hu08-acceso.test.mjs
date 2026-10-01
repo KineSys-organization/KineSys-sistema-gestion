@@ -84,6 +84,7 @@ test("puedeHacer: cada acción según el rol", () => {
     "catalogo.gestionar": [true, false, false], // HU-31
     "profesionales.gestionar": [true, false, false],
     "usuarios.gestionar": [true, false, false], // HU-29 / HU-30
+    "horarios.consultar": [true, true, false],
     "horarios.gestionar": [true, false, false],
     "pacientes.gestionar": [true, true, false],
     "disponibilidad.consultar": [true, true, false],

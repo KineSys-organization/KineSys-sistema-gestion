@@ -36,6 +36,7 @@ export const PERMISOS_ACCIONES = {
   "catalogo.gestionar": SOLO_GERENTE, // HU-31: obras sociales
   "profesionales.gestionar": SOLO_GERENTE, // listar, alta, edición, estado
   "usuarios.gestionar": SOLO_GERENTE, // HU-29/30: listar, alta, edición y estado
+  "horarios.consultar": RECEPCION, // HU-27: lectura del horario del profesional
   "horarios.gestionar": SOLO_GERENTE, // franjas del profesional
   "pacientes.gestionar": RECEPCION, // buscar, alta, edición, obras sociales
   "disponibilidad.consultar": RECEPCION,

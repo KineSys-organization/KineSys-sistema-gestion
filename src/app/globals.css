@@ -1188,6 +1188,149 @@ a.badge-horario:hover {
   overflow-x: auto;
 }
 
+.no-imprimir {
+  display: inline-flex;
+}
+
+.solo-impresion {
+  display: none;
+}
+
+.bloque-impresion {
+  page-break-inside: auto;
+  background: var(--blanco);
+  color: var(--azul-oscuro);
+}
+
+.encabezado-impresion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--azul-principal);
+}
+
+.marca-impresion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--azul-principal);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.marca-impresion img {
+  width: 38px;
+  height: 38px;
+}
+
+.encabezado-impresion > p {
+  margin: 0;
+  color: var(--gris-texto);
+  font-size: 0.9rem;
+}
+
+.titulo-horario-impresion {
+  margin: 24px 0;
+  padding-left: 16px;
+  border-left: 4px solid #17a58b;
+}
+
+.etiqueta-impresion {
+  margin: 0 0 6px;
+  color: var(--gris-texto);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.titulo-profesional {
+  margin: 0;
+  color: var(--azul-oscuro);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.servicios-impresion,
+.franjas-impresion {
+  margin-top: 24px;
+}
+
+.servicios-impresion h4,
+.franjas-impresion h4 {
+  margin: 0 0 10px;
+  color: var(--azul-principal);
+  font-size: 1rem;
+}
+
+.servicios-impresion ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.tabla-impresion {
+  box-shadow: none;
+}
+
+.pie-impresion {
+  margin-top: 30px;
+  padding-top: 12px;
+  border-top: 1px solid var(--borde);
+  color: var(--gris-texto);
+  font-size: 0.8rem;
+}
+
+@media print {
+  @page {
+    margin: 18mm;
+  }
+
+  body {
+    background: var(--blanco);
+    color: #123b5d;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .solo-impresion,
+  .solo-impresion * {
+    visibility: visible !important;
+  }
+
+  .solo-impresion {
+    display: block !important;
+    position: fixed;
+    inset: 0 auto auto 0;
+    width: 100%;
+    background: var(--blanco);
+  }
+
+  .bloque-impresion {
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .tabla-impresion thead {
+    display: table-header-group;
+  }
+
+  .tabla-impresion tr {
+    page-break-inside: avoid;
+  }
+
+  .modulo {
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+}
+
 /* ===== Mejoras UX: acciones, otorgar turno, calendario, filtros, inicio ===== */
 
 /* Fila de acciones al pie de una pantalla: mismas alturas y separación.
