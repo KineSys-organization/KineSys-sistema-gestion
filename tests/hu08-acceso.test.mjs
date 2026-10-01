@@ -19,7 +19,10 @@ const MATRIZ = {
   "/profesionales/nuevo": [true, false, false],
   "/profesionales/abc/editar": [true, false, false],
   "/profesionales/abc/horarios": [true, false, false],
-  "/usuarios": [true, false, false], // HU-29: personal interno
+  "/usuarios": [true, false, false], // HU-29 / HU-30: personal interno
+  "/usuarios/nuevo": [true, false, false],
+  "/usuarios/abc": [true, false, false],
+  "/usuarios/abc/editar": [true, false, false],
   "/pacientes": [true, true, false],
   "/pacientes/nuevo": [true, true, false],
   "/pacientes/abc": [true, true, false],
@@ -80,7 +83,7 @@ test("puedeHacer: cada acción según el rol", () => {
     "servicios.gestionar": [true, false, false],
     "catalogo.gestionar": [true, false, false], // HU-31
     "profesionales.gestionar": [true, false, false],
-    "usuarios.gestionar": [true, false, false], // HU-29
+    "usuarios.gestionar": [true, false, false], // HU-29 / HU-30
     "horarios.gestionar": [true, false, false],
     "pacientes.gestionar": [true, true, false],
     "disponibilidad.consultar": [true, true, false],

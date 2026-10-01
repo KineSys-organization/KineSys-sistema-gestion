@@ -2,6 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Personal interno** HU-29/HU-30, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08). Estados de pago, reembolsos y el resto de los indicadores siguen pendientes.
 Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Obras sociales** HU-31, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08). Estados de pago, reembolsos y el resto de los indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
@@ -113,6 +114,9 @@ src/
     (main)/profesionales/nuevo
     (main)/profesionales/[id]/editar
     (main)/profesionales/[id]/horarios
+    (main)/usuarios           → personal interno: listado (mismo layout que profesionales)
+    (main)/usuarios/nuevo     → alta Gerente / Mesa de Entradas (HU-29)
+    (main)/usuarios/[id]/editar → editar / rol / estado (HU-30)
     (main)/pacientes
     (main)/pacientes/nuevo
     (main)/pacientes/[id]
@@ -127,7 +131,7 @@ src/
     (main)/indicadores       → indicadores generales del centro (HU-26, solo Gerente)
     (main)/pagos             → listado de pagos con filtros (HU-14)
     (main)/turnos/[id]/pago  → registrar, consultar y corregir el pago del turno (HU-14)
-  proxy.ts + middleware.ts  → Next 15 carga middleware; la lógica está en proxy
+  proxy.ts + middleware.ts  → Next 15 carga `src/middleware.ts`; la sesión se refresca en `src/lib/supabase/middleware.ts`
 ```
 
 Módulos nuevos: carpetas hermanas **dentro de `(main)/`**.
@@ -190,6 +194,14 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Horarios de profesionales (HU-02B): `fn_consultar_horarios_profesional` y `fn_registrar_franja_profesional`. Franjas horarias semanales recurrentes por día de la semana. Exige al menos un servicio asociado. Restricción `EXCLUDE` (GiST) en PostgreSQL para evitar solapamientos. Pantallas solo Gerente. El alta carga la misma franja en varios días a la vez (casillas + atajos "Lunes a viernes"/"Todos") con `fn_registrar_franjas_profesional(profesional, dias[], inicio, fin)`: todo o nada, el error dice qué día se superpone. La edición sigue siendo de a una franja. SQL: `supabase/migrations/012_franjas_varios_dias.sql`; pruebas: `supabase/tests/franjas_varios_dias.sql` y `tests/horarios.test.mjs`.
 - Edición y disponibilidad de profesionales (HU-03): `fn_obtener_profesional`, `fn_editar_profesional`, `fn_alternar_estado_profesional`, `fn_editar_franja_profesional` y `fn_eliminar_franja_profesional`. Edición precargada de datos personales, matrícula y servicios; mail actual de solo lectura. Quitar servicios requiere no tener turnos confirmados pendientes y aceptar el aviso; admite cero servicios en edición. Activación/desactivación conserva turnos. Cambiar/eliminar franjas permite guardar, conserva los turnos e informa los afectados antes y después. Migración 006, con prevención de solapamientos GiST. Pantallas solo Gerente.
 
+### HU-29 / HU-30 — Personal interno (Gerente y Mesa de Entradas)
+
+- Pantallas: `/usuarios` (listado, mismo patrón que profesionales), `/usuarios/nuevo` (alta HU-29) y `/usuarios/[id]/editar` (HU-30). Solo **Gerente** (`exigirGerente`, acción `usuarios.gestionar`). No se mezcla con `/profesionales`.
+- Alta: edge `crear-usuario-gestion` (Auth + fila `usuario`, rol Gerente o Mesa). Listado: `fn_listar_usuarios_gestion`.
+- Edición (HU-30): `fn_obtener_usuario_gestion`, `fn_editar_usuario_gestion` (nombre, apellido, teléfono), `fn_cambiar_rol_usuario_gestion` y `fn_cambiar_estado_usuario_gestion` (`p_activo` explícito). Mail, DNI y fecha de nacimiento de solo lectura. Flags `es_usuario_actual` / `es_ultimo_gerente_activo` para deshabilitar en UI; la base igual bloquea.
+- No se borra la cuenta de Auth. Inactivo no entra (`fn_acceso_gestion`). Tiene que quedar **al menos un Gerente activo**.
+- SQL (ya aplicada en el proyecto): `supabase/migrations/021_gestion_usuarios_gestion_editar_rol_estado.sql`. Pruebas de validación: `tests/usuarios-gestion.test.mjs`. Evidencia en `docs/hu-30-usuarios-gestion.md`.
+
 ### HU-04 — Pacientes
 
 - Pantallas: `/pacientes` (buscar), `/pacientes/nuevo`, `/pacientes/[id]` (editar). Solo **Gerente** y **Mesa de Entradas** (`exigirRecepcion`).
@@ -239,7 +251,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 
 ### HU-08 — Autenticación y acceso interno
 
-- Matriz: Inicio todos; `/servicios` Gerente + Mesa de Entradas (**solo lectura** para Mesa); `/profesionales/*` solo Gerente; pacientes, disponibilidad, agenda, turnos (incluye `/turnos` y `/turnos/[id]/reprogramar`) y pagos (`/pagos`, `/turnos/[id]/pago`, HU-14) Gerente + Mesa de Entradas; `/mi-agenda/*` solo Profesional (HU-12/13, `exigirProfesional`).
+- Matriz: Inicio todos; `/servicios` Gerente + Mesa de Entradas (**solo lectura** para Mesa); `/profesionales/*` y `/usuarios` (HU-29/30) solo Gerente; pacientes, disponibilidad, agenda, turnos (incluye `/turnos` y `/turnos/[id]/reprogramar`) y pagos (`/pagos`, `/turnos/[id]/pago`, HU-14) Gerente + Mesa de Entradas; `/mi-agenda/*` solo Profesional (HU-12/13, `exigirProfesional`).
 - Defensa en 3 capas: página (`exigirGerente` / `exigirRecepcion`, sin permiso → `/?error=sin-permiso` con aviso en Inicio), server action (`exigirAccion`) y RPC (`fn_*` valida rol con usuario activo).
 - `fn_exigir_rol(text[])` (interna, revocada a `authenticated`): exige usuario activo con uno de los roles; un `NULL` siempre se rechaza. Reemplaza a `rol_actual()` en las funciones de servicios y `fn_listar_profesionales`. Mensaje: *No tenés permisos para realizar esta acción*.
 - Menú y tarjetas de Inicio se filtran con `puedeAcceder` (solo UX). El header muestra "Nombre Apellido · Rol".

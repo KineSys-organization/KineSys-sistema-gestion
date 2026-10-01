@@ -749,7 +749,12 @@ a.badge-horario:hover {
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+}
 
+.tabla .fila-acciones {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 

@@ -66,7 +66,7 @@ export default async function InicioPage({
     {
       href: "/usuarios",
       titulo: "Personal interno",
-      texto: "Registrar Gerentes y usuarios de Mesa de Entradas.",
+      texto: "Registrar, editar y activar o desactivar Gerentes y Mesa de Entradas.",
     },
     {
       href: "/servicios",

@@ -40,3 +40,31 @@ export function validarAltaUsuarioGestion(
   }
   return null;
 }
+
+export type DatosEdicionUsuarioGestion = {
+  nombre_usuario: string;
+  apellido_usuario: string;
+  telefono_usuario: string;
+};
+
+export function validarEdicionUsuarioGestion(datos: DatosEdicionUsuarioGestion): string | null {
+  if (!datos.nombre_usuario.trim() || !datos.apellido_usuario.trim() || !datos.telefono_usuario.trim()) {
+    return "Nombre, apellido y teléfono son obligatorios";
+  }
+  if (!NOMBRE_OK.test(datos.nombre_usuario.trim())) return "El nombre solo puede tener letras";
+  if (!NOMBRE_OK.test(datos.apellido_usuario.trim())) return "El apellido solo puede tener letras";
+  if (!TELEFONO_OK.test(datos.telefono_usuario.trim())) return "El teléfono debe tener 10 números";
+  return null;
+}
+
+export function validarRolUsuarioGestion(rol: string): string | null {
+  const rolesPermitidos: RolGestionInterno[] = ["Gerente", "Mesa de Entradas"];
+  if (!rolesPermitidos.includes(rol as RolGestionInterno)) {
+    return "El rol solo puede ser Gerente o Mesa de Entradas";
+  }
+  return null;
+}
+
+export function esIdUsuarioGestion(id: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+}
