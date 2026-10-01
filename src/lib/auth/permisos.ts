@@ -33,7 +33,7 @@ export const PERMISOS_ACCIONES = {
   "servicios.ver": RECEPCION,
   "servicios.gestionar": SOLO_GERENTE, // alta, edición y baja
   "profesionales.gestionar": SOLO_GERENTE, // listar, alta, edición, estado
-  "usuarios.gestionar": SOLO_GERENTE, // HU-29: listar y alta de Gerentes / Mesa de Entradas
+  "usuarios.gestionar": SOLO_GERENTE, // HU-29/30: listar, alta, edición y estado
   "horarios.gestionar": SOLO_GERENTE, // franjas del profesional
   "pacientes.gestionar": RECEPCION, // buscar, alta, edición, obras sociales
   "disponibilidad.consultar": RECEPCION,

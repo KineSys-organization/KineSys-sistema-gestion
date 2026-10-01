@@ -9,4 +9,12 @@ export type UsuarioGestionListado = {
   activo: boolean;
 };
 
+export type UsuarioGestionEdicion = UsuarioGestionListado & {
+  fecha_nacimiento_usuario: string;
+  dni_usuario: number | string;
+  telefono_usuario: string;
+  es_usuario_actual: boolean;
+  es_ultimo_gerente_activo: boolean;
+};
+
 export type EstadoFormularioUsuario = { ok: boolean; error: string | null };
