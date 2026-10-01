@@ -152,7 +152,7 @@ export default async function AgendaPage({ searchParams }: Props) {
                           />
                         </td>
                         <td>
-                          <Link className="boton-pill" href={`/turnos/${turno.id_turno}`}>
+                          <Link className="boton-pill" href={`/turnos/${turno.id_turno}?desde=agenda`}>
                             Ver turno
                           </Link>
                         </td>
