@@ -1,5 +1,6 @@
 import { esFechaValida, hoyArgentina } from "@/lib/atencion/validar";
 import { DNI_OK, NOMBRE_OK, TELEFONO_OK } from "@/lib/profesionales/validar";
+import type { ObraSocial, ObraSocialPaciente } from "./tipos";
 
 const MAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -168,4 +169,25 @@ export function leerFiltrosPacientes(params: {
     edadMin: min ? Number(min) : null,
     edadMax: max ? Number(max) : null,
   };
+}
+
+// Catálogo activo (HU-04) más las obras inactivas que el paciente ya tiene (HU-32).
+export function obrasDelPacienteEnFormulario(
+  catalogo: ObraSocial[],
+  delPaciente: ObraSocialPaciente[] = []
+): ObraSocial[] {
+  const mapa = new Map<string, ObraSocial>();
+  for (const obra of catalogo) {
+    mapa.set(obra.id_obra_social, { ...obra, activo: obra.activo !== false });
+  }
+  for (const obra of delPaciente) {
+    if (!mapa.has(obra.id_obra_social)) {
+      mapa.set(obra.id_obra_social, {
+        id_obra_social: obra.id_obra_social,
+        nombre_obra_social: obra.nombre_obra_social,
+        activo: obra.activo !== false,
+      });
+    }
+  }
+  return [...mapa.values()];
 }

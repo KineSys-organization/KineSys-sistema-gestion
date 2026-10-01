@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { ObraSocial, ObraSocialPaciente } from "@/lib/pacientes/tipos";
+import { obrasDelPacienteEnFormulario } from "@/lib/pacientes/validar";
 
 type Props = {
   obras: ObraSocial[];
@@ -9,6 +10,10 @@ type Props = {
 };
 
 export function ListaObrasSociales({ obras, seleccionadas = [] }: Props) {
+  const visibles = useMemo(
+    () => obrasDelPacienteEnFormulario(obras, seleccionadas),
+    [obras, seleccionadas]
+  );
   const iniciales = useMemo(() => {
     const mapa = new Map<string, string>();
     for (const obra of seleccionadas) {
@@ -37,7 +42,7 @@ export function ListaObrasSociales({ obras, seleccionadas = [] }: Props) {
     });
   }
 
-  if (obras.length === 0) {
+  if (visibles.length === 0) {
     return (
       <p className="texto-suave">
         No hay obras sociales en el catálogo. El paciente se puede guardar como particular.
@@ -50,8 +55,9 @@ export function ListaObrasSociales({ obras, seleccionadas = [] }: Props) {
       <p className="texto-suave">
         Opcional. Sin obra social queda como particular (se elige al otorgar el turno).
       </p>
-      {obras.map((obra) => {
+      {visibles.map((obra) => {
         const marcada = marcadas.has(obra.id_obra_social);
+        const inactiva = obra.activo === false;
         return (
           <div key={obra.id_obra_social} className="obra-item">
             <label className="check-item">
@@ -62,7 +68,10 @@ export function ListaObrasSociales({ obras, seleccionadas = [] }: Props) {
                 checked={marcada}
                 onChange={(evento) => alMarcar(obra.id_obra_social, evento.target.checked)}
               />
-              <span>{obra.nombre_obra_social}</span>
+              <span>
+                {obra.nombre_obra_social}
+                {inactiva ? " (inactiva)" : ""}
+              </span>
             </label>
             {marcada && (
               <div className="campo campo-afiliado">

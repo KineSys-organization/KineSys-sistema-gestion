@@ -3,7 +3,7 @@
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
 Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Personal interno** HU-29/HU-30, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08). Estados de pago, reembolsos y el resto de los indicadores siguen pendientes.
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Obras sociales** HU-31, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08). Estados de pago, reembolsos y el resto de los indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Obras sociales** HU-31/HU-32, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08). Estados de pago, reembolsos y el resto de los indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -109,7 +109,7 @@ src/
     (auth)/logout/actions
     (main)/                 → /   (protegido; al Profesional le muestra su dashboard, HU-15)
     (main)/servicios
-    (main)/obras-sociales       → catálogo de obras sociales (HU-31, solo Gerente)
+    (main)/obras-sociales       → catálogo de obras sociales (HU-31/HU-32, solo Gerente)
     (main)/profesionales
     (main)/profesionales/nuevo
     (main)/profesionales/[id]/editar
@@ -219,7 +219,15 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Alta con nombre recortado de espacios y longitud de 2 a 80 caracteres. La base rechaza duplicados ignorando mayúsculas y espacios periféricos.
 - RPCs: `fn_registrar_obra_social` y `fn_listar_obras_sociales_gestion`, ambas con `fn_exigir_rol(['Gerente'])`.
 - `fn_listar_obras_sociales` sigue siendo el catálogo activo que usa Recepción en Pacientes; Particular continúa sin fila.
-- Edición y activación/desactivación quedan para HU-32. SQL: `supabase/migrations/021_hu31_catalogo_obras_sociales.sql`.
+- SQL: `supabase/migrations/021_hu31_catalogo_obras_sociales.sql`.
+
+### HU-32 — Editar y activar/desactivar obras sociales
+
+- Misma pantalla `/obras-sociales` (HU-31): el Gerente edita el nombre (mismas validaciones del alta) y activa o desactiva. **No se borra la fila.**
+- RPCs: `fn_editar_obra_social(p_id_obra_social, p_nombre)` y `fn_cambiar_estado_obra_social(p_id_obra_social, p_activo)` (explícito, no es toggle). Acción `catalogo.gestionar`.
+- Una inactiva no sale en `fn_listar_obras_sociales` (combo de pacientes nuevos ni cobertura nueva). Los pacientes que ya la tienen la conservan; al editar se muestra como "(inactiva)" y se reenvía si no se quita. Particular sigue disponible.
+- Desactivar no cancela turnos ni cambia coberturas ya guardadas.
+- SQL (ya aplicada en el proyecto): `supabase/migrations/022_hu32_obras_sociales_editar_estado.sql`. Pruebas: `tests/obras-sociales.test.mjs`. Evidencia en `docs/hu-32-obras-sociales.md`.
 
 ### HU-05 — Disponibilidad
 
@@ -251,7 +259,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 
 ### HU-08 — Autenticación y acceso interno
 
-- Matriz: Inicio todos; `/servicios` Gerente + Mesa de Entradas (**solo lectura** para Mesa); `/profesionales/*` y `/usuarios` (HU-29/30) solo Gerente; pacientes, disponibilidad, agenda, turnos (incluye `/turnos` y `/turnos/[id]/reprogramar`) y pagos (`/pagos`, `/turnos/[id]/pago`, HU-14) Gerente + Mesa de Entradas; `/mi-agenda/*` solo Profesional (HU-12/13, `exigirProfesional`).
+- Matriz: Inicio todos; `/servicios` Gerente + Mesa de Entradas (**solo lectura** para Mesa); `/profesionales/*`, `/usuarios` (HU-29/30) y `/obras-sociales` (HU-31/32) solo Gerente; pacientes, disponibilidad, agenda, turnos (incluye `/turnos` y `/turnos/[id]/reprogramar`) y pagos (`/pagos`, `/turnos/[id]/pago`, HU-14) Gerente + Mesa de Entradas; `/mi-agenda/*` solo Profesional (HU-12/13, `exigirProfesional`).
 - Defensa en 3 capas: página (`exigirGerente` / `exigirRecepcion`, sin permiso → `/?error=sin-permiso` con aviso en Inicio), server action (`exigirAccion`) y RPC (`fn_*` valida rol con usuario activo).
 - `fn_exigir_rol(text[])` (interna, revocada a `authenticated`): exige usuario activo con uno de los roles; un `NULL` siempre se rechaza. Reemplaza a `rol_actual()` en las funciones de servicios y `fn_listar_profesionales`. Mensaje: *No tenés permisos para realizar esta acción*.
 - Menú y tarjetas de Inicio se filtran con `puedeAcceder` (solo UX). El header muestra "Nombre Apellido · Rol".

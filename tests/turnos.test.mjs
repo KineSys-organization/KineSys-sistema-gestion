@@ -72,10 +72,13 @@ test("C6: preselección de cobertura según las obras del paciente", () => {
     nombre_obra_social: "Galeno",
     numero_afiliado: "2",
   };
+  const inactiva = { ...osde, activo: false };
 
   assert.equal(coberturaInicial([osde]), obra);
   assert.equal(coberturaInicial([]), PARTICULAR);
   assert.equal(coberturaInicial([osde, galeno]), "");
+  assert.equal(coberturaInicial([inactiva]), PARTICULAR);
+  assert.equal(coberturaInicial([osde, { ...galeno, activo: false }]), obra);
 });
 
 test("C5: el resumen muestra el día legible", () => {
