@@ -6,14 +6,60 @@ import { esFechaValida, hoyArgentina, sumarDias } from "@/lib/atencion/validar";
 import { urlPasoPaciente } from "@/lib/turnos/flujo";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
+import { obtenerDiasSemana } from "@/lib/agenda/semana";
+import type { TurnoAgenda } from "@/lib/agenda/tipos";
 
 type Props = {
-  searchParams: Promise<{ profesional?: string; fecha?: string }>;
+  searchParams: Promise<{ profesional?: string; fecha?: string; vista?: string }>;
 };
 
-// HU-07. Agenda de un profesional para una fecha (Recepción).
-// Profesional y fecha van en la URL: abre directo en el día de hoy y se puede
-// linkear desde el resumen del turno ("Ver agenda del día").
+function TablaTurnos({ turnos }: { turnos: TurnoAgenda[] }) {
+  return (
+    <div className="tabla-scroll">
+      <table className="tabla">
+        <thead>
+          <tr>
+            <th>Horario</th>
+            <th>Paciente</th>
+            <th>DNI</th>
+            <th>Servicio</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {turnos.map((turno) => (
+            <tr
+              key={turno.id_turno}
+              className={turno.estado === "cancelado" ? "fila-cancelada" : undefined}
+            >
+              <td>
+                {turno.hora_inicio} a {turno.hora_fin}
+              </td>
+              <td>
+                {turno.apellido_paciente}, {turno.nombre_paciente}
+              </td>
+              <td>{turno.dni_paciente}</td>
+              <td>{turno.nombre_servicio}</td>
+              <td>
+                <EstadoTurnoBadge
+                  estado={turno.estado}
+                  motivoCancelacion={turno.motivo_cancelacion}
+                />
+              </td>
+              <td>
+                <Link className="boton-pill" href={`/turnos/${turno.id_turno}`}>
+                  Ver turno
+                </Link>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default async function AgendaPage({ searchParams }: Props) {
   await exigirRecepcion();
   const params = await searchParams;
@@ -22,23 +68,35 @@ export default async function AgendaPage({ searchParams }: Props) {
 
   const hoy = hoyArgentina();
   const fecha = params.fecha && esFechaValida(params.fecha) ? params.fecha : hoy;
+  const vista = params.vista === "semana" ? "semana" : "dia";
   const profesional =
     profesionales.find((p) => p.id_usuario === params.profesional) ?? profesionales[0];
 
-  const agenda = profesional
-    ? await obtenerAgenda({ id_profesional: profesional.id_usuario, fecha })
-    : null;
+  const diasSemana = vista === "semana" ? obtenerDiasSemana(fecha) : [];
+  const agendasSemana =
+    profesional && vista === "semana"
+      ? await Promise.all(
+          diasSemana.map((dia) =>
+            obtenerAgenda({ id_profesional: profesional.id_usuario, fecha: dia })
+          )
+        )
+      : [];
+  const agenda =
+    profesional && vista === "dia"
+      ? await obtenerAgenda({ id_profesional: profesional.id_usuario, fecha })
+      : null;
   const turnos = agenda?.data?.turnos ?? [];
 
-  const urlDia = (dia: string) =>
-    `/agenda?profesional=${profesional?.id_usuario ?? ""}&fecha=${dia}`;
+  const urlAgenda = (dia: string, modo = vista) =>
+    `/agenda?profesional=${encodeURIComponent(profesional?.id_usuario ?? "")}&fecha=${dia}&vista=${modo}`;
+  const desplazamiento = vista === "semana" ? 7 : 1;
 
   return (
     <section className="modulo">
       <div className="modulo-cabecera">
         <div>
           <h2>Agenda</h2>
-          <p className="texto-suave">Turnos de un profesional para un día.</p>
+          <p className="texto-suave">Consultá los turnos de un profesional por día o semana.</p>
         </div>
         {profesional && (
           <Link
@@ -60,7 +118,7 @@ export default async function AgendaPage({ searchParams }: Props) {
         <p className="texto-suave">No hay profesionales activos para consultar.</p>
       ) : (
         <>
-          <form className="tarjeta bloque filtro-fecha" method="get">
+          <form className="tarjeta bloque filtro-fecha" action="/agenda" method="get">
             <div className="campo">
               <label htmlFor="profesional">Profesional</label>
               <select
@@ -79,90 +137,105 @@ export default async function AgendaPage({ searchParams }: Props) {
               <label htmlFor="fecha">Fecha</label>
               <input id="fecha" name="fecha" type="date" defaultValue={fecha} required />
             </div>
+            <input type="hidden" name="vista" value={vista} />
             <button className="boton-principal boton-inline" type="submit">
               Ver agenda
             </button>
-            <div className="fila-acciones">
-              <Link className="boton-pill" href={urlDia(sumarDias(fecha, -1))}>
-                ← Día anterior
-              </Link>
-              {fecha !== hoy && (
-                <Link className="boton-pill" href={urlDia(hoy)}>
-                  Hoy
+            <div className="agenda-controles">
+              <nav className="fila-acciones" aria-label="Tipo de vista de agenda">
+                <Link
+                  className={`boton-pill${vista === "dia" ? " boton-pill-fuerte" : ""}`}
+                  href={urlAgenda(fecha, "dia")}
+                  aria-current={vista === "dia" ? "page" : undefined}
+                >
+                  Día
                 </Link>
-              )}
-              <Link className="boton-pill" href={urlDia(sumarDias(fecha, 1))}>
-                Día siguiente →
-              </Link>
+                <Link
+                  className={`boton-pill${vista === "semana" ? " boton-pill-fuerte" : ""}`}
+                  href={urlAgenda(fecha, "semana")}
+                  aria-current={vista === "semana" ? "page" : undefined}
+                >
+                  Semana
+                </Link>
+              </nav>
+              <nav className="fila-acciones" aria-label="Navegación de agenda">
+                <Link
+                  className="boton-pill"
+                  href={urlAgenda(sumarDias(fecha, -desplazamiento))}
+                >
+                  {vista === "semana" ? "← Semana anterior" : "← Día anterior"}
+                </Link>
+                {fecha !== hoy && (
+                  <Link className="boton-pill" href={urlAgenda(hoy)}>
+                    Hoy
+                  </Link>
+                )}
+                <Link
+                  className="boton-pill"
+                  href={urlAgenda(sumarDias(fecha, desplazamiento))}
+                >
+                  {vista === "semana" ? "Semana siguiente →" : "Día siguiente →"}
+                </Link>
+              </nav>
             </div>
           </form>
 
-          <section className="tarjeta">
-            <div className="modulo-cabecera">
-              <h3>
-                {profesional.apellido_usuario}, {profesional.nombre_usuario} ·{" "}
-                {formatearFecha(fecha)}
-                {fecha === hoy && <span className="badge-hoy">Hoy</span>}
-              </h3>
-              {turnos.length > 0 && (
-                <p className="texto-suave">
-                  {turnos.length} {turnos.length === 1 ? "turno" : "turnos"}
-                </p>
-              )}
-            </div>
-
-            {agenda?.error ? (
-              <p className="mensaje-error" role="alert">
-                {agenda.error}
-              </p>
-            ) : turnos.length === 0 ? (
-              <p className="texto-suave">No hay turnos para ese profesional en esa fecha.</p>
-            ) : (
-              <div className="tabla-scroll">
-                <table className="tabla">
-                  <thead>
-                    <tr>
-                      <th>Horario</th>
-                      <th>Paciente</th>
-                      <th>DNI</th>
-                      <th>Servicio</th>
-                      <th>Estado</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {turnos.map((turno) => (
-                      // HU-10A: los cancelados se ven atenuados y no ocupan el horario.
-                      <tr
-                        key={turno.id_turno}
-                        className={turno.estado === "cancelado" ? "fila-cancelada" : undefined}
-                      >
-                        <td>
-                          {turno.hora_inicio} a {turno.hora_fin}
-                        </td>
-                        <td>
-                          {turno.apellido_paciente}, {turno.nombre_paciente}
-                        </td>
-                        <td>{turno.dni_paciente}</td>
-                        <td>{turno.nombre_servicio}</td>
-                        <td>
-                          <EstadoTurnoBadge
-                            estado={turno.estado}
-                            motivoCancelacion={turno.motivo_cancelacion}
-                          />
-                        </td>
-                        <td>
-                          <Link className="boton-pill" href={`/turnos/${turno.id_turno}?desde=agenda`}>
-                            Ver turno
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {vista === "dia" ? (
+            <section className="tarjeta">
+              <div className="modulo-cabecera">
+                <h3>
+                  {profesional.apellido_usuario}, {profesional.nombre_usuario} ·{" "}
+                  {formatearFecha(fecha)}
+                  {fecha === hoy && <span className="badge-hoy">Hoy</span>}
+                </h3>
+                {turnos.length > 0 && (
+                  <p className="texto-suave">
+                    {turnos.length} {turnos.length === 1 ? "turno" : "turnos"}
+                  </p>
+                )}
               </div>
-            )}
-          </section>
+
+              {agenda?.error ? (
+                <p className="mensaje-error" role="alert">
+                  {agenda.error}
+                </p>
+              ) : turnos.length === 0 ? (
+                <p className="texto-suave">No hay turnos para ese profesional en esa fecha.</p>
+              ) : (
+                <TablaTurnos turnos={turnos} />
+              )}
+            </section>
+          ) : (
+            <div className="agenda-semana">
+              {diasSemana.map((dia, indice) => {
+                const agendaDia = agendasSemana[indice];
+                const turnosDia = agendaDia?.data?.turnos ?? [];
+
+                return (
+                  <section className="tarjeta agenda-dia" key={dia}>
+                    <div className="modulo-cabecera">
+                      <h3>
+                        {formatearFecha(dia)}
+                        {dia === hoy && <span className="badge-hoy">Hoy</span>}
+                      </h3>
+                      <p className="texto-suave">
+                        {turnosDia.length} {turnosDia.length === 1 ? "turno" : "turnos"}
+                      </p>
+                    </div>
+                    {agendaDia?.error ? (
+                      <p className="mensaje-error" role="alert">
+                        {agendaDia.error}
+                      </p>
+                    ) : turnosDia.length === 0 ? (
+                      <p className="texto-suave">No hay turnos para este día.</p>
+                    ) : (
+                      <TablaTurnos turnos={turnosDia} />
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
     </section>

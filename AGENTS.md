@@ -257,6 +257,13 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Una fecha sin turnos se muestra vacía, sin error.
 - SQL: `supabase/migrations/007_hu07_agenda_profesional.sql`. Pruebas: `tests/agenda.test.mjs` (`npm test`).
 
+### HU-11 — Ver agenda diaria y semanal
+
+- En `/agenda`, Recepción puede alternar entre las vistas Día y Semana para el profesional seleccionado. Profesional, fecha y vista se conservan en la URL.
+- La semana va de lunes a domingo; cada día muestra sus turnos ordenados por horario y un mensaje claro si no tiene turnos.
+- La consulta reutiliza `fn_consultar_agenda_profesional` para cada fecha; no agrega RPC ni acceso directo a tablas.
+- Pruebas de fechas de semana: `tests/agenda.test.mjs` (`npm test`).
+
 ### HU-08 — Autenticación y acceso interno
 
 - Matriz: Inicio todos; `/servicios` Gerente + Mesa de Entradas (**solo lectura** para Mesa); `/profesionales/*`, `/usuarios` (HU-29/30) y `/obras-sociales` (HU-31/32) solo Gerente; pacientes, disponibilidad, agenda, turnos (incluye `/turnos` y `/turnos/[id]/reprogramar`) y pagos (`/pagos`, `/turnos/[id]/pago`, HU-14) Gerente + Mesa de Entradas; `/mi-agenda/*` solo Profesional (HU-12/13, `exigirProfesional`).
