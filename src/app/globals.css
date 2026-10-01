@@ -1345,6 +1345,50 @@ a.badge-horario:hover {
   font-size: 12px;
 }
 
+/* ===== HU-25: repetir un turno semanalmente ===== */
+
+/* Abierto ocupa todo el ancho debajo de la fila de acciones (como cancelar). */
+.acciones-pie .form-repetir {
+  flex: 1 1 100%;
+  min-width: 0; /* si no, la tabla ensancha la página en celular (scrollea adentro) */
+  margin: 8px 0 0;
+}
+
+.form-repetir .form-semanas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.form-repetir .form-semanas .campo {
+  margin: 0;
+  max-width: 260px;
+}
+
+.form-repetir .tabla-repetir {
+  margin-bottom: 12px;
+  box-shadow: none;
+  border: 1px solid var(--borde);
+}
+
+.form-repetir .mensaje-error,
+.form-repetir .mensaje-ok {
+  margin-bottom: 12px;
+}
+
+.lista-repetir {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.lista-repetir li::first-letter {
+  text-transform: uppercase;
+}
+
 /* HU-15: dashboard del Profesional en Inicio. */
 .dashboard-contadores {
   margin-top: 24px;

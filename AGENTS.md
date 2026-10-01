@@ -2,7 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08) e **Indicadores generales** del Gerente (HU-26, vista corta del Incremento 2). Pagos y el resto de los indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08). Pagos y el resto de los indicadores siguen pendientes.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -119,7 +119,7 @@ src/
     (main)/agenda
     (main)/turnos             → listado con filtros y paginación (HU-09)
     (main)/turnos/nuevo       → "Otorgar turno" paso 1 (paciente) y pasos 4-5 (cobertura y confirmar)
-    (main)/turnos/[id]       → resumen + cancelar (HU-10A) + ausencia (HU-10B)
+    (main)/turnos/[id]       → resumen + cancelar (HU-10A) + repetir (HU-25) + ausencia (HU-10B)
     (main)/turnos/[id]/reprogramar → nuevo día y horario del mismo turno (HU-10C)
     (main)/mi-agenda         → agenda propia del Profesional (HU-12)
     (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13) con orden médica (HU-24A)
@@ -283,6 +283,16 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - RPC: `fn_buscar_turnos(texto, profesional, servicio, desde, hasta, estado, pagina)` → `{ total, pagina, por_pagina, turnos }`. Filtros opcionales en AND; texto por palabras (nombre, apellido o comienzo de DNI); 10 por página en orden cronológico.
 - Filtros en la URL (`leerFiltrosTurnos` / `urlTurnos` en `src/lib/turnos/busqueda.ts`). Sin `desde`/`hasta` en la URL = hoy; vacíos = sin límite ("Limpiar filtros"). `RangoFechas` (cliente) impide Hasta < Desde.
 - SQL: `supabase/migrations/016_hu09_buscar_turnos.sql`. Pruebas: `supabase/tests/hu09_buscar_turnos.sql` y `tests/hu09-buscar-turnos.test.mjs`. Evidencia en `docs/hu-09-buscar-turnos.md`.
+
+### HU-25 — Repetir un turno en las próximas semanas
+
+- Desde `/turnos/[id]` (botón "Repetir semanalmente" si el turno está `confirmado`) y justo después de otorgar (`otorgarTurno` redirige a `/turnos/[id]?nuevo=1`, que abre el formulario). Solo **Gerente** y **Mesa de Entradas** (acción `turnos.repetir`).
+- Flujo: semanas (1 a 24) → **Ver fechas** (`fn_turno_repetir_preview`, no escribe) → **Confirmar** (`fn_turno_repetir_confirmar`) → "Se crearon X turnos" + las omitidas con su motivo.
+- Mismo día de la semana y hora, mismo paciente, profesional, servicio y cobertura. **No es todo-o-nada**: crea solo las fechas libres y cada una se revalida al confirmar. Motivos: *Horario ocupado*, *Fuera de la franja del profesional*, *Profesional inactivo*, mensaje de HU-05 si el servicio ya no está asociado.
+- Serie: tabla `serie_turno` (RLS cerrada) + `turno.id_serie` (el original también). Se crea con el primer turno nuevo; si el turno ya tenía serie, se suma a esa. Cada turno es independiente para cancelar / ausente / reprogramar.
+- Regla única: el cuerpo de la disponibilidad está en `fn_horarios_del_dia` (interna, sin rol ni ventana; suma `en_franja`). `fn_consultar_disponibilidad` es el envoltorio con rol + fecha pasada + **30 días** y responde igual que antes. La serie **no** usa la ventana de 30 días (decisión del equipo): el resto de las reglas son las de HU-05/HU-06.
+- Lock: el mismo `pg_advisory_xact_lock(profesional + día)` de otorgar, para el día original y todas las fechas nuevas, tomados juntos en orden por hash (como reprogramar). `EXCLUDE` como última defensa: omite la fecha, no aborta la serie.
+- SQL: `supabase/migrations/018_hu25_repetir_turno.sql`. Pruebas: `supabase/tests/hu25_repetir_turno.sql` y `tests/hu25-repetir-turno.test.mjs`. Evidencia en `docs/hu-25-repetir-turno.md`.
 
 ### Mejoras de UX/UI (menú, otorgar turno, calendario, filtros)
 

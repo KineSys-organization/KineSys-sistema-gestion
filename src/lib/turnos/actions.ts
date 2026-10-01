@@ -7,8 +7,12 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   EstadoAccionTurno,
   EstadoCancelar,
+  EstadoConfirmarRepetir,
   EstadoOtorgar,
+  EstadoPreviaRepetir,
+  FechaRepeticion,
   ResultadoBusquedaTurnos,
+  ResultadoRepeticion,
   Turno,
 } from "@/lib/turnos/tipos";
 import {
@@ -17,6 +21,7 @@ import {
   validarCancelacion,
   validarOtorgarTurno,
   validarReprogramacion,
+  validarRepetir,
 } from "@/lib/turnos/validar";
 import { validarFiltrosTurnos, type FiltrosTurnos } from "@/lib/turnos/busqueda";
 import type { Profesional } from "@/lib/profesionales/tipos";
@@ -56,7 +61,8 @@ export async function otorgarTurno(
 
   const turno = data as Turno;
   revalidatePath("/disponibilidad");
-  redirect(`/turnos/${turno.id_turno}`);
+  // HU-25: ?nuevo=1 hace que el resumen ofrezca repetir el turno las próximas semanas.
+  redirect(`/turnos/${turno.id_turno}?nuevo=1`);
 }
 
 export async function obtenerTurno(id: string): Promise<{
@@ -251,4 +257,68 @@ export async function listarOpcionesFiltroTurnos(): Promise<{
     servicios: (servicios.data ?? []) as Servicio[],
     error: profesionales.error?.message ?? servicios.error?.message ?? null,
   };
+}
+
+// HU-25. Repetir un turno semanalmente. Paso 1: ver las fechas propuestas (no crea nada).
+export async function previsualizarRepeticion(
+  _prev: EstadoPreviaRepetir,
+  formData: FormData
+): Promise<EstadoPreviaRepetir> {
+  const campos = {
+    idTurno: String(formData.get("id_turno") ?? "").trim(),
+    semanas: String(formData.get("semanas") ?? "").trim(),
+  };
+
+  const sinPermiso = await exigirAccion("turnos.repetir");
+  if (sinPermiso) return { error: sinPermiso, semanas: campos.semanas, fechas: null };
+
+  const errorValidacion = validarRepetir(campos);
+  if (errorValidacion) return { error: errorValidacion, semanas: campos.semanas, fechas: null };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("fn_turno_repetir_preview", {
+    p_id_turno: campos.idTurno,
+    p_semanas: Number(campos.semanas),
+  });
+
+  if (error) return { error: error.message, semanas: campos.semanas, fechas: null };
+
+  const fechas = ((data ?? []) as FechaRepeticion[]).map((f) => ({
+    ...f,
+    fecha: String(f.fecha).slice(0, 10),
+  }));
+  return { error: null, semanas: campos.semanas, fechas };
+}
+
+// HU-25. Paso 2: crear los turnos. La base revalida cada fecha en ese momento
+// (el preview puede haber quedado viejo) y crea solo las que siguen libres.
+export async function confirmarRepeticion(
+  _prev: EstadoConfirmarRepetir,
+  formData: FormData
+): Promise<EstadoConfirmarRepetir> {
+  const sinPermiso = await exigirAccion("turnos.repetir");
+  if (sinPermiso) return { error: sinPermiso, resultado: null };
+
+  const campos = {
+    idTurno: String(formData.get("id_turno") ?? "").trim(),
+    semanas: String(formData.get("semanas") ?? "").trim(),
+  };
+
+  const errorValidacion = validarRepetir(campos);
+  if (errorValidacion) return { error: errorValidacion, resultado: null };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("fn_turno_repetir_confirmar", {
+    p_id_turno: campos.idTurno,
+    p_semanas: Number(campos.semanas),
+  });
+
+  if (error) return { error: error.message, resultado: null };
+
+  // Hay turnos nuevos: se ven en el listado, la agenda y la disponibilidad.
+  revalidatePath(`/turnos/${campos.idTurno}`);
+  revalidatePath("/turnos");
+  revalidatePath("/agenda");
+  revalidatePath("/disponibilidad");
+  return { error: null, resultado: data as ResultadoRepeticion };
 }
