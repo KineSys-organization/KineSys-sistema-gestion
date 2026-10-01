@@ -14,7 +14,7 @@ import { PagoForm } from "@/components/pagos/PagoForm";
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ok?: string; corregir?: string }>;
+  searchParams: Promise<{ ok?: string; corregir?: string; volver?: string }>;
 };
 
 // HU-14. Pago de un turno: registrar el cobro, consultarlo o corregirlo.
@@ -23,7 +23,8 @@ type Props = {
 export default async function PagoTurnoPage({ params, searchParams }: Props) {
   await exigirRecepcion();
   const { id } = await params;
-  const { ok, corregir } = await searchParams;
+  const { ok, corregir, volver } = await searchParams;
+  const volverAlTurno = volver === "turno";
   const { data, error } = await obtenerPagoTurno(id);
 
   if (error || !data) {
@@ -33,7 +34,7 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
         <p className="mensaje-error" role="alert">
           {error ?? "El turno no existe"}
         </p>
-        <Link href="/pagos">Volver al listado de pagos</Link>
+        <Link href="/pagos">Volver a pagos</Link>
       </section>
     );
   }
@@ -50,8 +51,11 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
             {pago ? "Pago registrado del turno." : "Registrá el cobro del turno."}
           </p>
         </div>
-        <Link className="boton-secundario boton-inline" href={`/turnos/${turno.id_turno}`}>
-          Volver al turno
+        <Link
+          className="boton-secundario boton-inline"
+          href={volverAlTurno ? `/turnos/${turno.id_turno}` : "/pagos"}
+        >
+          {volverAlTurno ? "Volver al turno" : "Volver"}
         </Link>
       </div>
 
