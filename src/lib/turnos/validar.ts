@@ -45,10 +45,16 @@ export function esIdTurno(id: string): boolean {
   return UUID_OK.test(id);
 }
 
-// Una sola obra: se preselecciona. Ninguna: Particular. Varias: Recepción elige.
+// Una obra inactiva se conserva en el paciente, pero no se ofrece como cobertura.
+export function obrasActivasParaCobertura(obras: ObraSocialPaciente[]): ObraSocialPaciente[] {
+  return obras.filter((obra) => obra.activo !== false);
+}
+
+// Una sola obra activa: se preselecciona. Ninguna: Particular. Varias: Recepción elige.
 export function coberturaInicial(obras: ObraSocialPaciente[]): string {
-  if (obras.length === 1) return obras[0].id_obra_social;
-  if (obras.length === 0) return PARTICULAR;
+  const activas = obrasActivasParaCobertura(obras);
+  if (activas.length === 1) return activas[0].id_obra_social;
+  if (activas.length === 0) return PARTICULAR;
   return "";
 }
 

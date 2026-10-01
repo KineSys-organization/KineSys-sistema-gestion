@@ -7,6 +7,7 @@ import type { EstadoOtorgar } from "@/lib/turnos/tipos";
 import type { ObraSocialPaciente } from "@/lib/pacientes/tipos";
 import { urlPasoHorario } from "@/lib/turnos/flujo";
 import {
+  obrasActivasParaCobertura,
   coberturaInicial,
   MENSAJE_NO_DISPONIBLE,
   PARTICULAR,
@@ -30,7 +31,8 @@ export function OtorgarTurnoForm({
   hora: string;
 }) {
   const [estado, action, pending] = useActionState(otorgarTurno, vacio);
-  // Una sola obra viene preseleccionada; con varias, Recepción tiene que elegir.
+  const obrasActivas = obrasActivasParaCobertura(obras);
+  // Una sola obra activa viene preseleccionada; con varias, Recepción tiene que elegir.
   const [cobertura, setCobertura] = useState(coberturaInicial(obras));
 
   // Se envía con onSubmit (y no con action={...}) para que React no resetee el
@@ -52,7 +54,7 @@ export function OtorgarTurnoForm({
       <fieldset className="fieldset-obras">
         <legend>¿Con qué cobertura se atiende?</legend>
         <div className="lista-checks">
-          {obras.map((obra) => (
+          {obrasActivas.map((obra) => (
             <label key={obra.id_obra_social} className="check-item">
               <input
                 type="radio"

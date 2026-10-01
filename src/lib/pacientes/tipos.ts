@@ -1,12 +1,14 @@
 export type ObraSocial = {
   id_obra_social: string;
   nombre_obra_social: string;
+  activo?: boolean;
 };
 
 export type ObraSocialPaciente = {
   id_obra_social: string;
   nombre_obra_social: string;
   numero_afiliado: string;
+  activo?: boolean;
 };
 
 export type Paciente = {
