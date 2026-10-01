@@ -875,6 +875,28 @@ a.badge-horario:hover {
   margin-left: auto;
 }
 
+.agenda-controles {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.agenda-semana {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
+  gap: 16px;
+}
+
+.agenda-dia {
+  min-width: 0;
+}
+
+.agenda-dia .modulo-cabecera {
+  margin-bottom: 12px;
+}
+
 .texto-observaciones {
   white-space: pre-wrap;
   font-weight: 400;
