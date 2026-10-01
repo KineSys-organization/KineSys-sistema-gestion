@@ -326,7 +326,8 @@ select {
 
 /* Shell del Gerente: barra superior + menú lateral claro, como el ERP. */
 .shell-gerente {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -340,6 +341,7 @@ select {
   gap: 16px;
   padding: 12px 24px;
   z-index: 40;
+  flex-shrink: 0;
 }
 
 .shell-gerente-usuario {
@@ -373,6 +375,7 @@ select {
   flex: 1;
   display: flex;
   min-height: 0;
+  overflow: hidden;
 }
 
 .menu-lateral-claro {
@@ -381,11 +384,25 @@ select {
   background: var(--blanco);
   border-right: 1px solid var(--borde);
   position: relative;
-  min-height: calc(100vh - 60px);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.menu-lateral-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .menu-cerrado .menu-lateral-claro {
   width: 28px;
+}
+
+.menu-cerrado .menu-lateral-scroll {
+  overflow: hidden;
 }
 
 .menu-gerente {
@@ -474,6 +491,8 @@ select {
 .dashboard-contenido {
   flex: 1;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .barra-movil {

@@ -111,7 +111,9 @@ function ShellGerente({
           />
         )}
         <aside className="menu-lateral-claro" aria-label="Menú">
-          <MenuGerente colapsado={!abierto} />
+          <div className="menu-lateral-scroll">
+            <MenuGerente colapsado={!abierto} />
+          </div>
           <button
             type="button"
             className="menu-plegar"
