@@ -71,6 +71,7 @@ function camposDesde(formData: FormData) {
     idTurno: String(formData.get("id_turno") ?? ""),
     observaciones: String(formData.get("observaciones") ?? ""),
     motivo: String(formData.get("motivo_consulta") ?? ""),
+    orden: String(formData.get("orden_medica") ?? ""),
   };
 }
 
@@ -84,7 +85,7 @@ function refrescarAgendas(idTurno: string) {
 
 // HU-13. Registrar la atención: la base valida que el turno sea propio, confirmado,
 // del día y no atendido; guarda fecha, profesional, paciente (del turno),
-// observaciones y motivo, y pasa el turno a 'atendido'.
+// observaciones, motivo y orden médica (HU-24A, opcional), y pasa el turno a 'atendido'.
 export async function registrarAtencion(
   _prev: EstadoAtencion,
   formData: FormData
@@ -102,6 +103,8 @@ export async function registrarAtencion(
     p_id_turno: idTurno,
     p_observaciones: campos.observaciones.trim(),
     p_motivo_consulta: campos.motivo.trim() || null,
+    // HU-24A: vacía = sin orden (la base también la normaliza a null).
+    p_orden_medica: campos.orden.trim() || null,
   });
 
   if (error) return { ok: false, error: error.message };
@@ -110,7 +113,8 @@ export async function registrarAtencion(
   redirect(`/mi-agenda/${idTurno}?ok=registrada`);
 }
 
-// HU-13. Edición explícita de una atención ya registrada (solo observaciones y motivo).
+// HU-13. Edición explícita de una atención ya registrada (observaciones, motivo
+// y, desde HU-24A, la orden médica).
 export async function editarAtencion(
   _prev: EstadoAtencion,
   formData: FormData
@@ -128,6 +132,8 @@ export async function editarAtencion(
     p_id_turno: idTurno,
     p_observaciones: campos.observaciones.trim(),
     p_motivo_consulta: campos.motivo.trim() || null,
+    // HU-24A: vacía = sin orden (la base también la normaliza a null).
+    p_orden_medica: campos.orden.trim() || null,
   });
 
   if (error) return { ok: false, error: error.message };

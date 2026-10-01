@@ -6,6 +6,7 @@ export type Atencion = {
   fecha_atencion: string;
   observaciones: string;
   motivo_consulta: string | null;
+  orden_medica: string | null; // HU-24A (null = sin orden)
   registrado_en: string;
   editado_en: string | null;
 };

@@ -5,9 +5,10 @@ const UUID_OK =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const FECHA_OK = /^\d{4}-\d{2}-\d{2}$/;
 
-// Mismos límites que los check de la tabla atencion (migración 010).
+// Mismos límites que los check de la tabla atencion (migraciones 010 y 019).
 export const LARGO_MAXIMO_OBSERVACIONES = 2000;
 export const LARGO_MAXIMO_MOTIVO_CONSULTA = 200;
+export const LARGO_MAXIMO_ORDEN_MEDICA = 2000; // HU-24A
 
 const ZONA_ARGENTINA = "America/Argentina/Buenos_Aires";
 
@@ -50,6 +51,8 @@ export type CamposAtencion = {
   idTurno: string;
   observaciones: string;
   motivo: string;
+  // HU-24A: opcional (sin orden = vacío o no viene).
+  orden?: string;
 };
 
 // Registrar y editar validan lo mismo.
@@ -64,6 +67,12 @@ export function validarAtencion(input: CamposAtencion): string | null {
 
   if (input.motivo.trim().length > LARGO_MAXIMO_MOTIVO_CONSULTA) {
     return "El motivo de consulta no puede superar los 200 caracteres";
+  }
+
+  // HU-24A: la orden médica es opcional; solo se controla el largo (después del trim,
+  // igual que la base).
+  if ((input.orden ?? "").trim().length > LARGO_MAXIMO_ORDEN_MEDICA) {
+    return "La orden médica no puede superar los 2000 caracteres";
   }
 
   return null;

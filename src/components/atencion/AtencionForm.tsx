@@ -6,6 +6,7 @@ import type { EstadoAtencion } from "@/lib/atencion/tipos";
 import {
   LARGO_MAXIMO_MOTIVO_CONSULTA,
   LARGO_MAXIMO_OBSERVACIONES,
+  LARGO_MAXIMO_ORDEN_MEDICA,
 } from "@/lib/atencion/validar";
 
 const inicial: EstadoAtencion = { ok: false, error: null };
@@ -16,17 +17,25 @@ type Props = {
   modo: "registrar" | "editar";
   observaciones?: string;
   motivo?: string | null;
+  ordenMedica?: string | null; // HU-24A
 };
 
 // HU-13. Formulario de la atención. Es cliente por useActionState y porque
 // la edición se abre a propósito con un botón (no se confunde con el registro).
-export function AtencionForm({ idTurno, modo, observaciones = "", motivo = "" }: Props) {
+export function AtencionForm({
+  idTurno,
+  modo,
+  observaciones = "",
+  motivo = "",
+  ordenMedica = "",
+}: Props) {
   const esEdicion = modo === "editar";
   const [abierto, setAbierto] = useState(!esEdicion);
   // Controlados: React 19 resetea el form después de la action y, si la base
   // devuelve un error, no queremos perder lo que el profesional escribió.
   const [textoObservaciones, setTextoObservaciones] = useState(observaciones);
   const [textoMotivo, setTextoMotivo] = useState(motivo ?? "");
+  const [textoOrden, setTextoOrden] = useState(ordenMedica ?? "");
   const [estado, action, pending] = useActionState(
     esEdicion ? editarAtencion : registrarAtencion,
     inicial
@@ -45,7 +54,7 @@ export function AtencionForm({ idTurno, modo, observaciones = "", motivo = "" }:
       <h3>{esEdicion ? "Editar atención" : "Registrar atención"}</h3>
       <p className="texto-suave">
         {esEdicion
-          ? "Corregí las observaciones o el motivo. La fecha, el profesional y el paciente no cambian."
+          ? "Corregí las observaciones, el motivo o la orden médica. La fecha, el profesional y el paciente no cambian."
           : "Al confirmar, el turno pasa a Atendido con la fecha de hoy y tu nombre como profesional."}
       </p>
       <input type="hidden" name="id_turno" value={idTurno} />
@@ -77,6 +86,24 @@ export function AtencionForm({ idTurno, modo, observaciones = "", motivo = "" }:
         />
       </div>
 
+      {/* HU-24A: la orden médica es un bloque aparte; no se mezcla con motivo ni observaciones. */}
+      <div className="campo campo-orden-medica">
+        <label htmlFor="orden_medica">Orden médica (opcional)</label>
+        <textarea
+          id="orden_medica"
+          name="orden_medica"
+          rows={4}
+          maxLength={LARGO_MAXIMO_ORDEN_MEDICA}
+          value={textoOrden}
+          onChange={(event) => setTextoOrden(event.target.value)}
+          placeholder="Diagnóstico, indicaciones, tratamiento..."
+          aria-describedby="orden_medica_contador"
+        />
+        <span id="orden_medica_contador" className="contador-caracteres">
+          {textoOrden.length} / {LARGO_MAXIMO_ORDEN_MEDICA}
+        </span>
+      </div>
+
       {estado.error && (
         <p className="mensaje-error" role="alert">
           {estado.error}
@@ -100,6 +127,7 @@ export function AtencionForm({ idTurno, modo, observaciones = "", motivo = "" }:
               // Descarta los cambios no guardados.
               setTextoObservaciones(observaciones);
               setTextoMotivo(motivo ?? "");
+              setTextoOrden(ordenMedica ?? "");
               setAbierto(false);
             }}
           >
