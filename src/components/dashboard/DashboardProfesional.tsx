@@ -305,13 +305,15 @@ export async function DashboardProfesional({
                     return (
                     <tr key={t.id_turno} className={t.estado === "cancelado" ? "fila-cancelada" : undefined}>
                       <td>
-                        {t.hora_inicio} a {t.hora_fin}
-                        {cercania && (
-                          <IconoProximidad
-                            tipo={cercania}
-                            etiqueta={textoProximidad(t.fecha.slice(0, 10), hoy)}
-                          />
-                        )}
+                        <div className="horario-con-proximidad">
+                          <span>{t.hora_inicio} a {t.hora_fin}</span>
+                          {cercania && (
+                            <IconoProximidad
+                              tipo={cercania}
+                              etiqueta={textoProximidad(t.fecha.slice(0, 10), hoy)}
+                            />
+                          )}
+                        </div>
                         <span className="texto-suave proximidad-texto">
                           {formatearFechaCorta(t.fecha)}
                         </span>

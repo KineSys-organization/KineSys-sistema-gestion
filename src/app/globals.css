@@ -2009,3 +2009,19 @@ a.badge-horario:hover {
   display: block;
   font-size: 12px;
 }
+
+.horario-con-proximidad {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.horario-con-proximidad .proximidad-icono {
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  margin: 0;
+  border-radius: 7px;
+}
