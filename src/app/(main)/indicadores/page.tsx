@@ -137,12 +137,12 @@ export default async function IndicadoresPage({ searchParams }: Props) {
           </p>
 
           <div className="indicadores-grid bloque">
-            <div className="tarjeta indicador indicador-destacado">
+            <div className="tarjeta indicador">
               <span className="indicador-titulo">Turnos del período</span>
               <strong className="indicador-valor">{data.turnos.total}</strong>
               <span className="indicador-detalle">Todos los estados</span>
             </div>
-            <div className="tarjeta indicador indicador-destacado">
+            <div className="tarjeta indicador">
               <span className="indicador-titulo">Pacientes nuevos</span>
               <strong className="indicador-valor">{data.pacientes_nuevos}</strong>
               <span className="indicador-detalle">Dados de alta en el período</span>
@@ -172,7 +172,7 @@ export default async function IndicadoresPage({ searchParams }: Props) {
           </div>
 
           <div className="indicadores-grid bloque">
-            <article className="tarjeta indicador indicador-destacado">
+            <article className="tarjeta indicador">
               <span className="indicador-titulo">Ocupación del centro</span>
               <strong className="indicador-valor">
                 {ocupacion(dashboard.data.ocupacion_centro.porcentaje, dashboard.data.ocupacion_centro.estado)}

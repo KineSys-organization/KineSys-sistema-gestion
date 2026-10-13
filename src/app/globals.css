@@ -1733,10 +1733,18 @@ a.badge-horario:hover {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  border-left: 4px solid var(--azul-principal);
 }
 
-.indicador-destacado {
-  border-left: 4px solid var(--azul-principal);
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .indicador {
+    transition: transform 160ms ease, box-shadow 160ms ease;
+  }
+
+  .indicador:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sombra), 0 10px 24px rgb(0 101 166 / 10%);
+  }
 }
 
 .indicador-titulo {
