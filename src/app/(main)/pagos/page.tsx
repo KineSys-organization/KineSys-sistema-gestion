@@ -3,16 +3,19 @@ import { exigirRecepcion } from "@/lib/auth";
 import { listarPagos } from "@/lib/pagos/actions";
 import {
   etiquetaMedio,
+  etiquetaMotivoReembolso,
   formatearMomento,
   formatearPesos,
   leerFiltrosPagos,
   MENSAJE_SIN_PAGOS,
+  OPCIONES_FILTRO_REEMBOLSO,
   totalPaginasPagos,
   urlPagos,
   type ParamsPagos,
 } from "@/lib/pagos/validar";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { RangoFechas } from "@/components/turnos/RangoFechas";
+import { EstadoPagoBadge } from "@/components/pagos/EstadoPagoBadge";
 
 type Props = {
   searchParams: Promise<ParamsPagos>;
@@ -27,6 +30,7 @@ function fechaCorta(fecha: string): string {
 // HU-14. Listado de pagos con filtros: paciente y período de la FECHA DEL PAGO.
 // Del más nuevo al más viejo, de a 10. Los filtros viven en la URL (paginar o volver
 // desde el detalle conserva la búsqueda). Filtrar vuelve a la página 1.
+// HU-22: estado del pago (Pagado / Reembolsado) y filtro Con / Sin reembolso.
 export default async function PagosPage({ searchParams }: Props) {
   await exigirRecepcion();
   const filtros = leerFiltrosPagos(await searchParams);
@@ -62,6 +66,16 @@ export default async function PagosPage({ searchParams }: Props) {
         </div>
         {/* Período de la fecha del pago (no la del turno). */}
         <RangoFechas desde={filtros.desde ?? ""} hasta={filtros.hasta ?? ""} />
+        <div className="campo">
+          <label htmlFor="reembolso">Reembolso</label>
+          <select id="reembolso" name="reembolso" defaultValue={filtros.reembolso ?? ""}>
+            {OPCIONES_FILTRO_REEMBOLSO.map((o) => (
+              <option key={o.valor} value={o.valor}>
+                {o.etiqueta}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="fila-acciones">
           <button className="boton-principal boton-inline" type="submit">
             Filtrar
@@ -98,6 +112,7 @@ export default async function PagosPage({ searchParams }: Props) {
                 <th>Importe cobrado</th>
                 <th>Fecha del pago</th>
                 <th>Medio</th>
+                <th>Estado</th>
                 <th></th>
               </tr>
             </thead>
@@ -118,6 +133,18 @@ export default async function PagosPage({ searchParams }: Props) {
                   </td>
                   <td>{formatearMomento(pago.registrado_en)}</td>
                   <td>{etiquetaMedio(pago.medio_pago)}</td>
+                  <td>
+                    <EstadoPagoBadge estado={pago.estado_pago} />
+                    {pago.reembolso && (
+                      <span className="texto-suave">
+                        <br />
+                        {formatearMomento(pago.reembolso.registrado_en)}
+                        <br />
+                        {etiquetaMotivoReembolso(pago.reembolso.motivo)} ·{" "}
+                        {formatearPesos(pago.reembolso.importe)}
+                      </span>
+                    )}
+                  </td>
                   <td>
                     <Link className="boton-pill" href={`/turnos/${pago.id_turno}/pago`}>
                       Ver detalle

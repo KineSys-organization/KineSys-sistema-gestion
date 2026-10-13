@@ -7,7 +7,8 @@ import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 import { RepetirTurnoForm } from "@/components/turnos/RepetirTurnoForm";
 import { obtenerTurno } from "@/lib/turnos/actions";
 import { obtenerPagoTurno } from "@/lib/pagos/actions";
-import { etiquetaMedio, formatearPesos } from "@/lib/pagos/validar";
+import { etiquetaMedio, formatearPesos, puedeCorregirPago } from "@/lib/pagos/validar";
+import { EstadoPagoBadge } from "@/components/pagos/EstadoPagoBadge";
 import { urlPasoHorario, urlPasoPaciente } from "@/lib/turnos/flujo";
 import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
 
@@ -153,10 +154,16 @@ export default async function TurnoPage({ params, searchParams }: Props) {
           </p>
         ) : detallePago?.pago ? (
           <p>
-            Cobrado <strong>{formatearPesos(detallePago.pago.importe_final)}</strong> ·{" "}
+            <EstadoPagoBadge estado={detallePago.pago.estado} /> Cobrado{" "}
+            <strong>{formatearPesos(detallePago.pago.importe_final)}</strong> ·{" "}
             {etiquetaMedio(detallePago.pago.medio_pago)} ·{" "}
-            {formatearMomento(detallePago.pago.registrado_en)}{" "}
-            <Link href={`/turnos/${turno.id_turno}/pago?volver=turno`}>Ver o corregir</Link>
+            {formatearMomento(detallePago.pago.registrado_en)}
+            {/* HU-22: reembolsado → ya no se corrige, solo se consulta. */}
+            {detallePago.reembolso &&
+              ` · Reembolsado ${formatearMomento(detallePago.reembolso.registrado_en)}`}{" "}
+            <Link href={`/turnos/${turno.id_turno}/pago?volver=turno`}>
+              {puedeCorregirPago(detallePago.pago) ? "Ver o corregir" : "Ver detalle"}
+            </Link>
           </p>
         ) : detallePago?.cobrable ? (
           <p>

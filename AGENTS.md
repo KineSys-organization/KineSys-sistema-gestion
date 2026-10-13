@@ -352,6 +352,15 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Front: importes en centavos (`src/lib/pagos/validar.ts`), coma o punto decimal, sin separador de miles; final en vivo en `PagoForm`.
 - SQL: `supabase/migrations/017_hu14_pagos.sql`. Pruebas: `supabase/tests/hu14_pagos.sql` y `tests/hu14-pagos.test.mjs` (`npm test`). Evidencia en `docs/hu-14-pagos.md`.
 
+### HU-22 / HU-17 — Reembolso de un pago (estado Reembolsado)
+
+- En `/turnos/[id]/pago`: botón "Registrar reembolso" si `reembolsable` (lo decide la base) **y** el rol tiene `pagos.reembolsar` (Gerente + Mesa de Entradas). `mostrarBotonReembolso` en `src/lib/pagos/validar.ts`.
+- `ReembolsoForm` (cliente): motivo (`turno_cancelado`, `pedido_paciente`, `otro`), detalle ≤ 200 (obligatorio con Otro), medio de devolución (por defecto el del pago) e importe de solo lectura (= `importe_final`, reembolso total). "Revisar reembolso" → resumen + "Esta acción no se deshace" → "Confirmar reembolso" (deshabilitado al enviar). Aviso fijo `AVISO_REEMBOLSO` (billetera virtual fuera del sistema).
+- RPC: `fn_registrar_reembolso(p_id_turno, p_motivo, p_detalle, p_medio)` (devuelve lo mismo que `fn_obtener_pago`). `fn_obtener_pago` suma `reembolsable`, `pago.estado` (Pagado/Reembolsado) y `reembolso`. Validación con los mismos mensajes en `validarReembolso`.
+- Reembolsado: badge `EstadoPagoBadge`, bloque con fecha/hora AR, motivo, detalle, importe, medio y quién lo registró; se ocultan "Registrar reembolso" y "Corregir pago" (`puedeCorregirPago`; `fn_corregir_pago` igual lo rechaza). El turno no cambia de estado.
+- `/pagos`: columna Estado (+ fecha, motivo e importe del reembolso) y filtro Reembolso Todos / Con / Sin (`p_reembolso` de `fn_listar_pagos`, en la URL con `urlPagos`).
+- El SQL ya está aplicado en el proyecto (no lo toca el front). Pruebas: `tests/hu22-reembolso.test.mjs`.
+
 ### HU-15 — Dashboard del profesional
 
 - En `/` (Inicio), solo para el **Profesional** (acción `atencion.dashboard`); Recepción y Gerente no lo ven (usan `/agenda`). Mes y día elegido en la URL: `/?mes=2026-10&dia=2026-10-05`.
