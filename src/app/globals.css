@@ -573,6 +573,10 @@ select {
   max-width: 680px;
 }
 
+.modulo-paciente-ficha {
+  max-width: 1180px;
+}
+
 .modulo-cabecera {
   display: flex;
   align-items: flex-start;
@@ -592,10 +596,20 @@ select {
   gap: 20px;
 }
 
+.paciente-ficha-grid {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+
 @media (min-width: 900px) {
   .modulo-grid {
     grid-template-columns: 340px 1fr;
     align-items: start;
+  }
+
+  .paciente-ficha-grid {
+    grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr);
   }
 }
 
@@ -701,8 +715,24 @@ select {
 }
 
 .badge-inactivo {
-  background: #eef1f4;
-  color: #56616b; /* 5.4:1 (antes #6b7680, 4.1:1) */
+  background: #fdeaea;
+  color: #a11b1b;
+}
+
+.estado-paciente-confirmacion {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #f1caca;
+  border-radius: 10px;
+  background: #fff8f8;
+}
+
+.estado-paciente-confirmacion ul {
+  padding-left: 22px;
+}
+
+.estado-paciente-confirmacion li + li {
+  margin-top: 8px;
 }
 
 .lista-checks {
