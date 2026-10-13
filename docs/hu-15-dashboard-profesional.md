@@ -14,7 +14,7 @@ Rama: `feature/hu-15-dashboard-profesional`. Issue: #15. Depende de HU-12/HU-13 
 | 4 | Semana actual (lunes a domingo, hora de Argentina): cancelaciones y ausencias **suyas** | ✅ |
 | 5 | Calendario mensual con sus turnos en el día que corresponde; mes anterior y siguiente | ✅ |
 | 6 | Al elegir un día se listan sus turnos por hora de inicio (hora, paciente, servicio, estado) y cada uno abre `/mi-agenda/[id]` | ✅ |
-| 7 | Color por proximidad en los confirmados; el color no es el único indicador (fecha, hora y estado en texto) | ✅ |
+| 7 | El color depende del estado y los íconos muestran la proximidad (HU-36, #70) | ✅ |
 | 8 | Un mes sin turnos se muestra vacío, sin error | ✅ |
 | 9 | Sábado y domingo se muestran; si hay turnos aparecen, si no quedan vacíos | ✅ |
 | 10 | Recepción y Gerente no ven este dashboard (usan `/agenda`) | ✅ |
@@ -23,15 +23,15 @@ Rama: `feature/hu-15-dashboard-profesional`. Issue: #15. Depende de HU-12/HU-13 
 
 - **Turnos de hoy**: los del día sin contar los cancelados. **Atendidos**: estado `atendido`. **Pendientes**: estado `confirmado` (todavía sin atención).
 - **Semana**: la que contiene a hoy en `America/Argentina/Buenos_Aires`, de lunes a domingo. Cancelaciones y ausencias se cuentan por el día del turno.
-- **Proximidad** (confirmados, respecto de hoy): hoy rojo · 1 a 3 días naranja · 4 a 7 días verde · más de 7 días azul. Atendidos, cancelados, ausentes o confirmados ya pasados: gris.
+- **Proximidad:** ver la regla actualizada por HU-36 en `docs/hu-36-calendario-colores-proximidad.md`.
 
 ## Flujo
 
 1. El Profesional entra a Inicio. Arriba sigue el resumen del día de HU-12 ("Atender al próximo").
 2. Debajo: cinco contadores (hoy y semana) y el calendario del mes actual.
 3. Mes anterior / siguiente / Mes actual y el día elegido quedan en la URL (`/?mes=2026-10&dia=2026-10-05`). Un mes o día inválido en la URL vuelve al mes actual, sin error.
-4. Cada día muestra hasta 3 turnos (hora + estado, borde con el color); el resto se ve al elegir el día.
-5. La lista del día muestra horario, fecha y "En N días / Hoy / Hace N días", paciente, servicio, estado y el link **Ver turno** a `/mi-agenda/[id]`.
+4. Cada día muestra hasta 3 turnos (hora + estado, color por estado e ícono de proximidad si corresponde); el resto se ve al elegir el día.
+5. La lista del día muestra horario, fecha, paciente, servicio, estado e ícono accesible de proximidad si corresponde, y el link **Ver turno** a `/mi-agenda/[id]`.
 
 ## Backend — `supabase/migrations/017_hu15_dashboard_profesional.sql`
 
@@ -58,12 +58,12 @@ Solo agrega una función de lectura; no crea ni modifica tablas.
 ## Front
 
 - `src/lib/dashboard/tipos.ts`: tipos de la respuesta.
-- `src/lib/dashboard/calendario.ts`: `armarMes`, `proximidad`, `textoProximidad`, `diaElegido`, `sumarMeses`, `urlDashboard` (lógica pura).
+- `src/lib/dashboard/calendario.ts`: `armarMes`, `colorPorEstado`, `proximidad`, `textoProximidad`, `diaElegido`, `sumarMeses`, `urlDashboard` (lógica pura).
 - `src/lib/dashboard/actions.ts`: `consultarDashboard(mes)` → `exigirAccion("atencion.dashboard")` → RPC.
 - `src/components/dashboard/DashboardProfesional.tsx`: contadores, calendario y lista del día (Server Component).
 - `src/app/(main)/page.tsx`: lo muestra solo si el rol es Profesional.
 - `src/lib/auth/permisos.ts`: acción `atencion.dashboard` (solo Profesional).
-- `globals.css`: `.dia-mes*`, `.turno-chip`, `.prox-*`, `.referencias-proximidad`.
+- `globals.css`: `.dia-mes*`, `.turno-chip`, colores de estado e íconos de proximidad.
 
 ## Pruebas
 
@@ -78,7 +78,7 @@ Solo agrega una función de lectura; no crea ni modifica tablas.
 | 8 | SQL: enero 2020 → lista vacía. Unit: `armarMes` de un mes sin turnos |
 | 10 | SQL: Mesa de Entradas, Gerente y cuenta sin fila → *No tenés permisos*. Unit: matriz HU-08 con `atencion.dashboard`; Inicio solo lo muestra al Profesional |
 
-Verificación visual (29/09/2026, Profesional Juarez, Agustin): contadores de hoy y de la semana, septiembre con los atendidos/cancelados en gris, octubre con turnos confirmados de prueba en naranja, verde y azul (borrados después), mes vacío y parámetros inválidos. Con Mesa de Entradas el Inicio no muestra el calendario.
+Verificación visual histórica de HU-15, anterior a HU-36 (29/09/2026, Profesional Juarez, Agustin): contadores de hoy y de la semana, septiembre con los atendidos/cancelados en gris, octubre con turnos confirmados de prueba en naranja, verde y azul (borrados después), mes vacío y parámetros inválidos. Con Mesa de Entradas el Inicio no muestra el calendario. Para los colores e íconos vigentes, ver `docs/hu-36-calendario-colores-proximidad.md`.
 
 ### Cómo correrlas
 

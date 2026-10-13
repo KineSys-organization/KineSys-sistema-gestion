@@ -705,6 +705,21 @@ select {
   color: #56616b; /* 5.4:1 (antes #6b7680, 4.1:1) */
 }
 
+/* HU-36: los estados de turno usan los mismos tonos en todas las agendas. */
+.badge-turno {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-turno-azul { background: #e4f2fa; color: #124b70; }
+.badge-turno-verde { background: #e4f5eb; color: #155b3b; }
+.badge-turno-naranja { background: #fff3d6; color: #754d06; }
+.badge-turno-gris { background: #eef1f4; color: #56616b; }
+
 .lista-checks {
   display: flex;
   flex-direction: column;
@@ -1876,9 +1891,12 @@ a.badge-horario:hover {
   border: 2px solid var(--azul-principal);
 }
 
-/* Cada turno del día: hora + estado en texto; el color de la izquierda es la proximidad. */
+/* HU-36: el color del turno indica su estado; los íconos indican proximidad. */
 .turno-chip {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
   padding: 1px 6px;
   border-style: solid;
   border-width: 0 0 0 4px;
@@ -1890,8 +1908,14 @@ a.badge-horario:hover {
   text-overflow: ellipsis;
 }
 
+.turno-chip-texto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .turno-chip-estado {
-  color: var(--gris-texto);
+  color: inherit;
+  font-weight: 600;
 }
 
 .turno-chip-mas {
@@ -1899,11 +1923,37 @@ a.badge-horario:hover {
   color: var(--gris-texto);
 }
 
-.prox-hoy { border-color: #d64545; background-color: #fdecec; }
-.prox-pronto { border-color: #e8871e; background-color: #fdf1e3; }
-.prox-semana { border-color: #1b7a45; background-color: #e5f7ec; }
-.prox-lejos { border-color: #0066a1; background-color: #e6f1f8; }
-.prox-gris { border-color: #9aa5ad; background-color: #f0f2f4; }
+.turno-color-azul { border-left-color: #0066a1; color: #124b70; background-color: #e4f2fa; }
+.turno-color-verde { border-left-color: #1b7a45; color: #155b3b; background-color: #e4f5eb; }
+.turno-color-naranja { border-left-color: #e8871e; color: #754d06; background-color: #fff3d6; }
+.turno-color-gris { border-left-color: #7b8790; color: #56616b; background-color: #eef1f4; }
+.turno-chip.turno-color-gris .turno-chip-texto { text-decoration: line-through; }
+
+.proximidad-icono {
+  display: inline-block;
+  flex: 0 0 auto;
+  box-sizing: content-box;
+  width: 22px;
+  height: 22px;
+  padding: 4px;
+  margin-left: 4px;
+  color: var(--azul-principal);
+  background: #e8f3fa;
+  border: 1px solid #d2e6f3;
+  border-radius: 9px;
+  vertical-align: middle;
+}
+
+.turno-chip .proximidad-icono {
+  box-sizing: border-box;
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  margin-left: 2px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
 
 .referencias-proximidad {
   display: flex;
@@ -1919,6 +1969,29 @@ a.badge-horario:hover {
 .referencias-proximidad li {
   display: flex;
   align-items: center;
+}
+
+.referencias-calendario {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--gris-texto);
+  font-size: 13px;
+}
+
+.referencia-grupo > strong {
+  color: var(--azul-oscuro);
+  font-size: 12px;
+}
+
+.referencia-grupo .referencias-proximidad {
+  margin-top: 6px;
+}
+
+.referencia-grupo .proximidad-icono {
+  width: 22px;
+  height: 22px;
+  margin: 0 6px 0 0;
 }
 
 .referencia-color {
