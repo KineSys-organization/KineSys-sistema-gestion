@@ -1756,6 +1756,56 @@ a.badge-horario:hover {
   font-size: 12px;
 }
 
+/* HU-18. Resumen por estado con tonos suaves y texto de alto contraste. */
+.tabla-operativa {
+  min-width: 880px;
+}
+
+.estados-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 290px;
+}
+
+.estado-total,
+.estado-indicador {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.estado-total {
+  color: var(--azul-oscuro);
+  background: #e8f2f8;
+}
+
+.estado-confirmado {
+  color: #124b70;
+  background: #e4f2fa;
+}
+
+.estado-atendido {
+  color: #155b3b;
+  background: #e4f5eb;
+}
+
+.estado-cancelado {
+  color: #8b2635;
+  background: #fdebed;
+}
+
+.estado-ausente {
+  color: #754d06;
+  background: #fff3d6;
+}
+
 /* HU-14: pagos. Importe final destacado (se ve antes de guardar) y bloque en el detalle del turno. */
 .importe-final {
   margin: 4px 0 12px;

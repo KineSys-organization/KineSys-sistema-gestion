@@ -51,6 +51,12 @@ export default async function IndicadoresPage({ searchParams }: Props) {
           <h2>Indicadores</h2>
           <p className="texto-suave">Resumen del consultorio en el período que elijas.</p>
         </div>
+        <Link
+          className="boton-secundario boton-inline"
+          href={`/indicadores/operativo?desde=${periodo.desde}&hasta=${periodo.hasta}`}
+        >
+          Ver dashboard operativo
+        </Link>
       </div>
 
       <form className="tarjeta bloque filtro-fecha" method="get">

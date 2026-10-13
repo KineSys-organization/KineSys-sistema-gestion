@@ -37,6 +37,7 @@ const MATRIZ = {
   "/mi-agenda/abc": [false, false, true],
   // HU-26: indicadores generales, solo Gerente.
   "/indicadores": [true, false, false],
+  "/indicadores/operativo": [true, false, false], // HU-18
   // HU-14: pagos, Recepción y Gerente.
   "/pagos": [true, true, false],
   "/turnos/abc/pago": [true, true, false],
