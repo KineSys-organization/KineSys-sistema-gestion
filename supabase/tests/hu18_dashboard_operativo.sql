@@ -1,5 +1,5 @@
 -- Pruebas HU-18. Todo se revierte al final.
--- Requiere la migración 20261013043429_hu18_dashboard_operativo.sql aplicada.
+-- Requiere la migración 20261013050518_hu18_dashboard_operativo.sql aplicada.
 begin;
 
 do $$
@@ -68,7 +68,7 @@ begin
     (v_prof, v_servicio, v_paciente_nuevo, v_fecha, '09:00', '09:30', 'confirmado', null),
     (v_prof, v_servicio, v_paciente_recurrente, v_fecha, '09:30', '10:00', 'atendido', null),
     (v_prof, v_servicio, v_paciente_recurrente, v_fecha, '10:00', '10:30', 'ausente', null),
-    (v_prof, v_servicio, v_paciente_recurrente, v_fecha, '10:30', '11:00', 'cancelado', 'prueba HU-18');
+    (v_prof, v_servicio, v_paciente_recurrente, v_fecha, '10:30', '11:00', 'cancelado', 'otro');
 
   -- Aísla el denominador del centro para comprobar la tasa exacta; todo se revierte.
   update public.profesional set activo = false where id_usuario <> v_prof;

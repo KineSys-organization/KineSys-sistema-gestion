@@ -2,16 +2,16 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const pagina = readFileSync("src/app/(main)/indicadores/operativo/page.tsx", "utf8");
-const paginaCorta = readFileSync("src/app/(main)/indicadores/page.tsx", "utf8");
+const pagina = readFileSync("src/app/(main)/indicadores/page.tsx", "utf8");
 const action = readFileSync("src/lib/indicadores/actions.ts", "utf8");
-const migracion = readFileSync("supabase/migrations/20261013043429_hu18_dashboard_operativo.sql", "utf8");
+const migracion = readFileSync("supabase/migrations/20261013050518_hu18_dashboard_operativo.sql", "utf8");
 const pruebaSql = readFileSync("supabase/tests/hu18_dashboard_operativo.sql", "utf8");
 
-test("HU-18 agrega una vista operativa separada y conserva el período elegido en HU-26", () => {
-  assert.match(paginaCorta, /Ver dashboard operativo/);
-  assert.match(paginaCorta, /\/indicadores\/operativo\?desde=\$\{periodo\.desde\}&hasta=\$\{periodo\.hasta\}/);
-  assert.match(pagina, /Volver a indicadores/);
+test("HU-18 integra el dashboard operativo en Indicadores y lo enlaza desde el encabezado", () => {
+  assert.match(pagina, /Ver dashboard operativo/);
+  assert.match(pagina, /href="#dashboard-operativo"/);
+  assert.match(pagina, /id="dashboard-operativo"/);
+  assert.match(pagina, /obtenerDashboardOperativo\(periodo\)/);
   assert.match(pagina, /periodosRapidos\(hoy\)/);
 });
 

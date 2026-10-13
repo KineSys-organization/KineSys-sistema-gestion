@@ -127,8 +127,7 @@ src/
     (main)/turnos/[id]/reprogramar → nuevo día y horario del mismo turno (HU-10C)
     (main)/mi-agenda         → agenda propia del Profesional (HU-12)
     (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13) con orden médica (HU-24A)
-    (main)/indicadores       → indicadores generales del centro (HU-26, solo Gerente)
-    (main)/indicadores/operativo → dashboard operativo con ocupación y desgloses (HU-18, solo Gerente)
+    (main)/indicadores       → indicadores generales y dashboard operativo con ocupación y desgloses (HU-26/HU-18, solo Gerente)
     (main)/pagos             → listado de pagos con filtros (HU-14)
     (main)/turnos/[id]/pago  → registrar, consultar y corregir el pago del turno (HU-14)
   proxy.ts + middleware.ts  → Next 15 carga `src/middleware.ts`; la sesión se refresca en `src/lib/supabase/middleware.ts`

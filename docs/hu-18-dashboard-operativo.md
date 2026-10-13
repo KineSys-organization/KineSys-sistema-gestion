@@ -4,7 +4,7 @@ Issue: #18 · Incremento 3 · Solo Gerente.
 
 ## Alcance
 
-- HU-26 conserva `/indicadores` como vista breve. Desde allí se abre `/indicadores/operativo`, manteniendo el período en la URL; ambas vistas comparten fechas por defecto y atajos.
+- HU-26 y HU-18 conviven en `/indicadores`: el resumen general aparece primero y el acceso destacado del encabezado lleva al dashboard operativo de la misma pantalla. El período y los atajos aplican a ambas secciones.
 - El dashboard muestra pacientes nuevos y recurrentes, ocupación total y tablas de turnos por profesional y servicio, con total y cantidad por estado.
 - Los profesionales y servicios inactivos que tuvieron turnos en el período siguen visibles. El profesional inactivo se marca y la ocupación indica `Inactivo · no computa`.
 - El color de estado usa fondos suaves azules, verdes, rojos y ámbar con texto oscuro de alto contraste, junto a la etiqueta y el conteo.
@@ -21,15 +21,15 @@ Issue: #18 · Incremento 3 · Solo Gerente.
 
 ## Archivos
 
-- `supabase/migrations/20261013043429_hu18_dashboard_operativo.sql`: RPC `fn_consultar_dashboard_operativo(desde, hasta)`, protegida con `fn_exigir_rol(['Gerente'])`.
+- `supabase/migrations/20261013050518_hu18_dashboard_operativo.sql`: RPC `fn_consultar_dashboard_operativo(desde, hasta)`, protegida con `fn_exigir_rol(['Gerente'])`.
 - `src/lib/indicadores/actions.ts` y `tipos.ts`: action protegida, tipos de respuesta.
-- `src/app/(main)/indicadores/operativo/page.tsx`: vista server side en `/indicadores/operativo`, solo Gerente.
+- `src/app/(main)/indicadores/page.tsx`: resumen de HU-26 y dashboard operativo de HU-18 en la misma vista, solo Gerente.
 - `src/app/globals.css`: tablas y tonos de estado con contraste legible.
 - `supabase/tests/hu18_dashboard_operativo.sql`: prueba de integración transaccional; termina en `rollback`.
-- `tests/hu18-dashboard-operativo.test.mjs`: contratos de UI, ruta, permisos y criterios SQL.
+- `tests/hu18-dashboard-operativo.test.mjs`: contratos de UI, permisos y criterios SQL.
 
 ## Validación
 
 - Ejecutar `npm test` para pruebas unitarias y chequeos de acceso.
-- Ejecutar `supabase/tests/hu18_dashboard_operativo.sql` en el SQL Editor luego de aplicar la migración. El guion revierte todos los datos de prueba.
-- La migración de HU-18 debe aplicarse al proyecto Supabase del equipo al integrar la HU; no se aplica desde este cambio local.
+- `supabase/tests/hu18_dashboard_operativo.sql` ya se ejecutó en una transacción que terminó en `rollback`; no dejó datos de prueba.
+- La migración HU-18 (`20261013050518`) ya está aplicada al proyecto Supabase del equipo. HU-34 (`20261013034240`) conserva su versión anterior; no hay colisión entre versiones.

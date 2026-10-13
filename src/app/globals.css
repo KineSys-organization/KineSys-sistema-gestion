@@ -1761,6 +1761,11 @@ a.badge-horario:hover {
   min-width: 880px;
 }
 
+.tabla-detalle {
+  display: block;
+  margin-top: 4px;
+}
+
 .estados-resumen {
   display: flex;
   flex-wrap: wrap;
