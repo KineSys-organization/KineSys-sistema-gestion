@@ -1,4 +1,5 @@
 // HU-14. Lo que devuelven fn_obtener_pago, fn_registrar_pago, fn_corregir_pago y fn_listar_pagos.
+// HU-22: fn_registrar_reembolso devuelve lo mismo que fn_obtener_pago.
 // Los importes llegan como number (numeric de la base, en pesos).
 import type { EstadoTurno } from "@/lib/turnos/tipos";
 
@@ -21,8 +22,12 @@ export type TurnoParaPago = {
   numero_afiliado: string | null;
 };
 
+// HU-17: la base lo deriva (Reembolsado = tiene fila en reembolso). No hay columna estado.
+export type EstadoPagoTurno = "Pagado" | "Reembolsado";
+
 export type Pago = {
   id_pago: string;
+  estado: EstadoPagoTurno;
   importe_base: number;
   descuento: number;
   importe_final: number;
@@ -30,6 +35,17 @@ export type Pago = {
   registrado_en: string;
   registrado_por: string;
   corregido_en: string | null;
+};
+
+// HU-22. Reembolso total del pago (uno solo por pago).
+export type Reembolso = {
+  id_reembolso: string;
+  importe: number;
+  medio_devolucion: string;
+  motivo: string; // turno_cancelado | pedido_paciente | otro
+  detalle: string | null;
+  registrado_en: string; // UTC: se muestra en hora de Argentina
+  registrado_por: string;
 };
 
 export type CorreccionPago = {
@@ -49,7 +65,9 @@ export type CorreccionPago = {
 export type DetallePago = {
   turno: TurnoParaPago;
   cobrable: boolean; // confirmado o atendido y sin pago
+  reembolsable: boolean; // HU-22: tiene pago y todavía no fue reembolsado
   pago: Pago | null;
+  reembolso: Reembolso | null;
   correcciones: CorreccionPago[];
 };
 
@@ -69,6 +87,8 @@ export type PagoListado = {
   medio_pago: string;
   registrado_en: string;
   corregido: boolean;
+  estado_pago: EstadoPagoTurno;
+  reembolso: Pick<Reembolso, "importe" | "medio_devolucion" | "motivo" | "registrado_en"> | null;
 };
 
 export type ResultadoPagos = {

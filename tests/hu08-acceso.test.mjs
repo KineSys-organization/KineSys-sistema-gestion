@@ -102,6 +102,7 @@ test("puedeHacer: cada acción según el rol", () => {
     "pagos.registrar": [true, true, false],
     "pagos.consultar": [true, true, false],
     "pagos.corregir": [true, true, false],
+    "pagos.reembolsar": [true, true, false], // HU-22
   };
   assert.deepEqual(Object.keys(PERMISOS_ACCIONES).sort(), Object.keys(esperado).sort());
   for (const [accion, valores] of Object.entries(esperado)) {

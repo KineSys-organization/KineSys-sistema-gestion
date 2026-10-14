@@ -54,6 +54,7 @@ export const PERMISOS_ACCIONES = {
   "pagos.registrar": RECEPCION, // HU-14: cobrar un turno
   "pagos.consultar": RECEPCION, // HU-14: ver el pago de un turno y el listado
   "pagos.corregir": RECEPCION, // HU-14: corregir importe/medio con motivo
+  "pagos.reembolsar": RECEPCION, // HU-22: registrar el reembolso total de un pago (HU-17: Reembolsado)
 } satisfies Record<string, readonly Rol[]>;
 
 export type Accion = keyof typeof PERMISOS_ACCIONES;
