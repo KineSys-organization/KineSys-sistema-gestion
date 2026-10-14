@@ -4,6 +4,7 @@ import { AtencionForm } from "@/components/atencion/AtencionForm";
 import { consultarMiAgenda, obtenerMiTurno } from "@/lib/atencion/actions";
 import { calcularEdad, hoyArgentina } from "@/lib/atencion/validar";
 import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
+import { urlHistoria } from "@/lib/historia-clinica/validar";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -131,6 +132,13 @@ export default async function MiTurnoPage({ params, searchParams }: Props) {
             </>
           )}
         </dl>
+        {/* HU-39: ficha clínica y evolución del paciente (no se entra por /pacientes, es de Recepción). */}
+        <Link
+          className="boton-secundario boton-inline"
+          href={urlHistoria(turno.id_paciente, { turno: turno.id_turno })}
+        >
+          Historia clínica
+        </Link>
       </div>
 
       {turno.estado === "atendido" && turno.atencion && (

@@ -1936,3 +1936,80 @@ a.badge-horario:hover {
   display: block;
   font-size: 12px;
 }
+
+/* HU-39: historia clínica del paciente. */
+.ficha-clinica .ficha-fila {
+  display: contents;
+}
+
+.ficha-clinica dt {
+  max-width: 220px;
+}
+
+.ultima-modificacion {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+
+.form-historia {
+  margin: 0 0 16px;
+}
+
+.versiones-historia {
+  margin-top: 16px;
+  border-top: 1px solid var(--borde);
+  padding-top: 12px;
+}
+
+.versiones-historia summary {
+  cursor: pointer;
+  color: var(--azul-principal);
+  font-weight: 600;
+}
+
+.version-historia {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--fondo);
+}
+
+.lista-evolucion {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item-evolucion {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.item-evolucion:last-child {
+  border-bottom: 0;
+}
+
+.evolucion-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0 0 8px;
+}
+
+@media print {
+  /* La historia puede ocupar varias páginas: fixed (HU-27) imprimiría solo la primera. */
+  .historia-impresion {
+    position: absolute !important;
+    top: 0;
+  }
+
+  .historia-impresion h4 {
+    margin: 20px 0 8px;
+    color: var(--azul-principal);
+  }
+
+  .historia-impresion .item-evolucion {
+    page-break-inside: avoid;
+  }
+}
