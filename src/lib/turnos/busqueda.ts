@@ -3,6 +3,7 @@
 // El filtrado y la paginación los hace fn_buscar_turnos.
 
 import type { EstadoTurno } from "./tipos";
+import { esEstadoCobro, type EstadoCobro } from "@/lib/pagos/cobro";
 
 const UUID_OK =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -29,6 +30,7 @@ export type FiltrosTurnos = {
   desde: string | null; // null = sin límite
   hasta: string | null;
   estado: EstadoTurno | null; // null = Todos
+  cobro: EstadoCobro | null; // HU-17: estado de cobro; null = Todos
   pagina: number;
 };
 
@@ -40,6 +42,7 @@ export type ParamsTurnos = {
   desde?: string;
   hasta?: string;
   estado?: string;
+  cobro?: string; // HU-17
   pagina?: string;
 };
 
@@ -65,6 +68,7 @@ export function leerFiltrosTurnos(params: ParamsTurnos, hoy: string): FiltrosTur
     desde: primeraEntrada ? hoy : params.desde?.trim() || null,
     hasta: primeraEntrada ? hoy : params.hasta?.trim() || null,
     estado,
+    cobro: esEstadoCobro(params.cobro) ? params.cobro : null,
     pagina: Number.isInteger(pagina) && pagina >= 1 ? pagina : 1,
   };
 }
@@ -89,12 +93,48 @@ export function urlTurnos(filtros: FiltrosTurnos, pagina = 1): string {
   params.set("desde", filtros.desde ?? "");
   params.set("hasta", filtros.hasta ?? "");
   if (filtros.estado) params.set("estado", filtros.estado);
+  if (filtros.cobro) params.set("cobro", filtros.cobro);
   if (pagina > 1) params.set("pagina", String(pagina));
   return `/turnos?${params.toString()}`;
 }
 
 // "Limpiar filtros": sin ningún filtro, tampoco de fechas.
 export const URL_TURNOS_SIN_FILTROS = "/turnos?desde=&hasta=";
+
+// HU-17. Atajo "Ver pendientes de cobro" (desde /pagos): todos los pendientes, sin límite
+// de fechas. En orden cronológico, arriba quedan los más viejos sin cobrar.
+export const URL_PENDIENTES_COBRO = "/turnos?desde=&hasta=&cobro=pendiente";
+
+// HU-17. Atajos de período del listado (se muestran con el filtro Pendiente):
+// "Todos", "Hasta hoy" (ya ocurrieron y no se cobraron) y "Próximos" (de hoy en adelante).
+// Solo completan Desde / Hasta; conservan el resto de los filtros y vuelven a la página 1.
+export type AtajoPeriodo = "todos" | "hasta_hoy" | "proximos";
+
+export const ATAJOS_PERIODO: { valor: AtajoPeriodo; etiqueta: string }[] = [
+  { valor: "todos", etiqueta: "Todos" },
+  { valor: "hasta_hoy", etiqueta: "Hasta hoy" },
+  { valor: "proximos", etiqueta: "Próximos" },
+];
+
+function rangoDelAtajo(atajo: AtajoPeriodo, hoy: string): { desde: string | null; hasta: string | null } {
+  if (atajo === "hasta_hoy") return { desde: null, hasta: hoy };
+  if (atajo === "proximos") return { desde: hoy, hasta: null };
+  return { desde: null, hasta: null };
+}
+
+export function urlAtajoPeriodo(filtros: FiltrosTurnos, atajo: AtajoPeriodo, hoy: string): string {
+  return urlTurnos({ ...filtros, ...rangoDelAtajo(atajo, hoy) });
+}
+
+// Qué atajo coincide con el rango actual (para marcarlo como elegido). null = rango a mano.
+export function atajoActual(filtros: FiltrosTurnos, hoy: string): AtajoPeriodo | null {
+  return (
+    ATAJOS_PERIODO.find((a) => {
+      const rango = rangoDelAtajo(a.valor, hoy);
+      return rango.desde === filtros.desde && rango.hasta === filtros.hasta;
+    })?.valor ?? null
+  );
+}
 
 export function totalPaginas(total: number): number {
   return Math.max(1, Math.ceil(total / TURNOS_POR_PAGINA));

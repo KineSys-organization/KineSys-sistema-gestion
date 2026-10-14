@@ -218,6 +218,7 @@ export async function buscarTurnos(filtros: FiltrosTurnos): Promise<{
     p_hasta: filtros.hasta,
     p_estado: filtros.estado,
     p_pagina: filtros.pagina,
+    p_estado_cobro: filtros.cobro, // HU-17
   });
 
   if (error) return { data: null, error: error.message };

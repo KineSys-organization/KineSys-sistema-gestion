@@ -1936,3 +1936,25 @@ a.badge-horario:hover {
   display: block;
   font-size: 12px;
 }
+
+/* HU-17: estado de cobro "Pendiente de pago" (rojo suave; Reembolsado usa el ámbar de badge-ausente).
+   Va siempre con texto, no solo color. */
+.badge-cobro-pendiente {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fdecec;
+  color: #a3261c; /* contraste 6.2:1 sobre el fondo */
+  white-space: nowrap;
+}
+
+/* HU-17: atajos de período del listado de pendientes de cobro. */
+.atajos-cobro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+}

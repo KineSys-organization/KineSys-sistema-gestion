@@ -8,6 +8,7 @@ import { DescargarHorarioPdfButton } from "@/components/profesionales/DescargarH
 import { urlPasoPaciente } from "@/lib/turnos/flujo";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
+import { EstadoCobroBadge } from "@/components/pagos/EstadoCobroBadge";
 import { obtenerDiasSemana } from "@/lib/agenda/semana";
 import type { TurnoAgenda } from "@/lib/agenda/tipos";
 
@@ -26,6 +27,7 @@ function TablaTurnos({ turnos }: { turnos: TurnoAgenda[] }) {
             <th>DNI</th>
             <th>Servicio</th>
             <th>Estado</th>
+            <th>Cobro</th>
             <th></th>
           </tr>
         </thead>
@@ -48,6 +50,10 @@ function TablaTurnos({ turnos }: { turnos: TurnoAgenda[] }) {
                   estado={turno.estado}
                   motivoCancelacion={turno.motivo_cancelacion}
                 />
+              </td>
+              <td>
+                {/* HU-17: estado de cobro (lo calcula la base; solo Recepción lo recibe). */}
+                <EstadoCobroBadge estado={turno.estado_cobro} />
               </td>
               <td>
                 <Link className="boton-pill" href={`/turnos/${turno.id_turno}?desde=agenda`}>
