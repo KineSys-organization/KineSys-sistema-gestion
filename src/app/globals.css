@@ -1958,3 +1958,56 @@ a.badge-horario:hover {
   gap: 8px;
   margin: 0 0 12px;
 }
+
+/* ===== HU-35: comprobante de pago ===== */
+/* Se ve en pantalla (dentro de una tarjeta) y es lo único que sale al imprimir. */
+.comprobante {
+  color: var(--azul-oscuro);
+}
+
+.seccion-comprobante {
+  margin-top: 20px;
+}
+
+.seccion-comprobante h4 {
+  margin: 0 0 8px;
+  color: var(--azul-principal);
+  font-size: 1rem;
+}
+
+.leyenda-comprobante {
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border-left: 4px solid var(--celeste);
+  background: #eef7fc;
+  font-weight: 600;
+}
+
+.leyenda-comprobante.leyenda-reembolso {
+  border-left-color: #8a5300;
+  background: #fff4e0;
+}
+
+@media print {
+  /* Igual que el PDF de horarios: se oculta todo menos el comprobante. */
+  .imprimible,
+  .imprimible * {
+    visibility: visible !important;
+  }
+
+  .imprimible {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    background: var(--blanco);
+  }
+
+  .no-imprimir {
+    display: none !important;
+  }
+}
+
+/* HU-35: "Pago registrado" con los botones del comprobante debajo. */
+div.mensaje-ok p {
+  margin: 0 0 10px;
+}

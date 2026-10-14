@@ -29,6 +29,7 @@ export type EstadoPagoTurno = "Pagado" | "Reembolsado";
 
 export type Pago = {
   id_pago: string;
+  numero_comprobante: number; // HU-35: se asigna al registrar y no cambia
   estado: EstadoPagoTurno;
   importe_base: number;
   descuento: number;
@@ -64,6 +65,34 @@ export type CorreccionPago = {
   corregido_por: string;
 };
 
+// HU-35. Lo que devuelve fn_obtener_comprobante: se arma cada vez con los datos vigentes.
+export type Comprobante = {
+  id_pago: string;
+  id_turno: string;
+  numero_comprobante: number;
+  emitido_en: string; // = fecha y hora del registro del pago (UTC; se muestra en hora AR)
+  registrado_por: string;
+  corregido_en: string | null;
+  paciente: { nombre: string; apellido: string; dni: number };
+  turno: {
+    fecha: string;
+    hora_inicio: string;
+    hora_fin: string;
+    estado: EstadoTurno;
+    nombre_profesional: string;
+    apellido_profesional: string;
+    nombre_servicio: string;
+  };
+  cobertura: string; // nombre de la obra social o "Particular"
+  numero_afiliado: string | null;
+  importe_base: number;
+  descuento: number;
+  importe_final: number;
+  medio_pago: string;
+  estado_cobro: EstadoCobro; // HU-17: pagado o reembolsado
+  reembolso: { importe: number; medio_devolucion: string; registrado_en: string } | null;
+};
+
 export type DetallePago = {
   turno: TurnoParaPago;
   cobrable: boolean; // confirmado o atendido y sin pago
@@ -76,6 +105,7 @@ export type DetallePago = {
 export type PagoListado = {
   id_pago: string;
   id_turno: string;
+  numero_comprobante: number; // HU-35
   nombre_paciente: string;
   apellido_paciente: string;
   dni_paciente: number;

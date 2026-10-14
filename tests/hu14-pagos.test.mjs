@@ -101,11 +101,12 @@ test("filtros del listado: paciente y período de la fecha del pago", () => {
     desde: null,
     hasta: null,
     reembolso: null,
+    numero: null, // HU-35
     pagina: 1,
   });
   assert.deepEqual(
     leerFiltrosPagos({ q: " Pérez ", desde: "2026-10-01", hasta: "2026-10-31", pagina: "2" }),
-    { texto: "Pérez", desde: "2026-10-01", hasta: "2026-10-31", reembolso: null, pagina: 2 }
+    { texto: "Pérez", desde: "2026-10-01", hasta: "2026-10-31", reembolso: null, numero: null, pagina: 2 }
   );
   assert.equal(leerFiltrosPagos({ pagina: "-3" }).pagina, 1);
 

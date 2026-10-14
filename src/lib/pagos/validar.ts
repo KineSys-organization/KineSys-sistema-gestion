@@ -198,6 +198,35 @@ export function puedeCorregirPago(pago: Pick<Pago, "estado"> | null): boolean {
   return pago !== null && pago.estado !== "Reembolsado";
 }
 
+// ============ Comprobante (HU-35) ============
+
+// Ancho del número impreso: 123 -> "0000123" (si crece, se muestra entero).
+export const DIGITOS_COMPROBANTE = 7;
+const NUMERO_COMPROBANTE_OK = /^\d{1,12}$/;
+
+export function formatearNumeroComprobante(numero: number | string | null | undefined): string {
+  if (numero === null || numero === undefined || numero === "") return "—";
+  return String(numero).padStart(DIGITOS_COMPROBANTE, "0");
+}
+
+// Lo que se escribe en la búsqueda ("0000123", "123", " 123 ") -> 123. Inválido o 0 -> null.
+export function leerNumeroComprobante(texto: string | null | undefined): number | null {
+  const valor = (texto ?? "").trim();
+  if (!NUMERO_COMPROBANTE_OK.test(valor)) return null;
+  const numero = Number(valor);
+  return Number.isSafeInteger(numero) && numero > 0 ? numero : null;
+}
+
+// Título de la ventana al imprimir = nombre sugerido del PDF.
+// "Comprobante 0000123 - Pérez, Juan"
+export function tituloComprobante(numero: number | string, apellido: string, nombre: string): string {
+  return `Comprobante ${formatearNumeroComprobante(numero)} - ${apellido}, ${nombre}`;
+}
+
+export function urlComprobante(idPago: string, imprimir = false): string {
+  return `/pagos/${idPago}/comprobante${imprimir ? "?imprimir=1" : ""}`;
+}
+
 // ============ Listado (/pagos) ============
 
 // HU-22: null = todos; "con" / "sin" reembolso (parámetro p_reembolso de fn_listar_pagos).
@@ -214,6 +243,7 @@ export type FiltrosPagos = {
   desde: string | null; // fecha del PAGO; null = sin límite
   hasta: string | null;
   reembolso: FiltroReembolso;
+  numero: number | null; // HU-35: número de comprobante; null = todos
   pagina: number;
 };
 
@@ -222,6 +252,7 @@ export type ParamsPagos = {
   desde?: string;
   hasta?: string;
   reembolso?: string;
+  numero?: string; // HU-35
   pagina?: string;
 };
 
@@ -243,6 +274,8 @@ export function leerFiltrosPagos(params: ParamsPagos): FiltrosPagos {
     desde: params.desde?.trim() || null,
     hasta: params.hasta?.trim() || null,
     reembolso: leerFiltroReembolso(params.reembolso),
+    // Un número inválido se ignora, como los demás filtros (no rompe la pantalla).
+    numero: leerNumeroComprobante(params.numero),
     pagina: Number.isInteger(pagina) && pagina >= 1 ? pagina : 1,
   };
 }
@@ -264,6 +297,7 @@ export function urlPagos(filtros: FiltrosPagos, pagina = 1): string {
   if (filtros.desde) params.set("desde", filtros.desde);
   if (filtros.hasta) params.set("hasta", filtros.hasta);
   if (filtros.reembolso) params.set("reembolso", filtros.reembolso);
+  if (filtros.numero) params.set("numero", String(filtros.numero));
   if (pagina > 1) params.set("pagina", String(pagina));
   const query = params.toString();
   return query ? `/pagos?${query}` : "/pagos";

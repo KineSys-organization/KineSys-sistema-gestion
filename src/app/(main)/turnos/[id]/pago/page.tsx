@@ -5,12 +5,14 @@ import {
   etiquetaMedio,
   etiquetaMotivoReembolso,
   formatearMomento,
+  formatearNumeroComprobante,
   formatearPesos,
   MENSAJE_YA_PAGADO,
   MENSAJE_YA_REEMBOLSADO,
   mostrarBotonReembolso,
   precioSugerido,
   puedeCorregirPago,
+  urlComprobante,
 } from "@/lib/pagos/validar";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
@@ -71,9 +73,26 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
       </div>
 
       {ok === "registrado" && (
-        <p className="mensaje-ok" role="status">
-          Pago registrado.
-        </p>
+        <div className="mensaje-ok" role="status">
+          <p>
+            Pago registrado.
+            {pago && ` Comprobante Nº ${formatearNumeroComprobante(pago.numero_comprobante)}.`}
+          </p>
+          {/* HU-35: el comprobante se ofrece apenas se registra el cobro. */}
+          {pago && (
+            <div className="fila-acciones">
+              <Link className="boton-principal boton-inline" href={urlComprobante(pago.id_pago)}>
+                Ver comprobante
+              </Link>
+              <Link
+                className="boton-secundario boton-inline"
+                href={urlComprobante(pago.id_pago, true)}
+              >
+                Descargar PDF
+              </Link>
+            </div>
+          )}
+        </div>
       )}
       {ok === "corregido" && (
         <p className="mensaje-ok" role="status">
@@ -140,6 +159,8 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
               </p>
             )}
             <dl className="resumen-turno">
+              <dt>Comprobante</dt>
+              <dd>Nº {formatearNumeroComprobante(pago.numero_comprobante)}</dd>
               <dt>Estado del pago</dt>
               <dd>
                 <EstadoPagoBadge estado={pago.estado} />
@@ -171,6 +192,10 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
               </p>
             )}
             <div className="acciones-pie">
+              {/* HU-35: siempre que hay pago (también corregido o reembolsado). */}
+              <Link className="boton-secundario boton-inline" href={urlComprobante(pago.id_pago)}>
+                Ver comprobante
+              </Link>
               {corregible && (
                 <Link
                   className="boton-principal boton-inline"

@@ -7,7 +7,12 @@ import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 import { RepetirTurnoForm } from "@/components/turnos/RepetirTurnoForm";
 import { obtenerTurno } from "@/lib/turnos/actions";
 import { obtenerPagoTurno } from "@/lib/pagos/actions";
-import { etiquetaMedio, formatearPesos, puedeCorregirPago } from "@/lib/pagos/validar";
+import {
+  etiquetaMedio,
+  formatearPesos,
+  puedeCorregirPago,
+  urlComprobante,
+} from "@/lib/pagos/validar";
 import { EstadoPagoBadge } from "@/components/pagos/EstadoPagoBadge";
 import { EstadoCobroBadge } from "@/components/pagos/EstadoCobroBadge";
 import { urlPasoHorario, urlPasoPaciente } from "@/lib/turnos/flujo";
@@ -170,6 +175,13 @@ export default async function TurnoPage({ params, searchParams }: Props) {
               ` · Reembolsado ${formatearMomento(detallePago.reembolso.registrado_en)}`}{" "}
             <Link href={`/turnos/${turno.id_turno}/pago?volver=turno`}>
               {puedeCorregirPago(detallePago.pago) ? "Ver o corregir" : "Ver detalle"}
+            </Link>{" "}
+            {/* HU-35: un turno con pago tiene su comprobante. */}
+            <Link
+              className="boton-secundario boton-inline"
+              href={urlComprobante(detallePago.pago.id_pago)}
+            >
+              Ver comprobante
             </Link>
           </p>
         ) : detallePago?.cobrable ? (
