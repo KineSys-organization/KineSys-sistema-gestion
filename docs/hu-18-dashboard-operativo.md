@@ -13,15 +13,16 @@ Issue: #18 · Incremento 3 · Solo Gerente.
 
 - Turnos del rango: fechas inclusivas, sábados y domingos incluidos; cada turno cuenta en su estado actual.
 - Ocupan minutos los turnos `confirmado`, `atendido` y `ausente`; `cancelado` se informa en el conteo, pero no suma ocupación.
-- Minutos ocupados: suma los turnos que ocupan horario de todo el centro, aunque el profesional hoy esté inactivo. Minutos disponibles: suma las franjas semanales vigentes para cada día del rango y solo profesionales activos (perfil, usuario y rol Profesional).
+- Minutos disponibles: suma las franjas semanales vigentes para cada día del rango y solo profesionales activos (perfil, usuario y rol Profesional). Minutos ocupados del centro: los turnos que ocupan horario de esos mismos profesionales activos (corrección `030_hu18_ocupacion_centro_activos.sql`: antes sumaba también a los inactivos, que no tienen franjas en el denominador, y el porcentaje se inflaba).
 - Ocupación = minutos ocupados / minutos disponibles. Si no hay minutos disponibles, se devuelve estado `sin_franjas` y porcentaje `null`; la interfaz muestra `Sin franjas`.
-- El porcentaje puede superar 100% si las franjas vigentes son menores que las que había cuando se otorgaron los turnos. Los profesionales inactivos muestran sus minutos ocupados, pero no un porcentaje propio.
+- El porcentaje puede superar 100% si las franjas vigentes son menores que las que había cuando se otorgaron los turnos. Los profesionales inactivos muestran sus turnos y minutos ocupados en su fila, pero no un porcentaje propio ni cuentan en el total del centro (`Inactivo · no computa`).
 - Paciente nuevo: alta (`paciente.creado`, hora de Argentina) dentro del rango. Recurrente: creado antes del inicio y con al menos un turno en el rango; cuenta una vez.
 - Período sin datos: contadores en cero y listas vacías, sin error.
 
 ## Archivos
 
 - `supabase/migrations/20261013050518_hu18_dashboard_operativo.sql`: RPC `fn_consultar_dashboard_operativo(desde, hasta)`, protegida con `fn_exigir_rol(['Gerente'])`.
+- `supabase/migrations/030_hu18_ocupacion_centro_activos.sql`: misma RPC; la ocupación del centro solo cuenta profesionales activos arriba y abajo.
 - `src/lib/indicadores/actions.ts` y `tipos.ts`: action protegida, tipos de respuesta.
 - `src/app/(main)/indicadores/page.tsx`: resumen de HU-26 y dashboard operativo de HU-18 en la misma vista, solo Gerente.
 - `src/app/globals.css`: tablas y tonos de estado con contraste legible.
