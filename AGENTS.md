@@ -2,7 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Personal interno** HU-29/HU-30, **Obras sociales** HU-31/HU-32, **Indicadores generales** HU-26, **Dashboard operativo** HU-18 e **Indicadores económicos** HU-19) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14 con reembolsos HU-22 y billetera virtual HU-21, **Estado de cobro** HU-17, **Prioridad del turno** HU-20), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 con orden médica HU-24A/HU-38, **Historial de órdenes** HU-24B, **Dashboard** en Inicio HU-15 e **Historia clínica** HU-39), con control de acceso por rol (HU-08). El comprobante de pago (HU-35) sigue pendiente.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Personal interno** HU-29/HU-30, **Obras sociales** HU-31/HU-32, **Indicadores generales** HU-26, **Dashboard operativo** HU-18 e **Indicadores económicos** HU-19) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14 con reembolsos HU-22 y billetera virtual HU-21, **Estado de cobro** HU-17, **Comprobante de pago** HU-35, **Prioridad del turno** HU-20), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 con orden médica HU-24A/HU-38, **Historial de órdenes** HU-24B, **Dashboard** en Inicio HU-15 e **Historia clínica** HU-39), con control de acceso por rol (HU-08).
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -132,6 +132,7 @@ src/
     (main)/indicadores       → indicadores del centro: generales (HU-26), económicos (HU-19) y operativos (HU-18), solo Gerente
     (main)/pagos             → listado de pagos con filtros (HU-14)
     (main)/turnos/[id]/pago  → registrar, consultar y corregir el pago del turno (HU-14)
+    (main)/pagos/[id]/comprobante → comprobante del pago, ver y descargar PDF (HU-35; [id] = id_pago)
   proxy.ts + middleware.ts  → Next 15 carga `src/middleware.ts`; la sesión se refresca en `src/lib/supabase/middleware.ts`
 ```
 
@@ -184,7 +185,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 ## Fuera de alcance (todavía)
 
 - Web de pacientes (login del paciente)
-- Pagos parciales, comprobante de pago (HU-35), facturar a la obra social, resto de los indicadores (HU-18)
+- Pagos parciales, facturación fiscal (AFIP/ARCA), facturar a la obra social, resto de los indicadores (HU-18)
 - Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
 - RLS cerrado en tablas históricas (las nuevas de HU-04 van con RLS + revoke; el acceso es solo por `fn_*`)
 
@@ -394,6 +395,17 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Solo Recepción y Gerente: en `fn_obtener_turno` y la agenda, al Profesional le llega `estado_cobro: null` (no se ve en `/mi-agenda`).
 - El comprobante (HU-35) puede usar `turno.estado_cobro` de `fn_obtener_pago`.
 - SQL: `supabase/migrations/024_hu17_estado_cobro.sql` (drop de la firma de 7 parámetros de `fn_buscar_turnos`). Pruebas: `supabase/tests/hu17_estado_cobro.sql` y `tests/hu17-estado-cobro.test.mjs` (`npm test`). Evidencia en `docs/hu-17-estado-cobro.md`.
+
+### HU-35 — Comprobante de pago
+
+- Pantalla `/pagos/[id]/comprobante` (`[id]` = id del pago; `?imprimir=1` abre el diálogo de impresión). Solo **Gerente** y **Mesa de Entradas** (acción `pagos.consultar`). Constancia **interna**, no factura fiscal.
+- Contenido (`ComprobantePago`): logo + "KineSys" + "Consultorio de kinesiología", Nº `0000123`, emitido el (= fecha y hora del registro del pago, AR), paciente, turno (fecha, horario, profesional, servicio, estado), cobertura y nº de afiliado o Particular, importes (base, descuento, final en pesos), medio, estado de cobro (HU-17) y quién registró el cobro. Leyendas "Corregido el …" y "Reembolsado el … por $ X".
+- PDF: `DescargarComprobanteButton` usa `window.print()` como el PDF de horarios (HU-27); título = `Comprobante 0000123 - Apellido, Nombre`. Al imprimir solo sale `.imprimible`. Sin librerías nuevas.
+- Accesos: tras registrar el pago ("Ver comprobante" / "Descargar PDF"), pantalla del pago, detalle del turno con pago y `/pagos` (columna Nº, "Ver comprobante" y búsqueda `?numero=`, combinable). Billetera virtual: muestra el nº de operación (HU-21, migración 029).
+- Número: columna `pago.numero_comprobante` (secuencia `pago_numero_comprobante_seq`, unique, not null, revocada al front). Se asigna al registrar (default de la columna) y no cambia al corregir. Los pagos existentes se numeraron en la migración por `registrado_en`. **Puede haber saltos** (un intento rechazado consume un número): decisión del equipo, no es factura fiscal.
+- RPCs: `fn_obtener_comprobante(id_pago)` (nueva; *El comprobante no existe*), `fn_obtener_pago` suma `pago.numero_comprobante`, `fn_listar_pagos` suma `numero_comprobante` y `p_numero_comprobante` (drop de la firma de 5 parámetros).
+- **Unificación con HU-21** (`029_unificar_pagos_hu21_hu35.sql`): 025 y 028 recreaban cada una su `fn_listar_pagos` y quedaban dos versiones (error *Could not choose the best candidate function*). La 029 deja una sola: `fn_listar_pagos(texto, desde, hasta, pagina, reembolso, medio, numero_comprobante)`; `fn_obtener_pago` con nº de comprobante + nº de operación + estado de cobro; y el comprobante muestra el **nº de operación** si el pago fue con billetera. Al modificar una función de pagos, partir de esta versión.
+- SQL: `supabase/migrations/025_hu35_comprobante_pago.sql`. Pruebas: `supabase/tests/hu35_comprobante_pago.sql` y `tests/hu35-comprobante.test.mjs` (`npm test`). Evidencia en `docs/hu-35-comprobante-pago.md`.
 
 ### HU-21 — Cobro con billetera virtual
 

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigirAccion } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { DetallePago, EstadoPago, ResultadoPagos } from "@/lib/pagos/tipos";
+import type { Comprobante, DetallePago, EstadoPago, ResultadoPagos } from "@/lib/pagos/tipos";
 import {
   calcularPago,
   centavosATexto,
@@ -162,6 +162,33 @@ export async function registrarReembolso(
   redirect(`/turnos/${idTurno}/pago?ok=reembolsado`);
 }
 
+// HU-35. Comprobante de un pago: se arma con los datos vigentes (si se corrigió o se
+// reembolsó, lo muestra). Sin pago no hay comprobante: la base responde "El comprobante no existe".
+export async function obtenerComprobante(idPago: string): Promise<{
+  data: Comprobante | null;
+  error: string | null;
+}> {
+  const sinPermiso = await exigirAccion("pagos.consultar");
+  if (sinPermiso) return { data: null, error: sinPermiso };
+
+  if (!esIdTurnoPago(idPago)) return { data: null, error: "Comprobante inválido" };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("fn_obtener_comprobante", {
+    p_id_pago: idPago.trim(),
+  });
+  if (error) return { data: null, error: error.message };
+
+  const comprobante = data as Comprobante;
+  return {
+    data: {
+      ...comprobante,
+      turno: { ...comprobante.turno, fecha: String(comprobante.turno.fecha).slice(0, 10) },
+    },
+    error: null,
+  };
+}
+
 // HU-14. Listado de pagos con filtros (paciente y período de la fecha del pago).
 // HU-22: suma el filtro Con / Sin reembolso.
 export async function listarPagos(filtros: FiltrosPagos): Promise<{
@@ -181,6 +208,7 @@ export async function listarPagos(filtros: FiltrosPagos): Promise<{
     p_hasta: filtros.hasta,
     p_pagina: filtros.pagina,
     p_reembolso: filtros.reembolso,
+    p_numero_comprobante: filtros.numero, // HU-35
     p_medio: filtros.medio, // HU-21 (null = todos)
   });
 

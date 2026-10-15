@@ -42,6 +42,7 @@ const MATRIZ = {
   // HU-14: pagos, Recepción y Gerente.
   "/pagos": [true, true, false],
   "/turnos/abc/pago": [true, true, false],
+  "/pagos/abc/comprobante": [true, true, false], // HU-35
 };
 const ORDEN_ROLES = ["Gerente", "Mesa de Entradas", "Profesional"];
 
