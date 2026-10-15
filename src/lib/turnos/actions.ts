@@ -24,6 +24,11 @@ import {
   validarRepetir,
 } from "@/lib/turnos/validar";
 import { validarFiltrosTurnos, type FiltrosTurnos } from "@/lib/turnos/busqueda";
+import {
+  esPrioridad,
+  PRIORIDAD_POR_DEFECTO,
+  validarCambioPrioridad,
+} from "@/lib/turnos/prioridad";
 import type { Profesional } from "@/lib/profesionales/tipos";
 import type { Servicio } from "@/lib/servicios/tipos";
 
@@ -42,9 +47,12 @@ export async function otorgarTurno(
     hora: String(formData.get("hora") ?? ""),
     cobertura: String(formData.get("cobertura") ?? ""),
   };
+  // HU-20: si no se elige, Normal.
+  const prioridad = String(formData.get("prioridad") ?? "").trim() || PRIORIDAD_POR_DEFECTO;
 
   const errorValidacion = validarOtorgarTurno(campos);
   if (errorValidacion) return { ok: false, error: errorValidacion };
+  if (!esPrioridad(prioridad)) return { ok: false, error: "La prioridad no es válida" };
 
   // La base vuelve a validar el horario al confirmar (concurrencia).
   const supabase = await createClient();
@@ -55,6 +63,7 @@ export async function otorgarTurno(
     p_fecha: campos.fecha,
     p_hora: campos.hora,
     p_id_obra_social: coberturaParaRpc(campos.cobertura),
+    p_prioridad: prioridad,
   });
 
   if (error) return { ok: false, error: error.message };
@@ -121,6 +130,40 @@ export async function cancelarTurno(
   revalidatePath(`/turnos/${campos.idTurno.trim()}`);
   revalidatePath("/agenda");
   revalidatePath("/disponibilidad");
+  return { ok: true, error: null };
+}
+
+// HU-20. Cambiar la prioridad desde el detalle. La base exige confirmado y no empezado.
+export async function cambiarPrioridad(
+  _prev: EstadoAccionTurno,
+  formData: FormData
+): Promise<EstadoAccionTurno> {
+  const sinPermiso = await exigirAccion("turnos.prioridad");
+  if (sinPermiso) return { ok: false, error: sinPermiso };
+
+  const campos = {
+    idTurno: String(formData.get("id_turno") ?? "").trim(),
+    prioridad: String(formData.get("prioridad") ?? "").trim().toLowerCase(),
+    nota: String(formData.get("nota_prioridad") ?? ""),
+  };
+
+  const errorValidacion = validarCambioPrioridad(campos);
+  if (errorValidacion) return { ok: false, error: errorValidacion };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("fn_cambiar_prioridad_turno", {
+    p_id_turno: campos.idTurno,
+    p_prioridad: campos.prioridad,
+    p_nota: campos.nota.trim() || null,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  // La marca se ve en el detalle, la agenda, el listado y la agenda del profesional.
+  revalidatePath(`/turnos/${campos.idTurno}`);
+  revalidatePath("/turnos");
+  revalidatePath("/agenda");
+  revalidatePath("/mi-agenda");
   return { ok: true, error: null };
 }
 
@@ -218,6 +261,7 @@ export async function buscarTurnos(filtros: FiltrosTurnos): Promise<{
     p_hasta: filtros.hasta,
     p_estado: filtros.estado,
     p_pagina: filtros.pagina,
+    p_prioridad: filtros.prioridad, // HU-20 (null = Todas)
     p_estado_cobro: filtros.cobro, // HU-17
   });
 

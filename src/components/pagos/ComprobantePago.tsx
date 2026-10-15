@@ -92,6 +92,13 @@ export function ComprobantePago({ comprobante: c }: { comprobante: Comprobante }
           </dd>
           <dt>Medio de pago</dt>
           <dd>{etiquetaMedio(c.medio_pago)}</dd>
+          {/* HU-21: con billetera virtual, el nº de operación. */}
+          {c.numero_operacion && (
+            <>
+              <dt>Nº de operación</dt>
+              <dd>{c.numero_operacion}</dd>
+            </>
+          )}
           <dt>Estado de cobro</dt>
           <dd>
             <EstadoCobroBadge estado={c.estado_cobro} />

@@ -23,7 +23,29 @@ export const MEDIOS_PAGO = [
   { valor: "transferencia", etiqueta: "Transferencia" },
   { valor: "debito", etiqueta: "Tarjeta de débito" },
   { valor: "credito", etiqueta: "Tarjeta de crédito" },
+  // HU-21: Mercado Pago, MODO, Ualá, etc. Sin integración: se registra con el nº de operación.
+  { valor: "billetera", etiqueta: "Billetera virtual" },
 ] as const;
+
+// HU-21: nº de operación de la billetera (check pago_numero_operacion_formato, migración 028).
+const NUMERO_OPERACION_OK = /^[A-Za-z0-9]{4,50}$/;
+export const LARGO_MAXIMO_NUMERO_OPERACION = 50;
+export const MENSAJE_NUMERO_OPERACION = "Ingresá un número de operación válido";
+export const MENSAJE_OPERACION_REPETIDA = "Ese número de operación ya está registrado en otro pago";
+
+export function pideNumeroOperacion(medio: string | null | undefined): boolean {
+  return medio === "billetera";
+}
+
+// 4 a 50 letras y/o números, sin espacios (se recortan los de los costados, como la base).
+export function esNumeroOperacionValido(numero: string): boolean {
+  return NUMERO_OPERACION_OK.test(numero.trim());
+}
+
+// Lo que va a la base: solo con billetera; con otro medio el nº no se manda (se quita).
+export function numeroOperacionParaRpc(medio: string, numero: string | undefined): string | null {
+  return pideNumeroOperacion(medio) ? (numero ?? "").trim() || null : null;
+}
 
 export type MedioPago = (typeof MEDIOS_PAGO)[number]["valor"];
 
@@ -91,6 +113,7 @@ export type CamposPago = {
   descuento: string; // vacío = 0
   medio: string;
   conObraSocial: boolean; // el descuento solo se aplica si el turno tiene obra social
+  numeroOperacion?: string; // HU-21: obligatorio solo con billetera virtual
 };
 
 export type ImportesPago = {
@@ -123,6 +146,11 @@ export function calcularPago(campos: CamposPago): { error: string } | { importes
   if (final <= 0) return { error: "El descuento no puede dejar el importe final en cero o menos" };
 
   if (!esMedioPago(campos.medio)) return { error: "Elegí un medio de pago válido" };
+
+  // HU-21: con billetera, el nº de operación es obligatorio.
+  if (pideNumeroOperacion(campos.medio) && !esNumeroOperacionValido(campos.numeroOperacion ?? "")) {
+    return { error: MENSAJE_NUMERO_OPERACION };
+  }
 
   return { importes: { base, descuento, final } };
 }
@@ -244,6 +272,7 @@ export type FiltrosPagos = {
   hasta: string | null;
   reembolso: FiltroReembolso;
   numero: number | null; // HU-35: número de comprobante; null = todos
+  medio: MedioPago | null; // HU-21: null = todos los medios
   pagina: number;
 };
 
@@ -253,6 +282,7 @@ export type ParamsPagos = {
   hasta?: string;
   reembolso?: string;
   numero?: string; // HU-35
+  medio?: string; // HU-21
   pagina?: string;
 };
 
@@ -276,6 +306,8 @@ export function leerFiltrosPagos(params: ParamsPagos): FiltrosPagos {
     reembolso: leerFiltroReembolso(params.reembolso),
     // Un número inválido se ignora, como los demás filtros (no rompe la pantalla).
     numero: leerNumeroComprobante(params.numero),
+    // HU-21: un medio desconocido cuenta como "Todos".
+    medio: params.medio && esMedioPago(params.medio.trim()) ? (params.medio.trim() as MedioPago) : null,
     pagina: Number.isInteger(pagina) && pagina >= 1 ? pagina : 1,
   };
 }
@@ -298,6 +330,7 @@ export function urlPagos(filtros: FiltrosPagos, pagina = 1): string {
   if (filtros.hasta) params.set("hasta", filtros.hasta);
   if (filtros.reembolso) params.set("reembolso", filtros.reembolso);
   if (filtros.numero) params.set("numero", String(filtros.numero));
+  if (filtros.medio) params.set("medio", filtros.medio);
   if (pagina > 1) params.set("pagina", String(pagina));
   const query = params.toString();
   return query ? `/pagos?${query}` : "/pagos";

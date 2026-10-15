@@ -102,3 +102,30 @@ test("pantallas: comprobante, accesos y PDF sin librerías nuevas", () => {
     "react-dom",
   ]);
 });
+
+// --- Migración 029: unifica las funciones de pagos de HU-21 (billetera) y HU-35 ---
+
+const sql029 = readFileSync("supabase/migrations/029_unificar_pagos_hu21_hu35.sql", "utf8");
+
+test("migración 029: una sola fn_listar_pagos con medio y nº de comprobante", () => {
+  // Borra las cuatro firmas posibles antes de crear la unificada.
+  for (const firma of [
+    "text, date, date, integer, text)",
+    "text, date, date, integer, text, text)",
+    "text, date, date, integer, text, bigint)",
+    "text, date, date, integer, text, text, bigint)",
+  ]) {
+    assert.ok(sql029.includes(`drop function if exists public.fn_listar_pagos(${firma}`), firma);
+  }
+  assert.match(sql029, /p_medio text default null,/);
+  assert.match(sql029, /p_numero_comprobante bigint default null/);
+  assert.equal((sql029.match(/create function public\.fn_listar_pagos\(/g) ?? []).length, 1);
+});
+
+test("migración 029: pago y comprobante con los dos números (operación y comprobante)", () => {
+  assert.match(sql029, /'numero_comprobante', p\.numero_comprobante, -- HU-35/);
+  assert.match(sql029, /'numero_operacion', p\.numero_operacion, -- HU-21/);
+  assert.match(sql029, /function public\.fn_obtener_comprobante\(p_id_pago uuid\)[\s\S]*'numero_operacion', p\.numero_operacion/);
+  assert.match(sql029, /public\.fn_estado_cobro\(/, "conserva el estado de cobro de HU-17");
+  assert.match(leer("src/components/pagos/ComprobantePago.tsx"), /Nº de operación/);
+});

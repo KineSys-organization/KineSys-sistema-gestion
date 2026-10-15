@@ -114,6 +114,48 @@ select {
   background: var(--blanco);
 }
 
+.campo-password {
+  position: relative;
+}
+
+.campo-password input {
+  padding-right: 52px !important;
+}
+
+.boton-mostrar-password {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gris-texto);
+  cursor: pointer;
+}
+
+.boton-mostrar-password:hover {
+  background: var(--fondo);
+  color: var(--azul-principal);
+}
+
+.boton-mostrar-password:focus-visible {
+  outline: 2px solid var(--celeste);
+}
+
+.boton-mostrar-password svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
 .campo input:not([type="checkbox"]):focus,
 .campo select:focus {
   outline: 2px solid var(--celeste);
@@ -573,6 +615,10 @@ select {
   max-width: 680px;
 }
 
+.modulo-paciente-ficha {
+  max-width: 1180px;
+}
+
 .modulo-cabecera {
   display: flex;
   align-items: flex-start;
@@ -592,10 +638,20 @@ select {
   gap: 20px;
 }
 
+.paciente-ficha-grid {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+
 @media (min-width: 900px) {
   .modulo-grid {
     grid-template-columns: 340px 1fr;
     align-items: start;
+  }
+
+  .paciente-ficha-grid {
+    grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr);
   }
 }
 
@@ -701,9 +757,40 @@ select {
 }
 
 .badge-inactivo {
-  background: #eef1f4;
-  color: #56616b; /* 5.4:1 (antes #6b7680, 4.1:1) */
+  background: #fdeaea;
+  color: #a11b1b;
 }
+
+.estado-paciente-confirmacion {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #f1caca;
+  border-radius: 10px;
+  background: #fff8f8;
+}
+
+.estado-paciente-confirmacion ul {
+  padding-left: 22px;
+}
+
+.estado-paciente-confirmacion li + li {
+  margin-top: 8px;
+}
+
+/* HU-36: los estados de turno usan los mismos tonos en todas las agendas. */
+.badge-turno {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-turno-azul { background: #e4f2fa; color: #124b70; }
+.badge-turno-verde { background: #e4f5eb; color: #155b3b; }
+.badge-turno-naranja { background: #fff3d6; color: #754d06; }
+.badge-turno-gris { background: #eef1f4; color: #56616b; }
 
 .lista-checks {
   display: flex;
@@ -1733,10 +1820,18 @@ a.badge-horario:hover {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  border-left: 4px solid var(--azul-principal);
 }
 
-.indicador-destacado {
-  border-left: 4px solid var(--azul-principal);
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .indicador {
+    transition: transform 160ms ease, box-shadow 160ms ease;
+  }
+
+  .indicador:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sombra), 0 10px 24px rgb(0 101 166 / 10%);
+  }
 }
 
 .indicador-titulo {
@@ -1754,6 +1849,61 @@ a.badge-horario:hover {
 .indicador-detalle {
   color: var(--gris-texto);
   font-size: 12px;
+}
+
+/* HU-18. Resumen por estado con tonos suaves y texto de alto contraste. */
+.tabla-operativa {
+  min-width: 880px;
+}
+
+.tabla-detalle {
+  display: block;
+  margin-top: 4px;
+}
+
+.estados-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 290px;
+}
+
+.estado-total,
+.estado-indicador {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.estado-total {
+  color: var(--azul-oscuro);
+  background: #e8f2f8;
+}
+
+.estado-confirmado {
+  color: #124b70;
+  background: #e4f2fa;
+}
+
+.estado-atendido {
+  color: #155b3b;
+  background: #e4f5eb;
+}
+
+.estado-cancelado {
+  color: #8b2635;
+  background: #fdebed;
+}
+
+.estado-ausente {
+  color: #754d06;
+  background: #fff3d6;
 }
 
 /* HU-14: pagos. Importe final destacado (se ve antes de guardar) y bloque en el detalle del turno. */
@@ -1876,9 +2026,12 @@ a.badge-horario:hover {
   border: 2px solid var(--azul-principal);
 }
 
-/* Cada turno del día: hora + estado en texto; el color de la izquierda es la proximidad. */
+/* HU-36: el color del turno indica su estado; los íconos indican proximidad. */
 .turno-chip {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
   padding: 1px 6px;
   border-style: solid;
   border-width: 0 0 0 4px;
@@ -1890,8 +2043,14 @@ a.badge-horario:hover {
   text-overflow: ellipsis;
 }
 
+.turno-chip-texto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .turno-chip-estado {
-  color: var(--gris-texto);
+  color: inherit;
+  font-weight: 600;
 }
 
 .turno-chip-mas {
@@ -1899,11 +2058,37 @@ a.badge-horario:hover {
   color: var(--gris-texto);
 }
 
-.prox-hoy { border-color: #d64545; background-color: #fdecec; }
-.prox-pronto { border-color: #e8871e; background-color: #fdf1e3; }
-.prox-semana { border-color: #1b7a45; background-color: #e5f7ec; }
-.prox-lejos { border-color: #0066a1; background-color: #e6f1f8; }
-.prox-gris { border-color: #9aa5ad; background-color: #f0f2f4; }
+.turno-color-azul { border-left-color: #0066a1; color: #124b70; background-color: #e4f2fa; }
+.turno-color-verde { border-left-color: #1b7a45; color: #155b3b; background-color: #e4f5eb; }
+.turno-color-naranja { border-left-color: #e8871e; color: #754d06; background-color: #fff3d6; }
+.turno-color-gris { border-left-color: #7b8790; color: #56616b; background-color: #eef1f4; }
+.turno-chip.turno-color-gris .turno-chip-texto { text-decoration: line-through; }
+
+.proximidad-icono {
+  display: inline-block;
+  flex: 0 0 auto;
+  box-sizing: content-box;
+  width: 22px;
+  height: 22px;
+  padding: 4px;
+  margin-left: 4px;
+  color: var(--azul-principal);
+  background: #e8f3fa;
+  border: 1px solid #d2e6f3;
+  border-radius: 9px;
+  vertical-align: middle;
+}
+
+.turno-chip .proximidad-icono {
+  box-sizing: border-box;
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  margin-left: 2px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
 
 .referencias-proximidad {
   display: flex;
@@ -1919,6 +2104,29 @@ a.badge-horario:hover {
 .referencias-proximidad li {
   display: flex;
   align-items: center;
+}
+
+.referencias-calendario {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--gris-texto);
+  font-size: 13px;
+}
+
+.referencia-grupo > strong {
+  color: var(--azul-oscuro);
+  font-size: 12px;
+}
+
+.referencia-grupo .referencias-proximidad {
+  margin-top: 6px;
+}
+
+.referencia-grupo .proximidad-icono {
+  width: 22px;
+  height: 22px;
+  margin: 0 6px 0 0;
 }
 
 .referencia-color {
@@ -2010,4 +2218,236 @@ a.badge-horario:hover {
 /* HU-35: "Pago registrado" con los botones del comprobante debajo. */
 div.mensaje-ok p {
   margin: 0 0 10px;
+}
+
+.horario-con-proximidad {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.horario-con-proximidad .proximidad-icono {
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  margin: 0;
+  border-radius: 7px;
+}
+
+/* HU-39: historia clínica del paciente. */
+.ficha-clinica .ficha-fila {
+  display: contents;
+}
+
+.ficha-clinica dt {
+  max-width: 220px;
+}
+
+.ultima-modificacion {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+
+.form-historia {
+  margin: 0 0 16px;
+}
+
+.versiones-historia {
+  margin-top: 16px;
+  border-top: 1px solid var(--borde);
+  padding-top: 12px;
+}
+
+.versiones-historia summary {
+  cursor: pointer;
+  color: var(--azul-principal);
+  font-weight: 600;
+}
+
+.version-historia {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--fondo);
+}
+
+.lista-evolucion {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item-evolucion {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.item-evolucion:last-child {
+  border-bottom: 0;
+}
+
+.evolucion-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0 0 8px;
+}
+
+@media print {
+  /* La historia puede ocupar varias páginas: fixed (HU-27) imprimiría solo la primera. */
+  .historia-impresion {
+    position: absolute !important;
+    top: 0;
+  }
+
+  .historia-impresion h4 {
+    margin: 20px 0 8px;
+    color: var(--azul-principal);
+  }
+
+  .historia-impresion .item-evolucion {
+    page-break-inside: avoid;
+  }
+}
+
+/* ============ HU-38: orden médica con datos automáticos, sesiones y detalle ============ */
+.campo-orden-medica {
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--celeste);
+  border-radius: 10px;
+  padding: 12px 14px 16px;
+  margin: 0;
+}
+
+.campo-orden-medica legend {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.campo-orden-medica input[type="number"] {
+  max-width: 140px;
+}
+
+.datos-orden {
+  margin: 4px 0 10px;
+}
+
+.bloque-orden-medica .boton-secundario {
+  margin-top: 10px;
+}
+
+.firma-orden {
+  margin-top: 56px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.firma-orden span {
+  min-width: 240px;
+  padding-top: 6px;
+  border-top: 1px solid var(--azul-oscuro);
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+@media print {
+  /* Varias órdenes en la página (HU-24B): se imprime solo la elegida. */
+  .orden-impresion:not(.imprimir-esta) {
+    display: none !important;
+  }
+
+  /* El resto de la página se saca del todo (no solo se oculta): si sigue ocupando lugar,
+     el navegador arma varias hojas y repite en cada una lo que está "fixed" (la orden
+     salía dos veces). Se dejan solo la orden elegida y los contenedores que la tienen. */
+  body:has(.orden-impresion.imprimir-esta)
+    *:not(:has(.imprimir-esta)):not(.imprimir-esta):not(.imprimir-esta *) {
+    display: none !important;
+  }
+
+  /* Arriba de la hoja, sin "fixed": si la orden es larga, sigue en la hoja siguiente. */
+  .orden-impresion.imprimir-esta {
+    position: absolute !important;
+    inset: 0 auto auto 0;
+  }
+
+  .orden-impresion h4 {
+    margin: 20px 0 6px;
+    color: var(--azul-principal);
+  }
+}
+
+/* ============ HU-24B: historial de órdenes médicas ============ */
+.filtros-ordenes {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  align-items: end;
+  margin: 12px 0 16px;
+}
+
+.filtros-ordenes .fila-acciones,
+.filtros-ordenes .campo-ancho {
+  grid-column: 1 / -1;
+}
+
+.lista-ordenes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.item-orden .titulo-orden {
+  margin: 0 0 4px;
+  color: var(--azul-oscuro);
+}
+
+.item-orden .bloque-orden-medica {
+  margin-top: 4px;
+}
+
+/* ============ HU-20: prioridad del turno (texto + color; Normal sin marca) ============ */
+.badge-prioridad {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.badge-prioridad-normal {
+  margin-left: 0;
+  background: #eef1f4;
+  color: #56616b;
+}
+
+.badge-prioridad-alta {
+  background: #fff4e0;
+  border-color: #f0b44c;
+  color: #8a4b00; /* 6.5:1 sobre el fondo */
+}
+
+.badge-prioridad-urgente {
+  background: #fde8e8;
+  border-color: #e07070;
+  color: #9b1c1c; /* 7:1 sobre el fondo */
+}
+
+.form-prioridad {
+  margin-top: 10px;
+}
+
+dd .boton-pill {
+  margin-left: 8px;
 }

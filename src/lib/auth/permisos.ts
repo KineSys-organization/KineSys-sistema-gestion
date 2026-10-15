@@ -12,6 +12,7 @@ export const MENSAJE_SIN_PERMISO = "No tenés permisos para realizar esta acció
 const SOLO_GERENTE: readonly Rol[] = ["Gerente"];
 const RECEPCION: readonly Rol[] = ["Gerente", "Mesa de Entradas"];
 const SOLO_PROFESIONAL: readonly Rol[] = ["Profesional"];
+const GERENTE_Y_PROFESIONAL: readonly Rol[] = ["Gerente", "Profesional"]; // HU-24B
 
 // Rutas de (main) y quién puede entrar. Inicio ("/") lo ve cualquier rol de gestión.
 // Un prefijo cubre también sus subrutas: "/pacientes" incluye "/pacientes/nuevo".
@@ -25,6 +26,7 @@ export const PERMISOS_RUTAS: { prefijo: string; roles: readonly Rol[] }[] = [
   { prefijo: "/agenda", roles: RECEPCION },
   { prefijo: "/turnos", roles: RECEPCION },
   { prefijo: "/mi-agenda", roles: SOLO_PROFESIONAL }, // HU-12/HU-13: incluye /mi-agenda/[id]
+  { prefijo: "/historia-clinica", roles: SOLO_PROFESIONAL }, // HU-39: /historia-clinica/[paciente]
   { prefijo: "/indicadores", roles: SOLO_GERENTE }, // HU-26
   { prefijo: "/pagos", roles: RECEPCION }, // HU-14: listado de pagos (cobrar es /turnos/[id]/pago)
 ];
@@ -47,9 +49,13 @@ export const PERMISOS_ACCIONES = {
   "turnos.reprogramar": RECEPCION, // HU-10C
   "turnos.buscar": RECEPCION, // HU-09: listado con filtros
   "turnos.repetir": RECEPCION, // HU-25: repetir un turno las próximas semanas
+  "turnos.prioridad": RECEPCION, // HU-20: cambiar la prioridad (el Profesional solo la ve)
   "atencion.agenda": SOLO_PROFESIONAL, // HU-12: su agenda y sus turnos (la base filtra por auth.uid())
   "atencion.registrar": SOLO_PROFESIONAL, // HU-13: registrar y editar la atención
   "atencion.dashboard": SOLO_PROFESIONAL, // HU-15: su dashboard en Inicio (la base filtra por auth.uid())
+  "historia.consultar": SOLO_PROFESIONAL, // HU-39: ficha clínica + evolución (la base exige un turno con el paciente)
+  "historia.registrar": SOLO_PROFESIONAL, // HU-39: crear y editar la ficha clínica
+  "ordenes.consultar": GERENTE_Y_PROFESIONAL, // HU-24B: historial de órdenes médicas (Profesional: con turno con el paciente)
   "indicadores.consultar": SOLO_GERENTE, // HU-26: indicadores generales del centro
   "pagos.registrar": RECEPCION, // HU-14: cobrar un turno
   "pagos.consultar": RECEPCION, // HU-14: ver el pago de un turno y el listado

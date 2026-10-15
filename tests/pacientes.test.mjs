@@ -9,6 +9,7 @@ import {
   parsearObrasFormulario,
   validarAltaPaciente,
   validarEdicionPaciente,
+  leerFiltrosPacientes,
 } from "../src/lib/pacientes/validar.ts";
 
 const HOY = "2026-09-25";
@@ -118,4 +119,18 @@ test("parsear obras desde FormData", () => {
 test("esIdPaciente valida UUID", () => {
   assert.equal(esIdPaciente("3fa85f64-5717-4562-b3fc-2c963f66afa6"), true);
   assert.equal(esIdPaciente("no-es-uuid"), false);
+});
+
+test("filtros de pacientes: activos por defecto y estados reconocidos", () => {
+  assert.equal(leerFiltrosPacientes({}).estado, "activos");
+  assert.equal(leerFiltrosPacientes({ estado: "inactivos" }).estado, "inactivos");
+  assert.equal(leerFiltrosPacientes({ estado: "todos" }).estado, "todos");
+  assert.equal(leerFiltrosPacientes({ estado: "otro" }).estado, "activos");
+  assert.deepEqual(leerFiltrosPacientes({ estado: "inactivos", q: " Ana ", edad: "18-39" }), {
+    texto: "Ana",
+    obra: null,
+    edadMin: 18,
+    edadMax: 39,
+    estado: "inactivos",
+  });
 });

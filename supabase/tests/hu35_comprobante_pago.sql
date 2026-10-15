@@ -16,6 +16,10 @@ declare
   v_pac_obra uuid;
   v_t1 uuid;
   v_t2 uuid;
+  v_t3 uuid;          -- pago con billetera virtual (HU-21)
+  v_pago3 uuid;
+  v_n3 bigint;
+  v_operacion text := 'HU35' || upper(substr(md5(random()::text), 1, 10)); -- único
   v_pago1 uuid;
   v_pago2 uuid;
   v_n1 bigint;
@@ -64,6 +68,8 @@ begin
     id_obra_social, numero_afiliado)
   values (v_prof, v_serv, v_pac_obra, v_pasado, '02:00', '02:30', 'confirmado', v_obra, 'AF-35')
   returning id_turno into v_t2;
+  insert into public.turno (id_profesional, id_servicio, id_paciente, fecha, hora_inicio, hora_fin, estado)
+  values (v_prof, v_serv, v_pac, v_pasado, '03:00', '03:30', 'confirmado') returning id_turno into v_t3;
 
   perform set_config('request.jwt.claims', jsonb_build_object('sub', v_mesa, 'role', 'authenticated')::text, true);
   set local role authenticated;
@@ -120,6 +126,26 @@ begin
   assert (v_comp ->> 'numero_comprobante')::bigint = v_n2, 'El reembolso no cambia el número';
   raise notice 'OK comprobante de un pago reembolsado';
 
+  -- ============ Billetera virtual (HU-21, migración 029) ============
+  v_res := public.fn_registrar_pago(
+    p_id_turno => v_t3, p_importe_base => 9000, p_descuento => 0,
+    p_medio => 'billetera', p_numero_operacion => v_operacion
+  );
+  v_pago3 := (v_res -> 'pago' ->> 'id_pago')::uuid;
+  v_n3 := (v_res -> 'pago' ->> 'numero_comprobante')::bigint;
+  assert v_n3 > v_n2, 'El pago con billetera también recibe número';
+  assert v_res -> 'pago' ->> 'numero_operacion' = v_operacion, 'fn_obtener_pago trae los dos números';
+
+  v_comp := public.fn_obtener_comprobante(v_pago3);
+  assert v_comp ->> 'medio_pago' = 'billetera';
+  assert v_comp ->> 'numero_operacion' = v_operacion, 'El comprobante muestra el nº de operación';
+  assert public.fn_obtener_comprobante(v_pago1) ->> 'numero_operacion' is null, 'Sin billetera, sin nº';
+
+  -- Búsqueda combinada: medio + nº de comprobante (una sola fn_listar_pagos).
+  assert (public.fn_listar_pagos(p_medio => 'billetera', p_numero_comprobante => v_n3) ->> 'total')::integer = 1;
+  assert (public.fn_listar_pagos(p_medio => 'efectivo', p_numero_comprobante => v_n3) ->> 'total')::integer = 0;
+  raise notice 'OK billetera: nº de operación en el comprobante y búsqueda combinada';
+
   -- ============ Sin pago no hay comprobante ============
   begin
     perform public.fn_obtener_comprobante(gen_random_uuid());
@@ -130,17 +156,17 @@ begin
   raise notice 'OK no hay comprobantes en blanco';
 
   -- ============ Listado: número y búsqueda ============
-  v_res := public.fn_listar_pagos(null, null, null, 1, null, v_n1);
+  v_res := public.fn_listar_pagos(p_pagina => 1, p_numero_comprobante => v_n1);
   assert (v_res ->> 'total')::integer = 1, 'Busca por número';
   assert (v_res -> 'pagos' -> 0 ->> 'numero_comprobante')::bigint = v_n1;
   -- Combinable con paciente: otro paciente → 0.
-  v_res := public.fn_listar_pagos('Beto', null, null, 1, null, v_n1);
+  v_res := public.fn_listar_pagos(p_texto => 'Beto', p_pagina => 1, p_numero_comprobante => v_n1);
   assert (v_res ->> 'total')::integer = 0;
   -- Combinable con reembolso: el n2 está reembolsado.
-  assert (public.fn_listar_pagos(null, null, null, 1, 'con', v_n2) ->> 'total')::integer = 1;
-  assert (public.fn_listar_pagos(null, null, null, 1, 'sin', v_n2) ->> 'total')::integer = 0;
+  assert (public.fn_listar_pagos(p_pagina => 1, p_reembolso => 'con', p_numero_comprobante => v_n2) ->> 'total')::integer = 1;
+  assert (public.fn_listar_pagos(p_pagina => 1, p_reembolso => 'sin', p_numero_comprobante => v_n2) ->> 'total')::integer = 0;
   begin
-    perform public.fn_listar_pagos(null, null, null, 1, null, 0);
+    perform public.fn_listar_pagos(p_pagina => 1, p_numero_comprobante => 0);
     raise exception 'Debía rechazar el número 0';
   exception when others then
     assert sqlerrm = 'El número de comprobante no es válido', sqlerrm;

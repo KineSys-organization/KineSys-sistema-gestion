@@ -35,6 +35,7 @@ export type Pago = {
   descuento: number;
   importe_final: number;
   medio_pago: string;
+  numero_operacion: string | null; // HU-21: solo con billetera virtual
   registrado_en: string;
   registrado_por: string;
   corregido_en: string | null;
@@ -61,6 +62,8 @@ export type CorreccionPago = {
   descuento_nuevo: number;
   importe_final_nuevo: number;
   medio_pago_nuevo: string;
+  numero_operacion_anterior: string | null; // HU-21
+  numero_operacion_nuevo: string | null;
   corregido_en: string;
   corregido_por: string;
 };
@@ -89,6 +92,7 @@ export type Comprobante = {
   descuento: number;
   importe_final: number;
   medio_pago: string;
+  numero_operacion: string | null; // HU-21: solo si el pago fue con billetera virtual
   estado_cobro: EstadoCobro; // HU-17: pagado o reembolsado
   reembolso: { importe: number; medio_devolucion: string; registrado_en: string } | null;
 };
@@ -117,6 +121,7 @@ export type PagoListado = {
   descuento: number;
   importe_final: number;
   medio_pago: string;
+  numero_operacion: string | null; // HU-21
   registrado_en: string;
   corregido: boolean;
   estado_pago: EstadoPagoTurno;

@@ -23,7 +23,8 @@ const conObra = { importeBase: "20000", descuento: "5000", medio: "transferencia
 test("medios: lista cerrada, sin texto libre ni obra social", () => {
   assert.deepEqual(
     MEDIOS_PAGO.map((m) => m.etiqueta),
-    ["Efectivo", "Transferencia", "Tarjeta de débito", "Tarjeta de crédito"]
+    // HU-21 suma Billetera virtual.
+    ["Efectivo", "Transferencia", "Tarjeta de débito", "Tarjeta de crédito", "Billetera virtual"]
   );
   assert.equal(etiquetaMedio("debito"), "Tarjeta de débito");
   assert.equal(etiquetaMedio("obra_social"), "—");
@@ -102,11 +103,12 @@ test("filtros del listado: paciente y período de la fecha del pago", () => {
     hasta: null,
     reembolso: null,
     numero: null, // HU-35
+    medio: null, // HU-21
     pagina: 1,
   });
   assert.deepEqual(
     leerFiltrosPagos({ q: " Pérez ", desde: "2026-10-01", hasta: "2026-10-31", pagina: "2" }),
-    { texto: "Pérez", desde: "2026-10-01", hasta: "2026-10-31", reembolso: null, numero: null, pagina: 2 }
+    { texto: "Pérez", desde: "2026-10-01", hasta: "2026-10-31", reembolso: null, numero: null, medio: null, pagina: 2 }
   );
   assert.equal(leerFiltrosPagos({ pagina: "-3" }).pagina, 1);
 

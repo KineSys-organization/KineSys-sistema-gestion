@@ -8,6 +8,7 @@ import {
   formatearNumeroComprobante,
   formatearPesos,
   leerFiltrosPagos,
+  MEDIOS_PAGO,
   MENSAJE_SIN_PAGOS,
   OPCIONES_FILTRO_REEMBOLSO,
   totalPaginasPagos,
@@ -97,6 +98,18 @@ export default async function PagosPage({ searchParams }: Props) {
             ))}
           </select>
         </div>
+        {/* HU-21: filtrar por medio (p. ej. Billetera virtual). */}
+        <div className="campo">
+          <label htmlFor="medio">Medio</label>
+          <select id="medio" name="medio" defaultValue={filtros.medio ?? ""}>
+            <option value="">Todos</option>
+            {MEDIOS_PAGO.map((m) => (
+              <option key={m.valor} value={m.valor}>
+                {m.etiqueta}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="fila-acciones">
           <button className="boton-principal boton-inline" type="submit">
             Filtrar
@@ -155,7 +168,12 @@ export default async function PagosPage({ searchParams }: Props) {
                     {pago.corregido && <span className="texto-suave"> (corregido)</span>}
                   </td>
                   <td>{formatearMomento(pago.registrado_en)}</td>
-                  <td>{etiquetaMedio(pago.medio_pago)}</td>
+                  <td>
+                    {etiquetaMedio(pago.medio_pago)}
+                    {pago.numero_operacion && (
+                      <span className="texto-suave"> · op. {pago.numero_operacion}</span>
+                    )}
+                  </td>
                   <td>
                     <EstadoPagoBadge estado={pago.estado_pago} />
                     {pago.reembolso && (

@@ -26,7 +26,10 @@ function estadoError(mensaje: string): EstadoFormulario {
   return { ok: false, error: mensaje };
 }
 
-function normalizarPaciente(fila: Paciente): Paciente {
+function normalizarPaciente(
+  fila: Omit<Paciente, "turnos_confirmados_futuros"> &
+    Partial<Pick<Paciente, "turnos_confirmados_futuros">>
+): Paciente {
   const fecha = fila.fecha_nacimiento_paciente
     ? String(fila.fecha_nacimiento_paciente).slice(0, 10)
     : "";
@@ -35,8 +38,12 @@ function normalizarPaciente(fila: Paciente): Paciente {
     ...fila,
     telefono_paciente: fila.telefono_paciente ?? "",
     mail_paciente: fila.mail_paciente ?? "",
+    activo: fila.activo !== false,
     fecha_nacimiento_paciente: fecha,
     obras_sociales: Array.isArray(fila.obras_sociales) ? fila.obras_sociales : [],
+    turnos_confirmados_futuros: Array.isArray(fila.turnos_confirmados_futuros)
+      ? fila.turnos_confirmados_futuros
+      : [],
   };
 }
 
@@ -166,6 +173,7 @@ export async function filtrarPacientes(
     p_obra: filtros.obra,
     p_edad_min: filtros.edadMin,
     p_edad_max: filtros.edadMax,
+    p_estado: filtros.estado,
   });
 
   if (error) return { data: [], error: error.message };
@@ -217,5 +225,26 @@ export async function editarPaciente(
 
   revalidatePath(PATH);
   revalidatePath(`/pacientes/${idPaciente}`);
+  return { ok: true, error: null };
+}
+
+export async function cambiarEstadoPaciente(
+  idPaciente: string,
+  activo: boolean
+): Promise<{ ok: boolean; error: string | null }> {
+  const sinPermiso = await exigirAccion("pacientes.gestionar");
+  if (sinPermiso) return { ok: false, error: sinPermiso };
+  if (!esIdPaciente(idPaciente)) return { ok: false, error: "Paciente inválido" };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("fn_cambiar_estado_paciente", {
+    p_id_paciente: idPaciente,
+    p_activo: activo,
+  });
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(PATH);
+  revalidatePath(`/pacientes/${idPaciente}`);
+  revalidatePath("/turnos/nuevo");
   return { ok: true, error: null };
 }
