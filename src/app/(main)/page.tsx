@@ -83,6 +83,11 @@ export default async function InicioPage({
       titulo: "Indicadores",
       texto: "Turnos por estado y pacientes nuevos en un período.",
     },
+    {
+      href: "/bloqueos",
+      titulo: "Bloqueos de agenda",
+      texto: "Feriados, cierres del centro y licencias de un profesional.",
+    },
   ].filter((tarjeta) => puedeAcceder(rol, tarjeta.href));
 
   // HU-12: el Profesional ve de entrada cómo viene su día.
@@ -133,6 +138,7 @@ export default async function InicioPage({
       {rol === "Profesional" && (
         <DashboardProfesional
           hoy={hoyArgentina()}
+          idProfesional={usuario.id_usuario}
           mesPedido={typeof mes === "string" ? mes : ""}
           diaPedido={typeof dia === "string" ? dia : ""}
         />

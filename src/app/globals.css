@@ -1733,6 +1733,23 @@ a.badge-horario:hover {
 }
 
 /* Alta de franjas en varios días: casillas Lunes..Domingo en grilla. */
+.atajos-bloqueo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.atajos-bloqueo .fila-acciones {
+  margin: 0;
+}
+
+.atajos-bloqueo .campo {
+  margin: 0;
+  width: 110px;
+}
+
 .dias-semana {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -2063,6 +2080,7 @@ a.badge-horario:hover {
 .turno-color-naranja { border-left-color: #e8871e; color: #754d06; background-color: #fff3d6; }
 .turno-color-gris { border-left-color: #7b8790; color: #56616b; background-color: #eef1f4; }
 .turno-chip.turno-color-gris .turno-chip-texto { text-decoration: line-through; }
+.turno-chip-bloqueo { border-left-color: #586770; color: #586770; background-color: #eef1f4; font-style: italic; }
 
 .proximidad-icono {
   display: inline-block;

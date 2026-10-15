@@ -147,26 +147,67 @@ export function urlReprogramar(
   return `/turnos/${idTurno}/reprogramar${query ? `?${query}` : ""}`;
 }
 
-// HU-25. Repetir un turno semanalmente: mismo día de la semana y misma hora.
-// Las reglas (turno confirmado con paciente, franjas, ocupación) las valida la base.
-export const MAXIMO_SEMANAS_REPETIR = 24;
+// HU-25 / HU-37. Repetir un turno cada semana, en los días elegidos.
+// Sin tocar los días queda solo el del turno original (igual que HU-25).
+// Las reglas de franja, ocupación y bloqueo las valida la base.
+export const MAXIMO_TURNOS_REPETIR = 24;
+export const MAXIMO_SEMANAS_REPETIR = MAXIMO_TURNOS_REPETIR;
+
+export const DIAS_REPETIR = [
+  { valor: 1, etiqueta: "Lunes" },
+  { valor: 2, etiqueta: "Martes" },
+  { valor: 3, etiqueta: "Miércoles" },
+  { valor: 4, etiqueta: "Jueves" },
+  { valor: 5, etiqueta: "Viernes" },
+  { valor: 6, etiqueta: "Sábado" },
+  { valor: 7, etiqueta: "Domingo" },
+] as const;
 
 export type CamposRepetir = {
   idTurno: string;
-  semanas: string;
+  modo: "semanas" | "sesiones";
+  cantidad: string;
+  dias: number[]; // 1 = lunes ... 7 = domingo, en el orden elegido
+  horas: string[]; // una por día, mismo orden, "HH:MM"
 };
+
+export function isoDow(fecha: string): number {
+  const dia = new Date(`${fecha.slice(0, 10)}T00:00:00Z`).getUTCDay();
+  return dia === 0 ? 7 : dia;
+}
 
 export function validarRepetir(input: CamposRepetir): string | null {
   if (!UUID_OK.test(input.idTurno.trim())) return "Turno inválido";
 
-  const semanas = input.semanas.trim();
-  if (!semanas) return "Indicá cuántas semanas repetir";
-  if (!/^\d+$/.test(semanas)) return "La cantidad de semanas tiene que ser un número entero";
-
-  const numero = Number(semanas);
-  if (numero < 1 || numero > MAXIMO_SEMANAS_REPETIR) {
-    return "Podés repetir el turno entre 1 y 24 semanas";
+  if (input.dias.length === 0) return "Elegí al menos un día de la semana";
+  if (input.dias.some((d) => !Number.isInteger(d) || d < 1 || d > 7)) {
+    return "Los días de la semana no son válidos";
   }
+  if (new Set(input.dias).size !== input.dias.length) {
+    return "Un mismo día no se puede elegir dos veces";
+  }
+  if (input.horas.length !== input.dias.length) return "Tiene que haber una hora por cada día elegido";
+  if (input.horas.some((h) => !HORA_OK.test(h))) {
+    return "La hora indicada no tiene un formato válido (HH:MM)";
+  }
+
+  if (input.modo !== "semanas" && input.modo !== "sesiones") {
+    return "Elegí cantidad de semanas o cantidad de sesiones, no las dos";
+  }
+
+  const cantidad = input.cantidad.trim();
+  if (!cantidad) {
+    return input.modo === "semanas" ? "Indicá cuántas semanas repetir" : "Indicá cuántas sesiones repetir";
+  }
+  if (!/^\d+$/.test(cantidad)) {
+    return "La cantidad de semanas o de sesiones tiene que ser un número entero";
+  }
+
+  const numero = Number(cantidad);
+  if (numero < 1) return "La cantidad de semanas o de sesiones tiene que ser mayor a cero";
+
+  const total = input.modo === "semanas" ? numero * input.dias.length : numero;
+  if (total > MAXIMO_TURNOS_REPETIR) return "No se pueden crear más de 24 turnos nuevos en total";
 
   return null;
 }

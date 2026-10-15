@@ -8,6 +8,7 @@ import { RepetirTurnoForm } from "@/components/turnos/RepetirTurnoForm";
 import { PrioridadBadge } from "@/components/turnos/PrioridadBadge";
 import { PrioridadForm } from "@/components/turnos/PrioridadForm";
 import { obtenerTurno } from "@/lib/turnos/actions";
+import { consultarHorarios } from "@/lib/profesionales/horarios-actions";
 import { obtenerPagoTurno } from "@/lib/pagos/actions";
 import {
   etiquetaMedio,
@@ -58,6 +59,14 @@ export default async function TurnoPage({ params, searchParams }: Props) {
     obtenerTurno(id),
     obtenerPagoTurno(id),
   ]);
+
+  const puedeRepetir =
+    turno?.estado === "confirmado" && puedeHacer(usuario.rol_usuario, "turnos.repetir");
+  const horarios = puedeRepetir && turno ? await consultarHorarios(turno.id_profesional) : null;
+  const diasLaborales =
+    horarios?.data
+      ? [...new Set(horarios.data.franjas.map((franja) => Number(franja.dia_semana)))]
+      : [1, 2, 3, 4, 5, 6, 7];
 
   if (error || !turno) {
     return (
@@ -249,8 +258,14 @@ export default async function TurnoPage({ params, searchParams }: Props) {
           Ver agenda del día
         </Link>
         {/* HU-25: solo desde un turno confirmado (la base lo vuelve a validar). */}
-        {turno.estado === "confirmado" && puedeHacer(usuario.rol_usuario, "turnos.repetir") && (
-          <RepetirTurnoForm idTurno={turno.id_turno} abiertoInicial={Boolean(nuevo)} />
+        {puedeRepetir && (
+          <RepetirTurnoForm
+            idTurno={turno.id_turno}
+            fecha={turno.fecha}
+            horaInicio={turno.hora_inicio}
+            diasLaborales={diasLaborales}
+            abiertoInicial={Boolean(nuevo)}
+          />
         )}
         {turno.marcable_ausente && (
           <AusenciaTurnoForm idTurno={turno.id_turno} modo="marcar" />

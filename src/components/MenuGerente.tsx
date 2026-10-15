@@ -8,6 +8,7 @@ import { estaActivo } from "@/components/Navegacion";
 const ATENCION = [
   { href: "/turnos/nuevo", texto: "Otorgar turno" },
   { href: "/agenda", texto: "Agenda" },
+  { href: "/bloqueos", texto: "Bloqueos" },
   { href: "/turnos", texto: "Turnos" },
   { href: "/pagos", texto: "Pagos" },
 ];
