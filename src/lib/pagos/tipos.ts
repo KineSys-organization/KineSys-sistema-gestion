@@ -32,6 +32,7 @@ export type Pago = {
   descuento: number;
   importe_final: number;
   medio_pago: string;
+  numero_operacion: string | null; // HU-21: solo con billetera virtual
   registrado_en: string;
   registrado_por: string;
   corregido_en: string | null;
@@ -58,6 +59,8 @@ export type CorreccionPago = {
   descuento_nuevo: number;
   importe_final_nuevo: number;
   medio_pago_nuevo: string;
+  numero_operacion_anterior: string | null; // HU-21
+  numero_operacion_nuevo: string | null;
   corregido_en: string;
   corregido_por: string;
 };
@@ -85,6 +88,7 @@ export type PagoListado = {
   descuento: number;
   importe_final: number;
   medio_pago: string;
+  numero_operacion: string | null; // HU-21
   registrado_en: string;
   corregido: boolean;
   estado_pago: EstadoPagoTurno;
