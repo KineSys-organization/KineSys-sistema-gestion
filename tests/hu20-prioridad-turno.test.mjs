@@ -73,10 +73,16 @@ const leer = (...partes) => readFileSync(join(...partes), "utf8");
 
 test("migración 027: columna, drop + create y la prioridad en cada consulta", () => {
   const sql = leer("supabase", "migrations", "027_hu20_prioridad_turno.sql");
-  assert.match(sql, /add column prioridad text not null default 'normal'/);
+  assert.match(sql, /add column if not exists prioridad text not null default 'normal'/);
   assert.match(sql, /check \(prioridad in \('normal', 'alta', 'urgente'\)\)/);
   assert.match(sql, /drop function if exists public\.fn_otorgar_turno\(uuid, uuid, uuid, date, time, uuid\);/);
-  assert.match(sql, /drop function if exists public\.fn_buscar_turnos\(text, uuid, uuid, date, date, text, integer\);/);
+  // Sobre la versión de HU-17 (8 parámetros, el último p_estado_cobro): queda una sola de 9.
+  assert.match(sql, /drop function if exists public\.fn_buscar_turnos\(text, uuid, uuid, date, date, text, integer, text\);/);
+  assert.match(sql, /p_estado_cobro text default null,\r?\n\s+p_prioridad text default null/);
+  assert.match(sql, /grant execute on function public\.fn_buscar_turnos\(text, uuid, uuid, date, date, text, integer, text, text\) to authenticated/);
+  // No se pierde lo de HU-17 (estado de cobro) ni lo de HU-38 (orden con sesiones).
+  assert.match(sql, /'estado_cobro'/);
+  assert.match(sql, /'orden_sesiones', a\.orden_sesiones/);
   // Cambiar: rol con usuario activo, confirmado y no empezado.
   const cambiar = sql.slice(sql.indexOf("function public.fn_cambiar_prioridad_turno"));
   assert.match(cambiar, /fn_exigir_rol\(array\['Gerente', 'Mesa de Entradas'\]\)/);

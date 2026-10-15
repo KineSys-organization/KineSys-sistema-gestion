@@ -229,6 +229,7 @@ end;
 $$;
 
 -- ============ Detalle del turno: la orden con sus datos automáticos ============
+-- Parte de la versión de HU-17 (024_hu17_estado_cobro, ya aplicada en la base: estado_cobro).
 -- Copia de 019. Dentro de 'atencion' (solo el profesional que atendió) se suman las
 -- sesiones y la cobertura del turno; arriba, la matrícula del profesional. Así la orden
 -- impresa se arma sin que el front mande nada.
@@ -287,8 +288,14 @@ begin
     'ausencia_corregible', (t.estado = 'ausente'),
     -- HU-13: confirmado y del día (hora de Argentina).
     'atendible', (t.estado = 'confirmado' and t.fecha = v_ahora::date),
+    -- HU-17: estado de cobro. El Profesional no lo ve (recibe null).
+    'estado_cobro', case
+      when v_es_recepcion then
+        public.fn_estado_cobro(t.estado, p.id_pago is not null, r.id_reembolso is not null)
+      else null
+    end,
     -- HU-13: la atención (observaciones clínicas) solo la ve el profesional que atendió.
-    -- HU-24A / HU-38: la orden médica va acá adentro, así Recepción tampoco la recibe.
+    -- HU-24A: la orden médica va acá adentro, así Recepción tampoco la recibe.
     'atencion', case
       when a.id_atencion is not null and a.id_profesional = auth.uid() then
         jsonb_build_object(
@@ -296,8 +303,8 @@ begin
           'observaciones', a.observaciones,
           'motivo_consulta', a.motivo_consulta,
           'orden_medica', a.orden_medica,
+          -- HU-38: sesiones y datos automáticos de la orden (leídos de la base, no del front).
           'orden_sesiones', a.orden_sesiones,
-          -- HU-38: datos automáticos de la orden (leídos de la base, no del front).
           'orden_cobertura', coalesce(o.nombre_obra_social, 'Particular'),
           'orden_numero_afiliado', t.numero_afiliado,
           'registrado_en', a.registrado_en,
@@ -311,9 +318,11 @@ begin
   join public.paciente pa on pa.id_paciente = t.id_paciente
   join public.usuario u on u.id_usuario = t.id_profesional
   join public.servicio s on s.id_servicio = t.id_servicio
-  left join public.profesional pr on pr.id_usuario = t.id_profesional
+  left join public.profesional pr on pr.id_usuario = t.id_profesional -- HU-38
   left join public.obra_social o on o.id_obra_social = t.id_obra_social
   left join public.atencion a on a.id_turno = t.id_turno
+  left join public.pago p on p.id_turno = t.id_turno -- HU-17
+  left join public.reembolso r on r.id_pago = p.id_pago -- HU-17
   where t.id_turno = p_id_turno;
 
   if v_resultado is null then

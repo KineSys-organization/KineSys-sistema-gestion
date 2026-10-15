@@ -20,13 +20,17 @@
 begin;
 
 -- ============ Tablas ============
-alter table public.pago drop constraint pago_medio_valido;
+-- "if exists / if not exists": se puede volver a correr si una ejecución anterior falló.
+alter table public.pago drop constraint if exists pago_medio_valido;
 alter table public.pago
   add constraint pago_medio_valido
     check (medio_pago in ('efectivo', 'transferencia', 'debito', 'credito', 'billetera'));
 
 alter table public.pago
-  add column numero_operacion text;
+  add column if not exists numero_operacion text;
+
+alter table public.pago drop constraint if exists pago_numero_operacion_formato;
+alter table public.pago drop constraint if exists pago_billetera_con_operacion;
 
 alter table public.pago
   add constraint pago_numero_operacion_formato
@@ -38,15 +42,15 @@ alter table public.pago
     check ((medio_pago = 'billetera') = (numero_operacion is not null));
 
 -- Un mismo nº de operación no se usa en dos pagos.
-create unique index idx_pago_numero_operacion
+create unique index if not exists idx_pago_numero_operacion
   on public.pago (lower(numero_operacion))
   where numero_operacion is not null;
 
 alter table public.pago_correccion
-  add column numero_operacion_anterior text,
-  add column numero_operacion_nuevo text;
+  add column if not exists numero_operacion_anterior text,
+  add column if not exists numero_operacion_nuevo text;
 
-alter table public.reembolso drop constraint reembolso_medio_valido;
+alter table public.reembolso drop constraint if exists reembolso_medio_valido;
 alter table public.reembolso
   add constraint reembolso_medio_valido
     check (medio_devolucion in ('efectivo', 'transferencia', 'debito', 'credito', 'billetera'));
@@ -144,6 +148,7 @@ revoke all on function public.fn_validar_numero_operacion(text, text, uuid)
   from public, anon, authenticated;
 
 -- ============ Consultar el pago de un turno: suma el nº de operación ============
+-- Parte de la versión de HU-17 (024_hu17_estado_cobro: turno.estado_cobro).
 create or replace function public.fn_obtener_pago(p_id_turno uuid)
 returns jsonb
 language plpgsql
@@ -173,7 +178,11 @@ begin
       'precio_servicio', s.precio_servicio, -- sugerencia; el pago guarda su propio importe
       'id_obra_social', t.id_obra_social,
       'cobertura', coalesce(o.nombre_obra_social, 'Particular'),
-      'numero_afiliado', t.numero_afiliado
+      'numero_afiliado', t.numero_afiliado,
+      -- HU-17: estado de cobro del turno (también para el comprobante, HU-35).
+      'estado_cobro', public.fn_estado_cobro(
+        t.estado, p.id_pago is not null, r.id_reembolso is not null
+      )
     ),
     -- Un turno con pago (reembolsado o no) ya no es cobrable: un pago por turno.
     'cobrable', (t.estado in ('confirmado', 'atendido') and p.id_pago is null),
@@ -242,6 +251,7 @@ $$;
 
 -- ============ Registrar el pago (HU-14 + HU-21) ============
 drop function if exists public.fn_registrar_pago(uuid, numeric, numeric, text);
+drop function if exists public.fn_registrar_pago(uuid, numeric, numeric, text, text);
 
 create function public.fn_registrar_pago(
   p_id_turno uuid,
@@ -316,6 +326,7 @@ $$;
 
 -- ============ Corregir el pago (HU-14 + HU-22 + HU-21) ============
 drop function if exists public.fn_corregir_pago(uuid, numeric, numeric, text, text);
+drop function if exists public.fn_corregir_pago(uuid, numeric, numeric, text, text, text);
 
 create function public.fn_corregir_pago(
   p_id_turno uuid,
@@ -411,6 +422,7 @@ $$;
 
 -- ============ Listado de pagos (HU-14 + HU-22 + HU-21): nº de operación y filtro por medio ============
 drop function if exists public.fn_listar_pagos(text, date, date, integer, text);
+drop function if exists public.fn_listar_pagos(text, date, date, integer, text, text);
 
 create function public.fn_listar_pagos(
   p_texto text default null,

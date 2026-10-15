@@ -76,9 +76,9 @@ const leer = (...partes) => readFileSync(join(...partes), "utf8");
 test("migración 028: check, columna, único y drop + create", () => {
   const sql = leer("supabase", "migrations", "028_hu21_billetera_virtual.sql");
   assert.match(sql, /'efectivo', 'transferencia', 'debito', 'credito', 'billetera'/);
-  assert.match(sql, /add column numero_operacion text;/);
+  assert.match(sql, /add column if not exists numero_operacion text;/);
   assert.match(sql, /check \(\(medio_pago = 'billetera'\) = \(numero_operacion is not null\)\)/);
-  assert.match(sql, /create unique index idx_pago_numero_operacion/);
+  assert.match(sql, /create unique index if not exists idx_pago_numero_operacion/);
   assert.match(sql, /drop function if exists public\.fn_registrar_pago\(uuid, numeric, numeric, text\);/);
   assert.match(sql, /drop function if exists public\.fn_corregir_pago\(uuid, numeric, numeric, text, text\);/);
   assert.match(sql, /drop function if exists public\.fn_listar_pagos\(text, date, date, integer, text\);/);

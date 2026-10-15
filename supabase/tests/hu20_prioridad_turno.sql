@@ -1,5 +1,6 @@
 -- Pruebas HU-20 (prioridad o urgencia del turno). Todo se revierte al final.
--- Requiere la migración 027_hu20_prioridad_turno.sql aplicada.
+-- Requiere HU-17 (024_hu17_estado_cobro) y la migración 027_hu20_prioridad_turno.sql aplicadas.
+-- fn_buscar_turnos: el 8.º parámetro es p_estado_cobro (HU-17) y el 9.º p_prioridad (HU-20).
 --
 -- Cuentas: Mesa carlaperez@ y el primer Profesional activo con servicio. Los turnos se
 -- insertan como postgres (salvo el que se otorga, que usa un horario libre de verdad).
@@ -106,20 +107,20 @@ begin
   end if;
 
   -- Listado: filtro combinable y la prioridad en cada fila.
-  v_res := public.fn_buscar_turnos('TestHU20', null, null, null, null, null, 1, 'urgente');
+  v_res := public.fn_buscar_turnos('TestHU20', null, null, null, null, null, 1, null, 'urgente');
   if (v_res ->> 'total')::int <> 1 or v_res -> 'turnos' -> 0 ->> 'prioridad' <> 'urgente' then
     raise exception 'FALLA: el filtro Urgente no anduvo: %', v_res;
   end if;
-  v_res := public.fn_buscar_turnos('TestHU20', null, null, null, null, 'confirmado', 1, 'normal');
+  v_res := public.fn_buscar_turnos('TestHU20', null, null, null, null, 'confirmado', 1, null, 'normal');
   if (v_res ->> 'total')::int <> 1 then
     raise exception 'FALLA: filtro Normal + Confirmado no anduvo';
   end if;
-  v_res := public.fn_buscar_turnos('TestHU20', null, null, null, null, null, 1, 'todas');
+  v_res := public.fn_buscar_turnos('TestHU20', null, null, null, null, null, 1, null, 'todas');
   if (v_res ->> 'total')::int <> 3 then
     raise exception 'FALLA: Todas no muestra todo';
   end if;
   begin
-    perform public.fn_buscar_turnos(null, null, null, null, null, null, 1, 'x');
+    perform public.fn_buscar_turnos(null, null, null, null, null, null, 1, null, 'x');
     raise exception 'FALLA: el listado aceptó una prioridad inválida';
   exception when others then
     if sqlerrm <> 'La prioridad no es válida' then raise; end if;

@@ -121,7 +121,10 @@ test("migración 025: columna, checks, drop + create y datos dentro de atencion"
 
   // Sesiones y cobertura solo dentro de 'atencion' (profesional que atendió).
   const obtener = sql.slice(sql.indexOf("function public.fn_obtener_turno"));
-  const rama = obtener.slice(obtener.indexOf("'atencion', case"), obtener.indexOf("else null"));
+  const rama = obtener.slice(
+    obtener.indexOf("'atencion', case"),
+    obtener.indexOf("else null", obtener.indexOf("'atencion', case"))
+  );
   assert.match(rama, /a\.id_profesional = auth\.uid\(\)/);
   assert.match(rama, /'orden_sesiones', a\.orden_sesiones/);
   assert.match(rama, /'orden_cobertura'/);

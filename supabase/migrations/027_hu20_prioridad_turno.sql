@@ -9,19 +9,24 @@
 --   * fn_otorgar_turno suma p_prioridad (default 'normal') con drop + create (copia de 022).
 --   * fn_cambiar_prioridad_turno (nueva): Recepción y Gerente, solo turnos confirmados que
 --     todavía no empezaron (hora de Argentina). Nota opcional.
---   * fn_obtener_turno (copia de 025), fn_consultar_agenda_profesional (copia de 014) y
---     fn_buscar_turnos (copia de 016, + filtro p_prioridad con drop + create) devuelven la
---     prioridad.
+--   * fn_obtener_turno, fn_consultar_agenda_profesional y fn_buscar_turnos devuelven la
+--     prioridad. Se parte de su versión de HU-17 (024_hu17_estado_cobro, ya aplicada en la base:
+--     estado_cobro y el filtro p_estado_cobro) + HU-38 (025) para fn_obtener_turno.
+--     fn_buscar_turnos suma p_prioridad (9.º parámetro) con drop + create.
 --   * fn_turno_repetir_confirmar (copia de 018): los turnos nuevos copian la prioridad.
 --   * Reprogramar (HU-10C) solo toca fecha y horas: la prioridad se conserva sola.
 begin;
 
 -- ============ Columnas ============
+-- "if exists / if not exists": se puede volver a correr si una ejecución anterior falló.
 alter table public.turno
-  add column prioridad text not null default 'normal',
-  add column prioridad_nota text,
-  add column prioridad_actualizada_en timestamptz,
-  add column prioridad_actualizada_por uuid references public.usuario (id_usuario);
+  add column if not exists prioridad text not null default 'normal',
+  add column if not exists prioridad_nota text,
+  add column if not exists prioridad_actualizada_en timestamptz,
+  add column if not exists prioridad_actualizada_por uuid references public.usuario (id_usuario);
+
+alter table public.turno drop constraint if exists turno_prioridad_valida;
+alter table public.turno drop constraint if exists turno_prioridad_nota_largo;
 
 alter table public.turno
   add constraint turno_prioridad_valida
@@ -33,6 +38,7 @@ alter table public.turno
 
 -- ============ Otorgar: con prioridad (HU-06 / HU-28, paso de confirmar) ============
 drop function if exists public.fn_otorgar_turno(uuid, uuid, uuid, date, time, uuid);
+drop function if exists public.fn_otorgar_turno(uuid, uuid, uuid, date, time, uuid, text);
 
 create function public.fn_otorgar_turno(
   p_id_paciente uuid,
@@ -280,8 +286,14 @@ begin
     'ausencia_corregible', (t.estado = 'ausente'),
     -- HU-13: confirmado y del día (hora de Argentina).
     'atendible', (t.estado = 'confirmado' and t.fecha = v_ahora::date),
+    -- HU-17: estado de cobro. El Profesional no lo ve (recibe null).
+    'estado_cobro', case
+      when v_es_recepcion then
+        public.fn_estado_cobro(t.estado, p.id_pago is not null, r.id_reembolso is not null)
+      else null
+    end,
     -- HU-13: la atención (observaciones clínicas) solo la ve el profesional que atendió.
-    -- HU-24A / HU-38: la orden médica va acá adentro, así Recepción tampoco la recibe.
+    -- HU-24A: la orden médica va acá adentro, así Recepción tampoco la recibe.
     'atencion', case
       when a.id_atencion is not null and a.id_profesional = auth.uid() then
         jsonb_build_object(
@@ -289,8 +301,8 @@ begin
           'observaciones', a.observaciones,
           'motivo_consulta', a.motivo_consulta,
           'orden_medica', a.orden_medica,
+          -- HU-38: sesiones y datos automáticos de la orden (leídos de la base, no del front).
           'orden_sesiones', a.orden_sesiones,
-          -- HU-38: datos automáticos de la orden (leídos de la base, no del front).
           'orden_cobertura', coalesce(o.nombre_obra_social, 'Particular'),
           'orden_numero_afiliado', t.numero_afiliado,
           'registrado_en', a.registrado_en,
@@ -304,9 +316,11 @@ begin
   join public.paciente pa on pa.id_paciente = t.id_paciente
   join public.usuario u on u.id_usuario = t.id_profesional
   join public.servicio s on s.id_servicio = t.id_servicio
-  left join public.profesional pr on pr.id_usuario = t.id_profesional
+  left join public.profesional pr on pr.id_usuario = t.id_profesional -- HU-38
   left join public.obra_social o on o.id_obra_social = t.id_obra_social
   left join public.atencion a on a.id_turno = t.id_turno
+  left join public.pago p on p.id_turno = t.id_turno -- HU-17
+  left join public.reembolso r on r.id_pago = p.id_pago -- HU-17
   where t.id_turno = p_id_turno;
 
   if v_resultado is null then
@@ -330,10 +344,11 @@ set search_path = ''
 as $$
 declare
   v_hoy date := (timezone('America/Argentina/Buenos_Aires', now()))::date;
+  v_es_recepcion boolean := public.fn_es_recepcion(); -- HU-17
 begin
   -- Recepción consulta la agenda de cualquier profesional (HU-07).
   -- Un Profesional solo la suya (HU-12): el id tiene que ser el de su sesión.
-  if not public.fn_es_recepcion() then
+  if not v_es_recepcion then
     perform public.fn_exigir_rol(array['Profesional']);
 
     if p_id_profesional is distinct from auth.uid() then
@@ -375,13 +390,21 @@ begin
           'nombre_servicio', s.nombre_servicio,
           'motivo_cancelacion', t.motivo_cancelacion,
           'prioridad', t.prioridad, -- HU-20
-          'atendible', (t.estado = 'confirmado' and t.fecha = v_hoy)
+          'atendible', (t.estado = 'confirmado' and t.fecha = v_hoy),
+          -- HU-17: estado de cobro. En "Mi agenda" del Profesional va null.
+          'estado_cobro', case
+            when v_es_recepcion then
+              public.fn_estado_cobro(t.estado, pg.id_pago is not null, r.id_reembolso is not null)
+            else null
+          end
         )
         order by t.hora_inicio, (t.estado = 'cancelado'), t.creado
       )
       from public.turno t
       join public.paciente pa on pa.id_paciente = t.id_paciente
       join public.servicio s on s.id_servicio = t.id_servicio
+      left join public.pago pg on pg.id_turno = t.id_turno -- HU-17
+      left join public.reembolso r on r.id_pago = pg.id_pago -- HU-17
       where t.id_profesional = p_id_profesional
         and t.fecha = p_fecha
         and t.estado in ('confirmado', 'cancelado', 'atendido', 'ausente')
@@ -392,7 +415,8 @@ end;
 $$;
 
 -- ============ Listado de turnos (HU-09): prioridad + filtro ============
-drop function if exists public.fn_buscar_turnos(text, uuid, uuid, date, date, text, integer);
+drop function if exists public.fn_buscar_turnos(text, uuid, uuid, date, date, text, integer, text);
+drop function if exists public.fn_buscar_turnos(text, uuid, uuid, date, date, text, integer, text, text);
 
 create function public.fn_buscar_turnos(
   p_texto text default null,
@@ -402,6 +426,7 @@ create function public.fn_buscar_turnos(
   p_hasta date default null,
   p_estado text default null,
   p_pagina integer default 1,
+  p_estado_cobro text default null,
   p_prioridad text default null -- HU-20
 )
 returns jsonb
@@ -415,8 +440,9 @@ declare
   v_texto text := trim(coalesce(p_texto, ''));
   v_palabras text[];
   v_estado text := lower(nullif(trim(coalesce(p_estado, '')), ''));
+  v_cobro text := lower(nullif(trim(coalesce(p_estado_cobro, '')), '')); -- HU-17
   v_pagina integer := greatest(coalesce(p_pagina, 1), 1);
-  v_prioridad text := lower(nullif(trim(coalesce(p_prioridad, '')), ''));
+  v_prioridad text := lower(nullif(trim(coalesce(p_prioridad, '')), '')); -- HU-20
   v_resultado jsonb;
 begin
   if not public.fn_es_recepcion() then
@@ -434,6 +460,15 @@ begin
   if v_estado is not null
     and v_estado not in ('confirmado', 'cancelado', 'atendido', 'ausente') then
     raise exception 'El estado no es válido';
+  end if;
+
+  if v_cobro = 'todos' then
+    v_cobro := null;
+  end if;
+
+  if v_cobro is not null
+    and v_cobro not in ('pendiente', 'pagado', 'reembolsado', 'no_corresponde') then
+    raise exception 'El estado de cobro no es válido';
   end if;
 
   -- HU-20: filtro de prioridad (Todas = sin filtro).
@@ -454,7 +489,7 @@ begin
   end if;
 
   -- "coincidencias" se usa dos veces: para el total y para armar la página.
-  with coincidencias as (
+  with base as (
     select
       t.id_turno,
       t.fecha,
@@ -462,7 +497,7 @@ begin
       t.hora_fin,
       t.estado,
       t.motivo_cancelacion,
-      t.prioridad,
+      t.prioridad, -- HU-20
       pa.id_paciente,
       pa.nombre_paciente,
       pa.apellido_paciente,
@@ -471,17 +506,22 @@ begin
       u.nombre_usuario,
       u.apellido_usuario,
       t.id_servicio,
-      s.nombre_servicio
+      s.nombre_servicio,
+      -- HU-17: misma regla que el detalle y la agenda.
+      public.fn_estado_cobro(t.estado, pg.id_pago is not null, r.id_reembolso is not null)
+        as estado_cobro
     from public.turno t
     join public.paciente pa on pa.id_paciente = t.id_paciente
     join public.usuario u on u.id_usuario = t.id_profesional
     join public.servicio s on s.id_servicio = t.id_servicio
+    left join public.pago pg on pg.id_turno = t.id_turno
+    left join public.reembolso r on r.id_pago = pg.id_pago
     where (p_id_profesional is null or t.id_profesional = p_id_profesional)
       and (p_id_servicio is null or t.id_servicio = p_id_servicio)
       and (p_desde is null or t.fecha >= p_desde)
       and (p_hasta is null or t.fecha <= p_hasta)
       and (v_estado is null or t.estado = v_estado)
-      and (v_prioridad is null or t.prioridad = v_prioridad)
+      and (v_prioridad is null or t.prioridad = v_prioridad) -- HU-20
       -- Paciente: ninguna palabra puede quedar sin coincidir (AND entre palabras).
       -- strpos en vez de ilike: así un "%" o "_" escrito se busca literal.
       and (
@@ -496,6 +536,9 @@ begin
           )
         )
       )
+  ),
+  coincidencias as (
+    select * from base b where v_cobro is null or b.estado_cobro = v_cobro
   ),
   pagina as (
     select *
@@ -519,7 +562,7 @@ begin
             'hora_fin', to_char(p.hora_fin, 'HH24:MI'),
             'estado', p.estado,
             'motivo_cancelacion', p.motivo_cancelacion,
-            'prioridad', p.prioridad,
+            'prioridad', p.prioridad, -- HU-20
             'id_paciente', p.id_paciente,
             'nombre_paciente', p.nombre_paciente,
             'apellido_paciente', p.apellido_paciente,
@@ -528,7 +571,8 @@ begin
             'nombre_profesional', p.nombre_usuario,
             'apellido_profesional', p.apellido_usuario,
             'id_servicio', p.id_servicio,
-            'nombre_servicio', p.nombre_servicio
+            'nombre_servicio', p.nombre_servicio,
+            'estado_cobro', p.estado_cobro
           )
           order by p.fecha, p.hora_inicio, p.apellido_paciente, p.nombre_paciente, p.id_turno
         )
@@ -677,14 +721,14 @@ revoke all on function public.fn_otorgar_turno(uuid, uuid, uuid, date, time, uui
 revoke all on function public.fn_cambiar_prioridad_turno(uuid, text, text) from public, anon;
 revoke all on function public.fn_obtener_turno(uuid) from public, anon;
 revoke all on function public.fn_consultar_agenda_profesional(uuid, date) from public, anon;
-revoke all on function public.fn_buscar_turnos(text, uuid, uuid, date, date, text, integer, text) from public, anon;
+revoke all on function public.fn_buscar_turnos(text, uuid, uuid, date, date, text, integer, text, text) from public, anon;
 revoke all on function public.fn_turno_repetir_confirmar(uuid, integer) from public, anon;
 
 grant execute on function public.fn_otorgar_turno(uuid, uuid, uuid, date, time, uuid, text) to authenticated;
 grant execute on function public.fn_cambiar_prioridad_turno(uuid, text, text) to authenticated;
 grant execute on function public.fn_obtener_turno(uuid) to authenticated;
 grant execute on function public.fn_consultar_agenda_profesional(uuid, date) to authenticated;
-grant execute on function public.fn_buscar_turnos(text, uuid, uuid, date, date, text, integer, text) to authenticated;
+grant execute on function public.fn_buscar_turnos(text, uuid, uuid, date, date, text, integer, text, text) to authenticated;
 grant execute on function public.fn_turno_repetir_confirmar(uuid, integer) to authenticated;
 
 notify pgrst, 'reload schema';
