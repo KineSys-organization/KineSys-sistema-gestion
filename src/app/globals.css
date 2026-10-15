@@ -2307,6 +2307,20 @@ a.badge-horario:hover {
     display: none !important;
   }
 
+  /* El resto de la página se saca del todo (no solo se oculta): si sigue ocupando lugar,
+     el navegador arma varias hojas y repite en cada una lo que está "fixed" (la orden
+     salía dos veces). Se dejan solo la orden elegida y los contenedores que la tienen. */
+  body:has(.orden-impresion.imprimir-esta)
+    *:not(:has(.imprimir-esta)):not(.imprimir-esta):not(.imprimir-esta *) {
+    display: none !important;
+  }
+
+  /* Arriba de la hoja, sin "fixed": si la orden es larga, sigue en la hoja siguiente. */
+  .orden-impresion.imprimir-esta {
+    position: absolute !important;
+    inset: 0 auto auto 0;
+  }
+
   .orden-impresion h4 {
     margin: 20px 0 6px;
     color: var(--azul-principal);
