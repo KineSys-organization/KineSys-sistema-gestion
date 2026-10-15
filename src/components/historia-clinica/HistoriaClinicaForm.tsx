@@ -28,7 +28,8 @@ export function HistoriaClinicaForm({ idPaciente, idTurno, ficha, urlCancelar }:
     <form className="tarjeta login-form form-historia" action={action}>
       <h3>{ficha ? "Editar historia clínica" : "Completar historia clínica"}</h3>
       <p className="texto-suave">
-        Todos los campos son opcionales (hasta {LARGO_MAXIMO_CAMPO_FICHA} caracteres cada uno).
+        Cada campo es opcional; completá al menos uno para guardar (máximo {LARGO_MAXIMO_CAMPO_FICHA}
+        caracteres por campo).
         {ficha && " Al guardar, la versión anterior queda en el historial de cambios."}
       </p>
       <input type="hidden" name="id_paciente" value={idPaciente} />

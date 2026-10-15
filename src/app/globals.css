@@ -114,6 +114,48 @@ select {
   background: var(--blanco);
 }
 
+.campo-password {
+  position: relative;
+}
+
+.campo-password input {
+  padding-right: 52px !important;
+}
+
+.boton-mostrar-password {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gris-texto);
+  cursor: pointer;
+}
+
+.boton-mostrar-password:hover {
+  background: var(--fondo);
+  color: var(--azul-principal);
+}
+
+.boton-mostrar-password:focus-visible {
+  outline: 2px solid var(--celeste);
+}
+
+.boton-mostrar-password svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
 .campo input:not([type="checkbox"]):focus,
 .campo select:focus {
   outline: 2px solid var(--celeste);
