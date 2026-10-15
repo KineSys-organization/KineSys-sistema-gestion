@@ -1,5 +1,5 @@
 -- Pruebas HU-24A (orden médica al atender un turno). Todo se revierte al final.
--- Requiere la migración 019_hu24a_orden_medica.sql aplicada.
+-- Requiere las migraciones 019_hu24a_orden_medica.sql y 025_hu38 (desde HU-38 la orden lleva sesiones).
 --
 -- Mismo armado que hu12_hu13_atencion.sql: roles simulados con `set local role authenticated`
 -- + `request.jwt.claims`. Cuentas: Mesa carlaperez@, el primer Profesional activo con servicio
@@ -86,7 +86,7 @@ begin
 
   -- ---------- Orden de 2001 caracteres: rechazada por la función ----------
   begin
-    perform public.fn_registrar_atencion(v_con_orden, 'ok', null, repeat('o', 2001));
+    perform public.fn_registrar_atencion(v_con_orden, 'ok', null, repeat('o', 2001), 5);
     raise exception 'FALLA: aceptó una orden de más de 2000';
   exception when others then
     if sqlerrm <> 'La orden médica no puede superar los 2000 caracteres' then raise; end if;
@@ -114,7 +114,7 @@ begin
 
   -- ---------- Registrar con orden (2000 justos entran) ----------
   v_orden := '  Dx: lumbalgia. ' || repeat('i', 1985) || '  ';  -- 15 + 1985 = 2000 después del trim
-  v_res := public.fn_registrar_atencion(v_con_orden, 'Sesión 1', 'Control', v_orden);
+  v_res := public.fn_registrar_atencion(v_con_orden, 'Sesión 1', 'Control', v_orden, 10);
   if v_res ->> 'estado' <> 'atendido'
     or char_length(v_res -> 'atencion' ->> 'orden_medica') <> 2000
     or v_res -> 'atencion' ->> 'orden_medica' <> trim(v_orden)
@@ -139,21 +139,21 @@ begin
   end if;
 
   -- ---------- Editar la orden: cambia el valor y se actualiza editado_en ----------
-  v_res := public.fn_editar_atencion(v_con_orden, 'Sesión 1', 'Control', '  Nueva orden: 10 sesiones  ');
+  v_res := public.fn_editar_atencion(v_con_orden, 'Sesión 1', 'Control', '  Nueva orden: 10 sesiones  ', 10);
   if v_res -> 'atencion' ->> 'orden_medica' <> 'Nueva orden: 10 sesiones'
     or v_res -> 'atencion' ->> 'editado_en' is null then
     raise exception 'FALLA: la edición de la orden quedó mal: %', v_res -> 'atencion';
   end if;
 
   begin
-    perform public.fn_editar_atencion(v_con_orden, 'Sesión 1', null, repeat('o', 2001));
+    perform public.fn_editar_atencion(v_con_orden, 'Sesión 1', null, repeat('o', 2001), 10);
     raise exception 'FALLA: la edición aceptó una orden de más de 2000';
   exception when others then
     if sqlerrm <> 'La orden médica no puede superar los 2000 caracteres' then raise; end if;
   end;
 
   -- Agregarle una orden a una atención que no tenía, y después quitarla (solo espacios).
-  v_res := public.fn_editar_atencion(v_sin_orden, 'Sesión sin orden', null, 'Agregada después');
+  v_res := public.fn_editar_atencion(v_sin_orden, 'Sesión sin orden', null, 'Agregada después', 3);
   if v_res -> 'atencion' ->> 'orden_medica' <> 'Agregada después' then
     raise exception 'FALLA: no se pudo agregar la orden al editar';
   end if;

@@ -9,6 +9,7 @@ import {
   calcularPago,
   centavosATexto,
   esIdTurnoPago,
+  numeroOperacionParaRpc,
   validarCorreccion,
   validarFiltrosPagos,
   validarReembolso,
@@ -35,6 +36,8 @@ function camposDesde(formData: FormData): CamposPago & { idTurno: string } {
     medio: String(formData.get("medio_pago") ?? ""),
     // Solo para validar en el front; la base mira la cobertura real del turno.
     conObraSocial: formData.get("con_obra_social") === "si",
+    // HU-21: solo con billetera virtual.
+    numeroOperacion: String(formData.get("numero_operacion") ?? ""),
   };
 }
 
@@ -82,6 +85,7 @@ export async function registrarPago(
     p_importe_base: centavosATexto(resultado.importes.base),
     p_descuento: centavosATexto(resultado.importes.descuento),
     p_medio: campos.medio,
+    p_numero_operacion: numeroOperacionParaRpc(campos.medio, campos.numeroOperacion),
   });
 
   if (error) return { ok: false, error: error.message };
@@ -114,6 +118,8 @@ export async function corregirPago(
     p_descuento: centavosATexto(resultado.importes.descuento),
     p_medio: campos.medio,
     p_motivo: campos.motivo.trim(),
+    // HU-21: si deja de ser billetera va null y la base quita el nº (queda en el historial).
+    p_numero_operacion: numeroOperacionParaRpc(campos.medio, campos.numeroOperacion),
   });
 
   if (error) return { ok: false, error: error.message };
@@ -175,6 +181,7 @@ export async function listarPagos(filtros: FiltrosPagos): Promise<{
     p_hasta: filtros.hasta,
     p_pagina: filtros.pagina,
     p_reembolso: filtros.reembolso,
+    p_medio: filtros.medio, // HU-21 (null = todos)
   });
 
   if (error) return { data: null, error: error.message };

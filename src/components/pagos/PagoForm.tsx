@@ -8,7 +8,9 @@ import {
   aCentavos,
   formatearPesos,
   LARGO_MAXIMO_MOTIVO,
+  LARGO_MAXIMO_NUMERO_OPERACION,
   MEDIOS_PAGO,
+  pideNumeroOperacion,
 } from "@/lib/pagos/validar";
 
 const vacio: EstadoPago = { ok: false, error: null };
@@ -24,6 +26,7 @@ export function PagoForm({
   importeBase,
   descuento = "",
   medio = "",
+  numeroOperacion = null,
 }: {
   idTurno: string;
   modo: "registrar" | "corregir";
@@ -32,6 +35,7 @@ export function PagoForm({
   importeBase: string; // precargado: precio actual del servicio o el importe ya cobrado
   descuento?: string;
   medio?: string;
+  numeroOperacion?: string | null; // HU-21: el actual, al corregir
 }) {
   const esCorreccion = modo === "corregir";
   const [estado, action, pending] = useActionState(
@@ -40,6 +44,9 @@ export function PagoForm({
   );
   const [base, setBase] = useState(importeBase);
   const [desc, setDesc] = useState(descuento);
+  // HU-21: el nº de operación aparece solo si el medio es Billetera virtual.
+  const [medioElegido, setMedioElegido] = useState(medio);
+  const [operacion, setOperacion] = useState(numeroOperacion ?? "");
 
   // Vista previa del final. Si algún importe no es válido todavía, no se muestra número.
   const baseCent = aCentavos(base);
@@ -107,7 +114,13 @@ export function PagoForm({
 
       <div className="campo">
         <label htmlFor="medio_pago">Medio de pago</label>
-        <select id="medio_pago" name="medio_pago" defaultValue={medio} required>
+        <select
+          id="medio_pago"
+          name="medio_pago"
+          value={medioElegido}
+          onChange={(e) => setMedioElegido(e.target.value)}
+          required
+        >
           <option value="" disabled>
             Elegí un medio
           </option>
@@ -118,6 +131,30 @@ export function PagoForm({
           ))}
         </select>
       </div>
+
+      {/* HU-21: solo con billetera virtual. Recepción lo copia de la app de la billetera
+          después de comprobar el cobro (KineSys no se conecta con ninguna billetera). */}
+      {pideNumeroOperacion(medioElegido) && (
+        <div className="campo">
+          <label htmlFor="numero_operacion">Nº de operación</label>
+          <input
+            id="numero_operacion"
+            name="numero_operacion"
+            autoComplete="off"
+            maxLength={LARGO_MAXIMO_NUMERO_OPERACION}
+            pattern="[A-Za-z0-9]{4,50}"
+            title="Entre 4 y 50 letras y/o números, sin espacios"
+            placeholder="Ej.: 1234567890"
+            value={operacion}
+            onChange={(e) => setOperacion(e.target.value)}
+            required
+          />
+          <p className="texto-suave">
+            Entre 4 y 50 letras y/o números, sin espacios. Comprobá el cobro en la app de la
+            billetera antes de registrarlo.
+          </p>
+        </div>
+      )}
 
       {esCorreccion && (
         <div className="campo">

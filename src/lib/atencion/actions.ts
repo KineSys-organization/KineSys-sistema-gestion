@@ -9,6 +9,7 @@ import type { TurnoAgenda } from "@/lib/agenda/tipos";
 import type { Turno } from "@/lib/turnos/tipos";
 import {
   esIdTurnoValido,
+  leerSesiones,
   validarAtencion,
   validarFechaAgenda,
 } from "@/lib/atencion/validar";
@@ -72,6 +73,17 @@ function camposDesde(formData: FormData) {
     observaciones: String(formData.get("observaciones") ?? ""),
     motivo: String(formData.get("motivo_consulta") ?? ""),
     orden: String(formData.get("orden_medica") ?? ""),
+    // HU-38: sesiones de la orden y, al editar, el detalle viejo sin sesiones (si había).
+    sesiones: String(formData.get("orden_sesiones") ?? ""),
+    ordenVieja: formData.has("orden_vieja") ? String(formData.get("orden_vieja")) : null,
+  };
+}
+
+// HU-38: lo que va a la base. Vacío = sin orden (la base también lo normaliza).
+function parametrosOrden(campos: ReturnType<typeof camposDesde>) {
+  return {
+    p_orden_medica: campos.orden.trim() || null,
+    p_orden_sesiones: leerSesiones(campos.sesiones),
   };
 }
 
@@ -103,8 +115,8 @@ export async function registrarAtencion(
     p_id_turno: idTurno,
     p_observaciones: campos.observaciones.trim(),
     p_motivo_consulta: campos.motivo.trim() || null,
-    // HU-24A: vacía = sin orden (la base también la normaliza a null).
-    p_orden_medica: campos.orden.trim() || null,
+    // HU-24A / HU-38: detalle + sesiones de la orden (vacíos = sin orden).
+    ...parametrosOrden(campos),
   });
 
   if (error) return { ok: false, error: error.message };
@@ -132,8 +144,8 @@ export async function editarAtencion(
     p_id_turno: idTurno,
     p_observaciones: campos.observaciones.trim(),
     p_motivo_consulta: campos.motivo.trim() || null,
-    // HU-24A: vacía = sin orden (la base también la normaliza a null).
-    p_orden_medica: campos.orden.trim() || null,
+    // HU-24A / HU-38: detalle + sesiones de la orden (vacíos = sin orden).
+    ...parametrosOrden(campos),
   });
 
   if (error) return { ok: false, error: error.message };

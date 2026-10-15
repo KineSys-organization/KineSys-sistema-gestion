@@ -5,6 +5,8 @@ import { AusenciaTurnoForm } from "@/components/turnos/AusenciaTurnoForm";
 import { CancelarTurnoForm } from "@/components/turnos/CancelarTurnoForm";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 import { RepetirTurnoForm } from "@/components/turnos/RepetirTurnoForm";
+import { PrioridadBadge } from "@/components/turnos/PrioridadBadge";
+import { PrioridadForm } from "@/components/turnos/PrioridadForm";
 import { obtenerTurno } from "@/lib/turnos/actions";
 import { obtenerPagoTurno } from "@/lib/pagos/actions";
 import { etiquetaMedio, formatearPesos, puedeCorregirPago } from "@/lib/pagos/validar";
@@ -123,6 +125,21 @@ export default async function TurnoPage({ params, searchParams }: Props) {
           <dd>
             {turno.cobertura}
             {turno.numero_afiliado && ` · nº ${turno.numero_afiliado}`}
+          </dd>
+          {/* HU-20: se ve siempre; se cambia solo si está confirmado y no empezó. */}
+          <dt>Prioridad</dt>
+          <dd>
+            <PrioridadBadge prioridad={turno.prioridad} mostrarNormal />
+            {turno.prioridad_nota && <span className="texto-suave"> · {turno.prioridad_nota}</span>}
+            {turno.prioridad_editable && puedeHacer(usuario.rol_usuario, "turnos.prioridad") && (
+              <PrioridadForm
+                // key: si cambia la prioridad guardada, el formulario arranca con el valor nuevo.
+                key={`${turno.prioridad}-${turno.prioridad_nota ?? ""}`}
+                idTurno={turno.id_turno}
+                prioridad={turno.prioridad}
+                nota={turno.prioridad_nota}
+              />
+            )}
           </dd>
           {turno.estado === "cancelado" && (
             <>

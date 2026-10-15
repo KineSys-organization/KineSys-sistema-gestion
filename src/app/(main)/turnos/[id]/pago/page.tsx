@@ -130,6 +130,7 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
               importeBase={precioSugerido(pago.importe_base)}
               descuento={Number(pago.descuento) > 0 ? precioSugerido(pago.descuento) : ""}
               medio={pago.medio_pago}
+              numeroOperacion={pago.numero_operacion}
             />
           </div>
         ) : (
@@ -154,6 +155,13 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
               </dd>
               <dt>Medio</dt>
               <dd>{etiquetaMedio(pago.medio_pago)}</dd>
+              {/* HU-21: nº de operación de la billetera virtual. */}
+              {pago.numero_operacion && (
+                <>
+                  <dt>Nº de operación</dt>
+                  <dd>{pago.numero_operacion}</dd>
+                </>
+              )}
               <dt>Registrado</dt>
               <dd>
                 {formatearMomento(pago.registrado_en)} · {pago.registrado_por}
@@ -262,12 +270,14 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
                     <td>
                       {formatearPesos(c.importe_final_anterior)} ·{" "}
                       {etiquetaMedio(c.medio_pago_anterior)}
+                      {c.numero_operacion_anterior && ` (op. ${c.numero_operacion_anterior})`}
                       {Number(c.descuento_anterior) > 0 &&
                         ` (base ${formatearPesos(c.importe_base_anterior)} − ${formatearPesos(c.descuento_anterior)})`}
                     </td>
                     <td>
                       {formatearPesos(c.importe_final_nuevo)} ·{" "}
                       {etiquetaMedio(c.medio_pago_nuevo)}
+                      {c.numero_operacion_nuevo && ` (op. ${c.numero_operacion_nuevo})`}
                       {Number(c.descuento_nuevo) > 0 &&
                         ` (base ${formatearPesos(c.importe_base_nuevo)} − ${formatearPesos(c.descuento_nuevo)})`}
                     </td>

@@ -7,7 +7,10 @@ import {
   LARGO_MAXIMO_MOTIVO_CONSULTA,
   LARGO_MAXIMO_OBSERVACIONES,
   LARGO_MAXIMO_ORDEN_MEDICA,
+  SESIONES_MAXIMAS,
+  SESIONES_MINIMAS,
 } from "@/lib/atencion/validar";
+import type { ReactNode } from "react";
 
 const inicial: EstadoAtencion = { ok: false, error: null };
 
@@ -17,7 +20,10 @@ type Props = {
   modo: "registrar" | "editar";
   observaciones?: string;
   motivo?: string | null;
-  ordenMedica?: string | null; // HU-24A
+  ordenMedica?: string | null; // HU-24A (desde HU-38: el detalle)
+  ordenSesiones?: number | null; // HU-38
+  // HU-38: datos automáticos de la orden (paciente, cobertura, profesional...), de solo lectura.
+  datosOrden?: ReactNode;
 };
 
 // HU-13. Formulario de la atención. Es cliente por useActionState y porque
@@ -28,8 +34,15 @@ export function AtencionForm({
   observaciones = "",
   motivo = "",
   ordenMedica = "",
+  ordenSesiones = null,
+  datosOrden,
 }: Props) {
   const esEdicion = modo === "editar";
+  // HU-38: orden de HU-24A (detalle sin sesiones). Si no se toca, se guarda igual.
+  const ordenVieja = esEdicion && ordenMedica && ordenSesiones == null ? ordenMedica : null;
+  const [textoSesiones, setTextoSesiones] = useState(
+    ordenSesiones == null ? "" : String(ordenSesiones)
+  );
   const [abierto, setAbierto] = useState(!esEdicion);
   // Controlados: React 19 resetea el form después de la action y, si la base
   // devuelve un error, no queremos perder lo que el profesional escribió.
@@ -54,7 +67,7 @@ export function AtencionForm({
       <h3>{esEdicion ? "Editar atención" : "Registrar atención"}</h3>
       <p className="texto-suave">
         {esEdicion
-          ? "Corregí las observaciones, el motivo o la orden médica. La fecha, el profesional y el paciente no cambian."
+          ? "Corregí las observaciones, el motivo o la orden médica (sesiones y detalle; vaciá los dos para quitarla). La fecha, el profesional y el paciente no cambian."
           : "Al confirmar, el turno pasa a Atendido con la fecha de hoy y tu nombre como profesional."}
       </p>
       <input type="hidden" name="id_turno" value={idTurno} />
@@ -86,23 +99,48 @@ export function AtencionForm({
         />
       </div>
 
-      {/* HU-24A: la orden médica es un bloque aparte; no se mezcla con motivo ni observaciones. */}
-      <div className="campo campo-orden-medica">
-        <label htmlFor="orden_medica">Orden médica (opcional)</label>
-        <textarea
-          id="orden_medica"
-          name="orden_medica"
-          rows={4}
-          maxLength={LARGO_MAXIMO_ORDEN_MEDICA}
-          value={textoOrden}
-          onChange={(event) => setTextoOrden(event.target.value)}
-          placeholder="Diagnóstico, indicaciones, tratamiento..."
-          aria-describedby="orden_medica_contador"
-        />
-        <span id="orden_medica_contador" className="contador-caracteres">
-          {textoOrden.length} / {LARGO_MAXIMO_ORDEN_MEDICA}
-        </span>
-      </div>
+      {/* HU-24A / HU-38: la orden médica es un bloque aparte. Los datos del paciente salen
+          solos; el profesional completa solo las sesiones y el detalle. */}
+      <fieldset className="campo-orden-medica">
+        <legend>Orden médica (opcional)</legend>
+        {datosOrden}
+        <p className="texto-suave">
+          Si cargás una orden, completá la cantidad de sesiones y el detalle. Dejá los dos vacíos
+          para atender sin orden.
+        </p>
+        <div className="campo">
+          <label htmlFor="orden_sesiones">Cantidad de sesiones</label>
+          <input
+            id="orden_sesiones"
+            name="orden_sesiones"
+            type="number"
+            inputMode="numeric"
+            min={SESIONES_MINIMAS}
+            max={SESIONES_MAXIMAS}
+            step={1}
+            value={textoSesiones}
+            onChange={(event) => setTextoSesiones(event.target.value)}
+            placeholder={ordenVieja ? "No informadas" : "Ej.: 10"}
+          />
+        </div>
+        <div className="campo">
+          <label htmlFor="orden_medica">Detalle de la orden</label>
+          <textarea
+            id="orden_medica"
+            name="orden_medica"
+            rows={4}
+            maxLength={LARGO_MAXIMO_ORDEN_MEDICA}
+            value={textoOrden}
+            onChange={(event) => setTextoOrden(event.target.value)}
+            placeholder="Diagnóstico, indicaciones y tratamiento. Ej.: Lesión de rodilla. Magnetoterapia y electroterapia"
+            aria-describedby="orden_medica_contador"
+          />
+          <span id="orden_medica_contador" className="contador-caracteres">
+            {textoOrden.length} / {LARGO_MAXIMO_ORDEN_MEDICA}
+          </span>
+        </div>
+        {ordenVieja && <input type="hidden" name="orden_vieja" value={ordenVieja} />}
+      </fieldset>
 
       {estado.error && (
         <p className="mensaje-error" role="alert">
@@ -128,6 +166,7 @@ export function AtencionForm({
               setTextoObservaciones(observaciones);
               setTextoMotivo(motivo ?? "");
               setTextoOrden(ordenMedica ?? "");
+              setTextoSesiones(ordenSesiones == null ? "" : String(ordenSesiones));
               setAbierto(false);
             }}
           >

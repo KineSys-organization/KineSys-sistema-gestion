@@ -1,23 +1,36 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirRecepcion } from "@/lib/auth";
+import { puedeHacer } from "@/lib/auth/permisos";
 import { listarObrasSociales, obtenerPaciente } from "@/lib/pacientes/actions";
+import { listarOrdenesPaciente } from "@/lib/ordenes/actions";
+import { leerFiltrosOrdenes } from "@/lib/ordenes/validar";
 import { EditarPacienteForm } from "@/components/pacientes/EditarPacienteForm";
+import { HistorialOrdenes } from "@/components/ordenes/HistorialOrdenes";
 import { EstadoPacienteForm } from "@/components/pacientes/EstadoPacienteForm";
 import { esIdPaciente } from "@/lib/pacientes/validar";
 
 type Props = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function EditarPacientePage({ params }: Props) {
-  await exigirRecepcion();
+export default async function EditarPacientePage({ params, searchParams }: Props) {
+  const usuario = await exigirRecepcion();
   const { id } = await params;
 
   if (!esIdPaciente(id)) notFound();
 
-  const [{ data: paciente, error }, { data: obras, error: errorObras }] =
-    await Promise.all([obtenerPaciente(id), listarObrasSociales()]);
+  // HU-24B: el historial de órdenes médicas solo lo ve el Gerente (Mesa de Entradas no).
+  const verOrdenes = puedeHacer(usuario.rol_usuario, "ordenes.consultar");
+  const filtros = leerFiltrosOrdenes(await searchParams);
+
+  const [{ data: paciente, error }, { data: obras, error: errorObras }, ordenes] =
+    await Promise.all([
+      obtenerPaciente(id),
+      listarObrasSociales(),
+      verOrdenes ? listarOrdenesPaciente(id, filtros) : null,
+    ]);
 
   if (error || !paciente) notFound();
 
@@ -48,6 +61,22 @@ export default async function EditarPacientePage({ params }: Props) {
           <EstadoPacienteForm paciente={paciente} />
         </div>
       </div>
+
+      {ordenes && (
+        <div className="tarjeta bloque" id="ordenes">
+          <h3>Órdenes médicas</h3>
+          <p className="texto-suave">
+            Órdenes de todas las atenciones del paciente, de la más reciente a la más antigua.
+            Solo lectura: las corrige el profesional que las registró.
+          </p>
+          <HistorialOrdenes
+            base={`/pacientes/${id}`}
+            filtros={filtros}
+            historial={ordenes.data}
+            error={ordenes.error}
+          />
+        </div>
+      )}
     </section>
   );
 }

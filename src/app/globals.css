@@ -2259,3 +2259,142 @@ a.badge-horario:hover {
     page-break-inside: avoid;
   }
 }
+
+/* ============ HU-38: orden médica con datos automáticos, sesiones y detalle ============ */
+.campo-orden-medica {
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--celeste);
+  border-radius: 10px;
+  padding: 12px 14px 16px;
+  margin: 0;
+}
+
+.campo-orden-medica legend {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.campo-orden-medica input[type="number"] {
+  max-width: 140px;
+}
+
+.datos-orden {
+  margin: 4px 0 10px;
+}
+
+.bloque-orden-medica .boton-secundario {
+  margin-top: 10px;
+}
+
+.firma-orden {
+  margin-top: 56px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.firma-orden span {
+  min-width: 240px;
+  padding-top: 6px;
+  border-top: 1px solid var(--azul-oscuro);
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+@media print {
+  /* Varias órdenes en la página (HU-24B): se imprime solo la elegida. */
+  .orden-impresion:not(.imprimir-esta) {
+    display: none !important;
+  }
+
+  /* El resto de la página se saca del todo (no solo se oculta): si sigue ocupando lugar,
+     el navegador arma varias hojas y repite en cada una lo que está "fixed" (la orden
+     salía dos veces). Se dejan solo la orden elegida y los contenedores que la tienen. */
+  body:has(.orden-impresion.imprimir-esta)
+    *:not(:has(.imprimir-esta)):not(.imprimir-esta):not(.imprimir-esta *) {
+    display: none !important;
+  }
+
+  /* Arriba de la hoja, sin "fixed": si la orden es larga, sigue en la hoja siguiente. */
+  .orden-impresion.imprimir-esta {
+    position: absolute !important;
+    inset: 0 auto auto 0;
+  }
+
+  .orden-impresion h4 {
+    margin: 20px 0 6px;
+    color: var(--azul-principal);
+  }
+}
+
+/* ============ HU-24B: historial de órdenes médicas ============ */
+.filtros-ordenes {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  align-items: end;
+  margin: 12px 0 16px;
+}
+
+.filtros-ordenes .fila-acciones,
+.filtros-ordenes .campo-ancho {
+  grid-column: 1 / -1;
+}
+
+.lista-ordenes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.item-orden .titulo-orden {
+  margin: 0 0 4px;
+  color: var(--azul-oscuro);
+}
+
+.item-orden .bloque-orden-medica {
+  margin-top: 4px;
+}
+
+/* ============ HU-20: prioridad del turno (texto + color; Normal sin marca) ============ */
+.badge-prioridad {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.badge-prioridad-normal {
+  margin-left: 0;
+  background: #eef1f4;
+  color: #56616b;
+}
+
+.badge-prioridad-alta {
+  background: #fff4e0;
+  border-color: #f0b44c;
+  color: #8a4b00; /* 6.5:1 sobre el fondo */
+}
+
+.badge-prioridad-urgente {
+  background: #fde8e8;
+  border-color: #e07070;
+  color: #9b1c1c; /* 7:1 sobre el fondo */
+}
+
+.form-prioridad {
+  margin-top: 10px;
+}
+
+dd .boton-pill {
+  margin-left: 8px;
+}
