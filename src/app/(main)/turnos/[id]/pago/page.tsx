@@ -3,14 +3,20 @@ import { exigirRecepcion } from "@/lib/auth";
 import { obtenerPagoTurno } from "@/lib/pagos/actions";
 import {
   etiquetaMedio,
+  etiquetaMotivoReembolso,
   formatearMomento,
   formatearPesos,
   MENSAJE_YA_PAGADO,
+  MENSAJE_YA_REEMBOLSADO,
+  mostrarBotonReembolso,
   precioSugerido,
+  puedeCorregirPago,
 } from "@/lib/pagos/validar";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
+import { EstadoPagoBadge } from "@/components/pagos/EstadoPagoBadge";
 import { PagoForm } from "@/components/pagos/PagoForm";
+import { ReembolsoForm } from "@/components/pagos/ReembolsoForm";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -20,8 +26,9 @@ type Props = {
 // HU-14. Pago de un turno: registrar el cobro, consultarlo o corregirlo.
 // El pago es posterior a reservar: no cambia el estado del turno.
 // Si el turno después se cancela, se marca ausente o se reprograma, el pago se conserva.
+// HU-22: desde acá se registra el reembolso total; el pago queda Reembolsado (HU-17).
 export default async function PagoTurnoPage({ params, searchParams }: Props) {
-  await exigirRecepcion();
+  const usuario = await exigirRecepcion();
   const { id } = await params;
   const { ok, corregir, volver } = await searchParams;
   const volverAlTurno = volver === "turno";
@@ -39,8 +46,11 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
     );
   }
 
-  const { turno, pago, correcciones, cobrable } = data;
+  const { turno, pago, reembolso, correcciones, cobrable, reembolsable } = data;
   const conObraSocial = Boolean(turno.id_obra_social);
+  const corregible = puedeCorregirPago(pago);
+  const conBotonReembolso = mostrarBotonReembolso(reembolsable, usuario.rol_usuario);
+  const textoTurno = `${formatearFecha(turno.fecha)} · ${turno.hora_inicio} a ${turno.hora_fin} · ${turno.nombre_servicio}`;
 
   return (
     <section className="modulo modulo-angosto">
@@ -69,6 +79,11 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
           Corrección guardada. Quedó registrada en el historial.
         </p>
       )}
+      {ok === "reembolsado" && (
+        <p className="mensaje-ok" role="status">
+          Reembolso registrado. El pago quedó como Reembolsado; el turno conserva su estado.
+        </p>
+      )}
 
       <div className="tarjeta">
         <dl className="resumen-turno">
@@ -95,7 +110,7 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
       </div>
 
       {pago ? (
-        corregir ? (
+        corregir && corregible ? (
           <div className="tarjeta">
             <h3>Corregir pago</h3>
             <p className="texto-suave">
@@ -115,10 +130,14 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
           <div className="tarjeta">
             {!ok && (
               <p className="aviso-accion" role="status">
-                {MENSAJE_YA_PAGADO}.
+                {reembolso ? MENSAJE_YA_REEMBOLSADO : MENSAJE_YA_PAGADO}.
               </p>
             )}
             <dl className="resumen-turno">
+              <dt>Estado del pago</dt>
+              <dd>
+                <EstadoPagoBadge estado={pago.estado} />
+              </dd>
               <dt>Importe base</dt>
               <dd>{formatearPesos(pago.importe_base)}</dd>
               <dt>Descuento</dt>
@@ -140,21 +159,33 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
                 </>
               )}
             </dl>
-            {(turno.estado === "cancelado" || turno.estado === "ausente") && (
+            {!reembolso && (turno.estado === "cancelado" || turno.estado === "ausente") && (
               <p className="texto-suave">
                 El turno está {turno.estado}. El pago se conserva: no hay devolución automática.
               </p>
             )}
             <div className="acciones-pie">
-              <Link
-                className="boton-principal boton-inline"
-                href={`/turnos/${turno.id_turno}/pago?corregir=1`}
-              >
-                Corregir pago
-              </Link>
+              {corregible && (
+                <Link
+                  className="boton-principal boton-inline"
+                  href={`/turnos/${turno.id_turno}/pago?corregir=1`}
+                >
+                  Corregir pago
+                </Link>
+              )}
               <Link className="boton-secundario boton-inline" href="/pagos">
                 Ver todos los pagos
               </Link>
+              {/* HU-22: el formulario se abre debajo, a todo el ancho. */}
+              {!reembolso && conBotonReembolso && (
+                <ReembolsoForm
+                  idTurno={turno.id_turno}
+                  importe={Number(pago.importe_final)}
+                  medioPago={pago.medio_pago}
+                  paciente={`${turno.apellido_paciente}, ${turno.nombre_paciente} · DNI ${turno.dni_paciente}`}
+                  turno={textoTurno}
+                />
+              )}
             </div>
           </div>
         )
@@ -173,6 +204,34 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
         <p className="aviso-accion" role="status">
           Solo se puede registrar el pago de un turno confirmado o atendido.
         </p>
+      )}
+
+      {pago && reembolso && (
+        <section className="tarjeta">
+          <h3>
+            Reembolso <EstadoPagoBadge estado="Reembolsado" />
+          </h3>
+          <dl className="resumen-turno">
+            <dt>Fecha y hora</dt>
+            <dd>{formatearMomento(reembolso.registrado_en)}</dd>
+            <dt>Motivo</dt>
+            <dd>{etiquetaMotivoReembolso(reembolso.motivo)}</dd>
+            {reembolso.detalle && (
+              <>
+                <dt>Detalle</dt>
+                <dd>{reembolso.detalle}</dd>
+              </>
+            )}
+            <dt>Importe devuelto</dt>
+            <dd>
+              <strong>{formatearPesos(reembolso.importe)}</strong>
+            </dd>
+            <dt>Medio de devolución</dt>
+            <dd>{etiquetaMedio(reembolso.medio_devolucion)}</dd>
+            <dt>Registrado por</dt>
+            <dd>{reembolso.registrado_por}</dd>
+          </dl>
+        </section>
       )}
 
       {correcciones.length > 0 && (
