@@ -6,6 +6,19 @@ const pagina = readFileSync("src/app/(main)/indicadores/page.tsx", "utf8");
 const action = readFileSync("src/lib/indicadores/actions.ts", "utf8");
 const migracion = readFileSync("supabase/migrations/20261013050518_hu18_dashboard_operativo.sql", "utf8");
 const pruebaSql = readFileSync("supabase/tests/hu18_dashboard_operativo.sql", "utf8");
+const correccion = readFileSync("supabase/migrations/030_hu18_ocupacion_centro_activos.sql", "utf8");
+
+test("la ocupación del centro usa los mismos profesionales activos en minutos ocupados y disponibles", () => {
+  const centro = correccion.slice(
+    correccion.indexOf("ocupacion_centro as ("),
+    correccion.indexOf("profesionales_a_mostrar as (")
+  );
+  assert.match(centro, /from profesionales_activos pa/);
+  assert.match(centro, /left join turnos_profesional tp on tp\.id_profesional = pa\.id_usuario/);
+  assert.doesNotMatch(centro, /from turnos_profesional tp\s*\)/, "no suma turnos de todos los profesionales");
+  assert.match(correccion, /public\.fn_exigir_rol\(array\['Gerente'\]\)/);
+  assert.match(pruebaSql, /el inactivo infla la ocupación del centro/);
+});
 
 test("HU-18 integra el dashboard operativo en Indicadores y lo enlaza desde el encabezado", () => {
   assert.match(pagina, /Ver dashboard operativo/);

@@ -1,5 +1,6 @@
 -- Pruebas HU-18. Todo se revierte al final.
--- Requiere la migración 20261013050518_hu18_dashboard_operativo.sql aplicada.
+-- Requiere las migraciones 20261013050518_hu18_dashboard_operativo.sql y
+-- 030_hu18_ocupacion_centro_activos.sql aplicadas.
 begin;
 
 do $$
@@ -7,6 +8,7 @@ declare
   v_gerente uuid;
   v_mesa uuid;
   v_prof uuid;
+  v_otro_prof uuid;
   v_servicio uuid;
   v_paciente_nuevo uuid;
   v_paciente_recurrente uuid;
@@ -107,10 +109,34 @@ begin
     raise exception 'FALLA: ocupación del centro: %', v_resultado -> 'ocupacion_centro';
   end if;
 
+  -- Un profesional inactivo con turnos ese día aparece en su fila, pero no infla el centro
+  -- (sus minutos no tienen franjas en el denominador).
+  reset role;
+  select p.id_usuario into v_otro_prof
+  from public.profesional p
+  where p.id_usuario <> v_prof
+  limit 1;
+  insert into public.turno (id_profesional, id_servicio, id_paciente, fecha, hora_inicio, hora_fin, estado)
+  values (v_otro_prof, v_servicio, v_paciente_recurrente, v_fecha, '13:00', '14:30', 'atendido');
+  set local role authenticated;
+  v_resultado := public.fn_consultar_dashboard_operativo(v_fecha, v_fecha);
+  if (v_resultado #>> '{ocupacion_centro,minutos_ocupados}')::int <> 90
+     or (v_resultado #>> '{ocupacion_centro,porcentaje}')::numeric <> 75 then
+    raise exception 'FALLA: el inactivo infla la ocupación del centro: %', v_resultado -> 'ocupacion_centro';
+  end if;
+  select item into v_profesional
+  from jsonb_array_elements(v_resultado -> 'profesionales') as filas(item)
+  where item ->> 'id_profesional' = v_otro_prof::text;
+  if v_profesional is null
+     or v_profesional ->> 'estado_ocupacion' <> 'inactivo'
+     or (v_profesional ->> 'minutos_ocupados')::int <> 90 then
+    raise exception 'FALLA: el inactivo con turnos debe verse en su fila: %', v_profesional;
+  end if;
+
   select item into v_servicio_resultado
   from jsonb_array_elements(v_resultado -> 'servicios') as filas(item)
   where item ->> 'id_servicio' = v_servicio::text;
-  if v_servicio_resultado is null or (v_servicio_resultado ->> 'total')::int <> 4 then
+  if v_servicio_resultado is null or (v_servicio_resultado ->> 'total')::int <> 5 then
     raise exception 'FALLA: desglose por servicio: %', v_servicio_resultado;
   end if;
 
@@ -143,7 +169,8 @@ begin
     raise exception 'FALLA: profesional inactivo con turnos: %', v_profesional;
   end if;
 
-  -- Sin profesionales activos, el centro informa Sin franjas y no divide por cero.
+  -- Sin profesionales activos, el centro informa Sin franjas, no divide por cero y no
+  -- suma minutos de inactivos.
   reset role;
   update public.profesional set activo = false;
   update public.usuario u set activo = false
@@ -151,7 +178,7 @@ begin
   set local role authenticated;
   v_resultado := public.fn_consultar_dashboard_operativo(v_fecha, v_fecha);
   if v_resultado #>> '{ocupacion_centro,estado}' <> 'sin_franjas'
-     or (v_resultado #>> '{ocupacion_centro,minutos_ocupados}')::int <> 90
+     or (v_resultado #>> '{ocupacion_centro,minutos_ocupados}')::int <> 0
      or (v_resultado #>> '{ocupacion_centro,minutos_disponibles}')::int <> 0
      or v_resultado #> '{ocupacion_centro,porcentaje}' <> 'null'::jsonb then
     raise exception 'FALLA: período sin franjas: %', v_resultado -> 'ocupacion_centro';
