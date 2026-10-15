@@ -8,6 +8,9 @@
 --   * fn_crear_bloqueo con p_solo_consultar lista los turnos confirmados afectados
 --     sin guardarlos. Guardar no cancela ni mueve esos turnos.
 --   * El calendario del Profesional y la ocupación (HU-18) restan los minutos bloqueados.
+--     La ocupación del centro cuenta solo profesionales activos arriba y abajo (corrección
+--     030_hu18_ocupacion_centro_activos.sql); en la base se aplicó junto como
+--     031_hu33_ocupacion_bloqueos_y_activos.
 begin;
 
 -- ---------- Helper interno ----------
@@ -702,13 +705,11 @@ begin
     ),
     ocupacion_centro as (
       select
-        (
-          select coalesce(sum(tp.minutos_ocupados), 0)::integer
-          from turnos_profesional tp
-        ) as minutos_ocupados,
+        coalesce(sum(tp.minutos_ocupados), 0)::integer as minutos_ocupados,
         coalesce(sum(dp.minutos_disponibles), 0)::integer as minutos_disponibles
       from profesionales_activos pa
       join disponibilidad_profesional dp on dp.id_usuario = pa.id_usuario
+      left join turnos_profesional tp on tp.id_profesional = pa.id_usuario
     ),
     profesionales_a_mostrar as (
       select
