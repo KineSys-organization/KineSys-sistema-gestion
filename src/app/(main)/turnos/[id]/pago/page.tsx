@@ -15,6 +15,7 @@ import {
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 import { EstadoPagoBadge } from "@/components/pagos/EstadoPagoBadge";
+import { EstadoCobroBadge } from "@/components/pagos/EstadoCobroBadge";
 import { PagoForm } from "@/components/pagos/PagoForm";
 import { ReembolsoForm } from "@/components/pagos/ReembolsoForm";
 
@@ -105,6 +106,11 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
           <dt>Estado</dt>
           <dd>
             <EstadoTurnoBadge estado={turno.estado} />
+          </dd>
+          {/* HU-17: estado de cobro del turno (lo calcula la base). */}
+          <dt>Estado de cobro</dt>
+          <dd>
+            <EstadoCobroBadge estado={turno.estado_cobro} />
           </dd>
         </dl>
       </div>

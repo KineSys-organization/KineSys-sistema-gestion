@@ -70,8 +70,10 @@ begin
   values (v_prof, v_serv, v_pac_particular, v_pasado, '03:00', '03:30', 'confirmado')
   returning id_turno into v_t_invalidos;
 
-  insert into public.turno (id_profesional, id_servicio, id_paciente, fecha, hora_inicio, hora_fin, estado)
-  values (v_prof, v_serv, v_pac_particular, v_pasado, '04:00', '04:30', 'cancelado')
+  -- Un cancelado necesita motivo (turno_cancelado_con_motivo, HU-10A).
+  insert into public.turno (id_profesional, id_servicio, id_paciente, fecha, hora_inicio, hora_fin, estado,
+    motivo_cancelacion)
+  values (v_prof, v_serv, v_pac_particular, v_pasado, '04:00', '04:30', 'cancelado', 'otro')
   returning id_turno into v_t_cancelado;
 
   insert into public.turno (id_profesional, id_servicio, id_paciente, fecha, hora_inicio, hora_fin, estado)

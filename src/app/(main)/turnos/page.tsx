@@ -3,17 +3,22 @@ import { exigirRecepcion } from "@/lib/auth";
 import { hoyArgentina } from "@/lib/atencion/validar";
 import { buscarTurnos, listarOpcionesFiltroTurnos } from "@/lib/turnos/actions";
 import {
+  ATAJOS_PERIODO,
+  atajoActual,
   ESTADOS_FILTRO,
   leerFiltrosTurnos,
   MENSAJE_SIN_RESULTADOS,
   totalPaginas,
   URL_TURNOS_SIN_FILTROS,
+  urlAtajoPeriodo,
   urlTurnos,
   type ParamsTurnos,
 } from "@/lib/turnos/busqueda";
+import { ESTADOS_COBRO } from "@/lib/pagos/cobro";
 import { urlPasoPaciente } from "@/lib/turnos/flujo";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
+import { EstadoCobroBadge } from "@/components/pagos/EstadoCobroBadge";
 import { RangoFechas } from "@/components/turnos/RangoFechas";
 import { PrioridadBadge } from "@/components/turnos/PrioridadBadge";
 import { PRIORIDADES } from "@/lib/turnos/prioridad";
@@ -31,10 +36,14 @@ function fechaCorta(fecha: string): string {
 // HU-09. Listado transversal de turnos (todos los profesionales) con filtros.
 // Arranca en el día de hoy; los filtros y la página viven en la URL, así que paginar,
 // volver desde el detalle o recargar conserva la búsqueda. Filtrar vuelve a la página 1.
+// HU-17: columna Cobro y filtro Estado de cobro (lo calcula la base). Con "Pendiente",
+// atajos de período: Todos / Hasta hoy / Próximos.
 export default async function TurnosPage({ searchParams }: Props) {
   await exigirRecepcion();
   const params = await searchParams;
-  const filtros = leerFiltrosTurnos(params, hoyArgentina());
+  const hoy = hoyArgentina();
+  const filtros = leerFiltrosTurnos(params, hoy);
+  const atajo = atajoActual(filtros, hoy);
 
   const [{ data, error }, opciones] = await Promise.all([
     buscarTurnos(filtros),
@@ -120,6 +129,17 @@ export default async function TurnosPage({ searchParams }: Props) {
             ))}
           </select>
         </div>
+        <div className="campo">
+          <label htmlFor="cobro">Estado de cobro</label>
+          <select id="cobro" name="cobro" defaultValue={filtros.cobro ?? ""}>
+            <option value="">Todos</option>
+            {ESTADOS_COBRO.map((e) => (
+              <option key={e.valor} value={e.valor}>
+                {e.etiqueta}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="fila-acciones">
           <button className="boton-principal boton-inline" type="submit">
             Filtrar
@@ -134,6 +154,23 @@ export default async function TurnosPage({ searchParams }: Props) {
         <p className="mensaje-error" role="alert">
           {error ?? opciones.error}
         </p>
+      )}
+
+      {/* HU-17: con el filtro Pendiente, atajos para elegir el período sin escribir fechas. */}
+      {filtros.cobro === "pendiente" && (
+        <nav className="atajos-cobro" aria-label="Período de los pendientes de cobro">
+          <span className="texto-suave">Pendientes de cobro:</span>
+          {ATAJOS_PERIODO.map((a) => (
+            <Link
+              key={a.valor}
+              className={`boton-pill${atajo === a.valor ? " boton-pill-fuerte" : ""}`}
+              href={urlAtajoPeriodo(filtros, a.valor, hoy)}
+              aria-current={atajo === a.valor ? "true" : undefined}
+            >
+              {a.etiqueta}
+            </Link>
+          ))}
+        </nav>
       )}
 
       {!error && (
@@ -157,6 +194,7 @@ export default async function TurnosPage({ searchParams }: Props) {
                 <th>Profesional</th>
                 <th>Servicio</th>
                 <th>Estado</th>
+                <th>Cobro</th>
                 <th></th>
               </tr>
             </thead>
@@ -185,6 +223,9 @@ export default async function TurnosPage({ searchParams }: Props) {
                       estado={turno.estado}
                       motivoCancelacion={turno.motivo_cancelacion}
                     />
+                  </td>
+                  <td>
+                    <EstadoCobroBadge estado={turno.estado_cobro} />
                   </td>
                   <td>
                     <Link className="boton-pill" href={`/turnos/${turno.id_turno}?desde=turnos`}>

@@ -1,5 +1,6 @@
 import type { EstadoTurno } from "@/lib/turnos/tipos";
 import type { Prioridad } from "@/lib/turnos/prioridad";
+import type { EstadoCobro } from "@/lib/pagos/cobro";
 
 export type TurnoAgenda = {
   id_turno: string;
@@ -17,6 +18,7 @@ export type TurnoAgenda = {
   motivo_cancelacion: string | null; // HU-10A
   prioridad: Prioridad; // HU-20 (Normal no lleva marca)
   atendible: boolean; // HU-13: confirmado y del día
+  estado_cobro: EstadoCobro | null; // HU-17: solo para Recepción (al Profesional le llega null)
 };
 
 export type Agenda = {

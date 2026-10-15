@@ -1,4 +1,5 @@
 import type { Prioridad } from "./prioridad";
+import type { EstadoCobro } from "@/lib/pagos/cobro";
 
 // HU-13 suma "atendido".
 export type EstadoTurno = "confirmado" | "cancelado" | "ausente" | "atendido";
@@ -58,6 +59,8 @@ export type Turno = {
   // HU-13: confirmado y del día (se le puede registrar la atención).
   atendible: boolean;
   atencion: Atencion | null;
+  // HU-17: estado de cobro (lo calcula la base). Al Profesional le llega null.
+  estado_cobro: EstadoCobro | null;
 };
 
 export type EstadoOtorgar = {
@@ -88,6 +91,7 @@ export type TurnoListado = {
   apellido_profesional: string;
   id_servicio: string;
   nombre_servicio: string;
+  estado_cobro: EstadoCobro; // HU-17
 };
 
 export type ResultadoBusquedaTurnos = {

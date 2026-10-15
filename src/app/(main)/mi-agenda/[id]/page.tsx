@@ -6,26 +6,13 @@ import { PrioridadBadge } from "@/components/turnos/PrioridadBadge";
 import { consultarMiAgenda, obtenerMiTurno } from "@/lib/atencion/actions";
 import { calcularEdad, hoyArgentina } from "@/lib/atencion/validar";
 import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
+import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 import { urlHistoria } from "@/lib/historia-clinica/validar";
 
 type Props = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ ok?: string }>;
 };
-
-const ETIQUETA_ESTADO = {
-  confirmado: "Confirmado",
-  cancelado: "Cancelado",
-  ausente: "Ausente",
-  atendido: "Atendido",
-} as const;
-
-const CLASE_ESTADO = {
-  confirmado: "badge-activo",
-  cancelado: "badge-cancelado",
-  ausente: "badge-inactivo",
-  atendido: "badge-atendido",
-} as const;
 
 const MENSAJES_OK: Record<string, string> = {
   registrada: "Atención registrada. El turno quedó como Atendido.",
@@ -106,9 +93,7 @@ export default async function MiTurnoPage({ params, searchParams }: Props) {
         <div className="fila-acciones">
           {/* HU-20: Alta / Urgente (solo lectura para el Profesional). */}
           <PrioridadBadge prioridad={turno.prioridad} />
-          <span className={CLASE_ESTADO[turno.estado] ?? "badge-inactivo"}>
-            {ETIQUETA_ESTADO[turno.estado] ?? turno.estado}
-          </span>
+          <EstadoTurnoBadge estado={turno.estado} motivoCancelacion={turno.motivo_cancelacion} />
         </div>
       </div>
 

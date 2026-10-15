@@ -15,6 +15,7 @@ import {
   type ParamsPagos,
 } from "@/lib/pagos/validar";
 import { formatearFecha } from "@/lib/turnos/validar";
+import { URL_PENDIENTES_COBRO } from "@/lib/turnos/busqueda";
 import { RangoFechas } from "@/components/turnos/RangoFechas";
 import { EstadoPagoBadge } from "@/components/pagos/EstadoPagoBadge";
 
@@ -50,6 +51,10 @@ export default async function PagosPage({ searchParams }: Props) {
             Cobros registrados. El cobro se registra desde el detalle de cada turno.
           </p>
         </div>
+        {/* HU-17: turnos confirmados o atendidos que todavía no se cobraron. */}
+        <Link className="boton-principal boton-inline" href={URL_PENDIENTES_COBRO}>
+          Ver pendientes de cobro
+        </Link>
       </div>
 
       {/* GET: los filtros quedan en la URL. Sin "pagina" → siempre vuelve a la 1. */}
