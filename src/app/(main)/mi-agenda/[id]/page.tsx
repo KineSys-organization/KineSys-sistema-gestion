@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { exigirProfesional } from "@/lib/auth";
 import { AtencionForm } from "@/components/atencion/AtencionForm";
+import { DatosAutomaticosOrden, OrdenMedica } from "@/components/atencion/OrdenMedica";
 import { consultarMiAgenda, obtenerMiTurno } from "@/lib/atencion/actions";
 import { calcularEdad, hoyArgentina } from "@/lib/atencion/validar";
 import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
@@ -66,6 +67,21 @@ export default async function MiTurnoPage({ params, searchParams }: Props) {
   const hoy = hoyArgentina();
   const edad = calcularEdad(turno.fecha_nacimiento_paciente, hoy);
   const mensajeOk = ok ? MENSAJES_OK[ok] : undefined;
+
+  // HU-38: datos de la orden que salen solos del turno (la base los devuelve; no se escriben).
+  const datosAutomaticos = {
+    id: turno.id_turno,
+    nombrePaciente: turno.nombre_paciente,
+    apellidoPaciente: turno.apellido_paciente,
+    dniPaciente: turno.dni_paciente,
+    cobertura: turno.atencion?.orden_cobertura ?? turno.cobertura,
+    numeroAfiliado: turno.atencion?.orden_numero_afiliado ?? turno.numero_afiliado,
+    nombreProfesional: turno.nombre_profesional,
+    apellidoProfesional: turno.apellido_profesional,
+    matriculaProfesional: turno.matricula_profesional ?? null,
+    servicio: turno.nombre_servicio,
+    fechaTurno: turno.fecha,
+  };
 
   // Ya atendido (o cancelado): el próximo turno del día que falta atender.
   const siguiente =
@@ -164,12 +180,17 @@ export default async function MiTurnoPage({ params, searchParams }: Props) {
               </>
             )}
           </dl>
-          {/* HU-24A: la orden médica en su propia sección, solo si se cargó. */}
+          {/* HU-24A / HU-38: la orden médica en su propia sección (con PDF), solo si se cargó. */}
           {turno.atencion.orden_medica && (
-            <div className="bloque-orden-medica">
-              <h4>Orden médica</h4>
-              <p className="texto-observaciones">{turno.atencion.orden_medica}</p>
-            </div>
+            <OrdenMedica
+              datos={{
+                ...datosAutomaticos,
+                sesiones: turno.atencion.orden_sesiones,
+                detalle: turno.atencion.orden_medica,
+                registradoEn: turno.atencion.registrado_en,
+                editadoEn: turno.atencion.editado_en,
+              }}
+            />
           )}
           <AtencionForm
             // key: si cambia la atención guardada, el formulario arranca con los datos nuevos.
@@ -179,11 +200,19 @@ export default async function MiTurnoPage({ params, searchParams }: Props) {
             observaciones={turno.atencion.observaciones}
             motivo={turno.atencion.motivo_consulta}
             ordenMedica={turno.atencion.orden_medica}
+            ordenSesiones={turno.atencion.orden_sesiones}
+            datosOrden={<DatosAutomaticosOrden datos={datosAutomaticos} />}
           />
         </div>
       )}
 
-      {turno.atendible && <AtencionForm idTurno={turno.id_turno} modo="registrar" />}
+      {turno.atendible && (
+        <AtencionForm
+          idTurno={turno.id_turno}
+          modo="registrar"
+          datosOrden={<DatosAutomaticosOrden datos={datosAutomaticos} />}
+        />
+      )}
 
       {turno.estado === "confirmado" && !turno.atendible && (
         <p className="texto-suave aviso-atencion">

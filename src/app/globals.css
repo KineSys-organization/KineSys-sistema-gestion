@@ -2055,3 +2055,56 @@ a.badge-horario:hover {
     page-break-inside: avoid;
   }
 }
+
+/* ============ HU-38: orden médica con datos automáticos, sesiones y detalle ============ */
+.campo-orden-medica {
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--celeste);
+  border-radius: 10px;
+  padding: 12px 14px 16px;
+  margin: 0;
+}
+
+.campo-orden-medica legend {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.campo-orden-medica input[type="number"] {
+  max-width: 140px;
+}
+
+.datos-orden {
+  margin: 4px 0 10px;
+}
+
+.bloque-orden-medica .boton-secundario {
+  margin-top: 10px;
+}
+
+.firma-orden {
+  margin-top: 56px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.firma-orden span {
+  min-width: 240px;
+  padding-top: 6px;
+  border-top: 1px solid var(--azul-oscuro);
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+@media print {
+  /* Varias órdenes en la página (HU-24B): se imprime solo la elegida. */
+  .orden-impresion:not(.imprimir-esta) {
+    display: none !important;
+  }
+
+  .orden-impresion h4 {
+    margin: 20px 0 6px;
+    color: var(--azul-principal);
+  }
+}

@@ -6,7 +6,11 @@ export type Atencion = {
   fecha_atencion: string;
   observaciones: string;
   motivo_consulta: string | null;
-  orden_medica: string | null; // HU-24A (null = sin orden)
+  orden_medica: string | null; // HU-24A (null = sin orden). Desde HU-38: el detalle.
+  // HU-38: sesiones (null = sin orden u orden vieja de HU-24A) y cobertura del turno.
+  orden_sesiones: number | null;
+  orden_cobertura: string;
+  orden_numero_afiliado: string | null;
   registrado_en: string;
   editado_en: string | null;
 };
@@ -28,6 +32,7 @@ export type Turno = {
   id_profesional: string;
   nombre_profesional: string;
   apellido_profesional: string;
+  matricula_profesional: string | null; // HU-38: encabezado de la orden médica
   id_servicio: string;
   nombre_servicio: string;
   id_obra_social: string | null;
