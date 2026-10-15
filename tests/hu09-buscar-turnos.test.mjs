@@ -22,6 +22,8 @@ test("CA1: al entrar sin filtros, Desde y Hasta arrancan en hoy y en la página 
     desde: HOY,
     hasta: HOY,
     estado: null,
+    prioridad: null, // HU-20
+    cobro: null, // HU-17
     pagina: 1,
   });
 });
@@ -55,6 +57,8 @@ test("lee todos los filtros de la URL", () => {
     desde: "2026-09-01",
     hasta: "2026-09-30",
     estado: "ausente",
+    prioridad: null, // HU-20
+    cobro: null, // HU-17
     pagina: 3,
   });
 });

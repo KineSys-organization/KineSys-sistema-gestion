@@ -5,15 +5,19 @@ import {
   etiquetaMedio,
   etiquetaMotivoReembolso,
   formatearMomento,
+  formatearNumeroComprobante,
   formatearPesos,
   leerFiltrosPagos,
+  MEDIOS_PAGO,
   MENSAJE_SIN_PAGOS,
   OPCIONES_FILTRO_REEMBOLSO,
   totalPaginasPagos,
+  urlComprobante,
   urlPagos,
   type ParamsPagos,
 } from "@/lib/pagos/validar";
 import { formatearFecha } from "@/lib/turnos/validar";
+import { URL_PENDIENTES_COBRO } from "@/lib/turnos/busqueda";
 import { RangoFechas } from "@/components/turnos/RangoFechas";
 import { EstadoPagoBadge } from "@/components/pagos/EstadoPagoBadge";
 
@@ -49,6 +53,10 @@ export default async function PagosPage({ searchParams }: Props) {
             Cobros registrados. El cobro se registra desde el detalle de cada turno.
           </p>
         </div>
+        {/* HU-17: turnos confirmados o atendidos que todavía no se cobraron. */}
+        <Link className="boton-principal boton-inline" href={URL_PENDIENTES_COBRO}>
+          Ver pendientes de cobro
+        </Link>
       </div>
 
       {/* GET: los filtros quedan en la URL. Sin "pagina" → siempre vuelve a la 1. */}
@@ -64,6 +72,20 @@ export default async function PagosPage({ searchParams }: Props) {
             placeholder="DNI o nombre y apellido"
           />
         </div>
+        {/* HU-35: búsqueda por nº de comprobante ("123" o "0000123"). */}
+        <div className="campo">
+          <label htmlFor="numero">Nº de comprobante</label>
+          <input
+            id="numero"
+            name="numero"
+            inputMode="numeric"
+            pattern="\d{1,12}"
+            maxLength={12}
+            defaultValue={filtros.numero ? formatearNumeroComprobante(filtros.numero) : ""}
+            placeholder="0000123"
+            title="Solo números"
+          />
+        </div>
         {/* Período de la fecha del pago (no la del turno). */}
         <RangoFechas desde={filtros.desde ?? ""} hasta={filtros.hasta ?? ""} />
         <div className="campo">
@@ -72,6 +94,18 @@ export default async function PagosPage({ searchParams }: Props) {
             {OPCIONES_FILTRO_REEMBOLSO.map((o) => (
               <option key={o.valor} value={o.valor}>
                 {o.etiqueta}
+              </option>
+            ))}
+          </select>
+        </div>
+        {/* HU-21: filtrar por medio (p. ej. Billetera virtual). */}
+        <div className="campo">
+          <label htmlFor="medio">Medio</label>
+          <select id="medio" name="medio" defaultValue={filtros.medio ?? ""}>
+            <option value="">Todos</option>
+            {MEDIOS_PAGO.map((m) => (
+              <option key={m.valor} value={m.valor}>
+                {m.etiqueta}
               </option>
             ))}
           </select>
@@ -106,6 +140,7 @@ export default async function PagosPage({ searchParams }: Props) {
           <table className="tabla">
             <thead>
               <tr>
+                <th>Nº</th>
                 <th>Paciente</th>
                 <th>Fecha del turno</th>
                 <th>Servicio</th>
@@ -119,6 +154,7 @@ export default async function PagosPage({ searchParams }: Props) {
             <tbody>
               {pagos.map((pago) => (
                 <tr key={pago.id_pago}>
+                  <td>{formatearNumeroComprobante(pago.numero_comprobante)}</td>
                   <td>
                     {pago.apellido_paciente}, {pago.nombre_paciente}
                     <span className="texto-suave"> · DNI {pago.dni_paciente}</span>
@@ -132,7 +168,12 @@ export default async function PagosPage({ searchParams }: Props) {
                     {pago.corregido && <span className="texto-suave"> (corregido)</span>}
                   </td>
                   <td>{formatearMomento(pago.registrado_en)}</td>
-                  <td>{etiquetaMedio(pago.medio_pago)}</td>
+                  <td>
+                    {etiquetaMedio(pago.medio_pago)}
+                    {pago.numero_operacion && (
+                      <span className="texto-suave"> · op. {pago.numero_operacion}</span>
+                    )}
+                  </td>
                   <td>
                     <EstadoPagoBadge estado={pago.estado_pago} />
                     {pago.reembolso && (
@@ -146,9 +187,15 @@ export default async function PagosPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td>
-                    <Link className="boton-pill" href={`/turnos/${pago.id_turno}/pago`}>
-                      Ver detalle
-                    </Link>
+                    <div className="fila-acciones">
+                      <Link className="boton-pill" href={`/turnos/${pago.id_turno}/pago`}>
+                        Ver detalle
+                      </Link>
+                      {/* HU-35: el mismo comprobante, listo para reimprimir. */}
+                      <Link className="boton-pill" href={urlComprobante(pago.id_pago)}>
+                        Ver comprobante
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

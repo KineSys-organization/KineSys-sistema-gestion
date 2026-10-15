@@ -5,16 +5,19 @@ import {
   etiquetaMedio,
   etiquetaMotivoReembolso,
   formatearMomento,
+  formatearNumeroComprobante,
   formatearPesos,
   MENSAJE_YA_PAGADO,
   MENSAJE_YA_REEMBOLSADO,
   mostrarBotonReembolso,
   precioSugerido,
   puedeCorregirPago,
+  urlComprobante,
 } from "@/lib/pagos/validar";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 import { EstadoPagoBadge } from "@/components/pagos/EstadoPagoBadge";
+import { EstadoCobroBadge } from "@/components/pagos/EstadoCobroBadge";
 import { PagoForm } from "@/components/pagos/PagoForm";
 import { ReembolsoForm } from "@/components/pagos/ReembolsoForm";
 
@@ -70,9 +73,26 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
       </div>
 
       {ok === "registrado" && (
-        <p className="mensaje-ok" role="status">
-          Pago registrado.
-        </p>
+        <div className="mensaje-ok" role="status">
+          <p>
+            Pago registrado.
+            {pago && ` Comprobante Nº ${formatearNumeroComprobante(pago.numero_comprobante)}.`}
+          </p>
+          {/* HU-35: el comprobante se ofrece apenas se registra el cobro. */}
+          {pago && (
+            <div className="fila-acciones">
+              <Link className="boton-principal boton-inline" href={urlComprobante(pago.id_pago)}>
+                Ver comprobante
+              </Link>
+              <Link
+                className="boton-secundario boton-inline"
+                href={urlComprobante(pago.id_pago, true)}
+              >
+                Descargar PDF
+              </Link>
+            </div>
+          )}
+        </div>
       )}
       {ok === "corregido" && (
         <p className="mensaje-ok" role="status">
@@ -106,6 +126,11 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
           <dd>
             <EstadoTurnoBadge estado={turno.estado} />
           </dd>
+          {/* HU-17: estado de cobro del turno (lo calcula la base). */}
+          <dt>Estado de cobro</dt>
+          <dd>
+            <EstadoCobroBadge estado={turno.estado_cobro} />
+          </dd>
         </dl>
       </div>
 
@@ -124,6 +149,7 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
               importeBase={precioSugerido(pago.importe_base)}
               descuento={Number(pago.descuento) > 0 ? precioSugerido(pago.descuento) : ""}
               medio={pago.medio_pago}
+              numeroOperacion={pago.numero_operacion}
             />
           </div>
         ) : (
@@ -134,6 +160,8 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
               </p>
             )}
             <dl className="resumen-turno">
+              <dt>Comprobante</dt>
+              <dd>Nº {formatearNumeroComprobante(pago.numero_comprobante)}</dd>
               <dt>Estado del pago</dt>
               <dd>
                 <EstadoPagoBadge estado={pago.estado} />
@@ -148,6 +176,13 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
               </dd>
               <dt>Medio</dt>
               <dd>{etiquetaMedio(pago.medio_pago)}</dd>
+              {/* HU-21: nº de operación de la billetera virtual. */}
+              {pago.numero_operacion && (
+                <>
+                  <dt>Nº de operación</dt>
+                  <dd>{pago.numero_operacion}</dd>
+                </>
+              )}
               <dt>Registrado</dt>
               <dd>
                 {formatearMomento(pago.registrado_en)} · {pago.registrado_por}
@@ -165,6 +200,10 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
               </p>
             )}
             <div className="acciones-pie">
+              {/* HU-35: siempre que hay pago (también corregido o reembolsado). */}
+              <Link className="boton-secundario boton-inline" href={urlComprobante(pago.id_pago)}>
+                Ver comprobante
+              </Link>
               {corregible && (
                 <Link
                   className="boton-principal boton-inline"
@@ -256,12 +295,14 @@ export default async function PagoTurnoPage({ params, searchParams }: Props) {
                     <td>
                       {formatearPesos(c.importe_final_anterior)} ·{" "}
                       {etiquetaMedio(c.medio_pago_anterior)}
+                      {c.numero_operacion_anterior && ` (op. ${c.numero_operacion_anterior})`}
                       {Number(c.descuento_anterior) > 0 &&
                         ` (base ${formatearPesos(c.importe_base_anterior)} − ${formatearPesos(c.descuento_anterior)})`}
                     </td>
                     <td>
                       {formatearPesos(c.importe_final_nuevo)} ·{" "}
                       {etiquetaMedio(c.medio_pago_nuevo)}
+                      {c.numero_operacion_nuevo && ` (op. ${c.numero_operacion_nuevo})`}
                       {Number(c.descuento_nuevo) > 0 &&
                         ` (base ${formatearPesos(c.importe_base_nuevo)} − ${formatearPesos(c.descuento_nuevo)})`}
                     </td>

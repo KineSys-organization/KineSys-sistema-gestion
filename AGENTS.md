@@ -2,8 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Personal interno** HU-29/HU-30, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08). Estados de pago, reembolsos y el resto de los indicadores siguen pendientes.
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Obras sociales** HU-31/HU-32, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 y **Dashboard** en Inicio HU-15), con control de acceso por rol (HU-08). Estados de pago, reembolsos y el resto de los indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Personal interno** HU-29/HU-30, **Obras sociales** HU-31/HU-32, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14 con reembolsos HU-22 y billetera virtual HU-21, **Estado de cobro** HU-17, **Comprobante de pago** HU-35, **Prioridad del turno** HU-20), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 con orden médica HU-24A/HU-38, **Historial de órdenes** HU-24B, **Dashboard** en Inicio HU-15 e **Historia clínica** HU-39), con control de acceso por rol (HU-08). El resto de los indicadores sigue pendiente.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -127,10 +126,13 @@ src/
     (main)/turnos/[id]       → resumen + cancelar (HU-10A) + repetir (HU-25) + ausencia (HU-10B) + pago (HU-14)
     (main)/turnos/[id]/reprogramar → nuevo día y horario del mismo turno (HU-10C)
     (main)/mi-agenda         → agenda propia del Profesional (HU-12)
-    (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13) con orden médica (HU-24A)
+    (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13) con orden médica (HU-24A / HU-38)
+    (main)/mi-agenda/[id]/ordenes → historial de órdenes médicas del paciente del turno (HU-24B)
+    (main)/historia-clinica/[paciente] → ficha clínica + evolución del paciente (HU-39, solo Profesional)
     (main)/indicadores       → indicadores generales del centro (HU-26, solo Gerente)
     (main)/pagos             → listado de pagos con filtros (HU-14)
     (main)/turnos/[id]/pago  → registrar, consultar y corregir el pago del turno (HU-14)
+    (main)/pagos/[id]/comprobante → comprobante del pago, ver y descargar PDF (HU-35; [id] = id_pago)
   proxy.ts + middleware.ts  → Next 15 carga `src/middleware.ts`; la sesión se refresca en `src/lib/supabase/middleware.ts`
 ```
 
@@ -183,7 +185,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 ## Fuera de alcance (todavía)
 
 - Web de pacientes (login del paciente)
-- Historia clínica, estados de pago y pagos parciales (HU-17), billetera virtual (HU-21), reembolsos (HU-22), facturar a la obra social, resto de los indicadores (HU-18)
+- Pagos parciales, facturación fiscal (AFIP/ARCA), facturar a la obra social, resto de los indicadores (HU-18)
 - Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
 - RLS cerrado en tablas históricas (las nuevas de HU-04 van con RLS + revoke; el acceso es solo por `fn_*`)
 
@@ -300,6 +302,21 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - El historial de órdenes del paciente es HU-24B (Incremento 3): leer `atencion` por `id_paciente`.
 - SQL: `supabase/migrations/019_hu24a_orden_medica.sql`. Pruebas: `supabase/tests/hu24a_orden_medica.sql` y `tests/hu24a-orden-medica.test.mjs`. Evidencia en `docs/hu-24a-orden-medica.md`.
 
+### HU-38 — Orden médica con datos automáticos, sesiones y detalle
+
+- Corrige HU-24A: en `/mi-agenda/[id]` la orden muestra de solo lectura paciente (nombre, apellido, DNI), cobertura del turno, profesional con matrícula, servicio y fecha. El profesional carga solo **sesiones** (1..50) y **detalle** (`atencion.orden_medica`, 1..2000). Opcional; si se carga van los dos (*Indicá la cantidad de sesiones* / *Completá el detalle de la orden*). Vaciar los dos al editar = quitar la orden.
+- `atencion.orden_sesiones smallint` (check 1..50 y check *sesiones ⇒ detalle*). Órdenes viejas sin sesiones = *No informadas*; se pueden seguir guardando si no se cambia el detalle.
+- `fn_registrar_atencion` / `fn_editar_atencion` suman `p_orden_sesiones` (drop + create). `fn_obtener_turno` suma `matricula_profesional` y, dentro de `atencion`, `orden_sesiones`, `orden_cobertura`, `orden_numero_afiliado`.
+- Imprimir / PDF: `OrdenMedica` + `ImprimirOrdenButton` (mecanismo HU-27; con varias órdenes en la página se imprime solo la marcada con `.imprimir-esta`).
+- SQL: `supabase/migrations/025_hu38_orden_medica_sesiones.sql`. Pruebas: `supabase/tests/hu38_orden_medica_sesiones.sql` y `tests/hu38-orden-medica-sesiones.test.mjs`. Evidencia en `docs/hu-38-orden-medica-sesiones.md`.
+
+### HU-24B — Historial de órdenes médicas del paciente
+
+- **Gerente:** sección **Órdenes médicas** en `/pacientes/[id]` (Mesa de Entradas no la ve). **Profesional:** botón "Historial de órdenes" en `/mi-agenda/[id]` → `/mi-agenda/[id]/ordenes`. Acción `ordenes.consultar` (Gerente + Profesional).
+- RPC: `fn_listar_ordenes_paciente(paciente, desde, hasta, profesional)` → `{ paciente, profesionales, total_sin_filtros, ordenes }`. Gerente con `fn_exigir_rol`; Profesional con `fn_exigir_paciente_propio` (*No tenés turnos con este paciente*). Nunca devuelve observaciones ni motivo.
+- Filtros por GET (Desde/Hasta de la fecha del turno + Profesional, `src/lib/ordenes/validar.ts`), más reciente primero, reimpresión por orden. Vacío: *Este paciente no tiene órdenes médicas registradas* / *No hay órdenes para esos filtros*.
+- SQL: `supabase/migrations/026_hu24b_historial_ordenes.sql`. Pruebas: `supabase/tests/hu24b_historial_ordenes.sql` y `tests/hu24b-historial-ordenes.test.mjs`. Evidencia en `docs/hu-24b-historial-ordenes.md`.
+
 ### HU-10B — Marcar ausencia de un turno
 
 - Desde `/turnos/[id]`: botón "Marcar ausente" si `marcable_ausente` (confirmado, sin fila en `atencion` y con la **hora de fin** pasada, hora de Argentina) y "Corregir ausencia" si `ausencia_corregible`. Siempre con confirmación, sin motivo. Solo **Gerente** y **Mesa de Entradas** (acción `turnos.ausente`).
@@ -317,7 +334,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 ### HU-09 — Buscar y filtrar turnos
 
 - Pantalla: `/turnos` (menú "Turnos"). Solo **Gerente** y **Mesa de Entradas** (acción `turnos.buscar`). Listado transversal (todos los profesionales); la vista semanal de un profesional es HU-11.
-- RPC: `fn_buscar_turnos(texto, profesional, servicio, desde, hasta, estado, pagina)` → `{ total, pagina, por_pagina, turnos }`. Filtros opcionales en AND; texto por palabras (nombre, apellido o comienzo de DNI); 10 por página en orden cronológico.
+- RPC: `fn_buscar_turnos(texto, profesional, servicio, desde, hasta, estado, pagina, estado_cobro)` → `{ total, pagina, por_pagina, turnos }` (el último parámetro, desde HU-17). Filtros opcionales en AND; texto por palabras (nombre, apellido o comienzo de DNI); 10 por página en orden cronológico.
 - Filtros en la URL (`leerFiltrosTurnos` / `urlTurnos` en `src/lib/turnos/busqueda.ts`). Sin `desde`/`hasta` en la URL = hoy; vacíos = sin límite ("Limpiar filtros"). `RangoFechas` (cliente) impide Hasta < Desde.
 - SQL: `supabase/migrations/016_hu09_buscar_turnos.sql`. Pruebas: `supabase/tests/hu09_buscar_turnos.sql` y `tests/hu09-buscar-turnos.test.mjs`. Evidencia en `docs/hu-09-buscar-turnos.md`.
 
@@ -327,11 +344,22 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - RPCs ya aplicadas: `fn_listar_bloqueos`, `fn_crear_bloqueo` (`p_solo_consultar` muestra los turnos confirmados afectados sin guardar), `fn_eliminar_bloqueo` (solo si todavía no empezó) y `fn_consultar_bloqueos_agenda`.
 - Un bloqueo no cancela turnos. La disponibilidad (otorgar, reprogramar, repetir) ya no ofrece el horario: lo descuenta `fn_horarios_del_dia`.
 - La agenda de Recepción, `/mi-agenda` y el calendario del Profesional muestran el día o el horario con su motivo.
+- La ocupación de HU-18 descuenta los minutos bloqueados de la disponibilidad (y el centro solo cuenta profesionales activos, como en la corrección 030).
+- SQL: `supabase/migrations/031_hu33_bloqueos_agenda.sql`. Pruebas: `tests/hu33-bloqueos.test.mjs`.
 
 ### HU-37 — Repetir un turno en varios días de la semana
 
 - Amplía el formulario de HU-25 en `/turnos/[id]`: casillas de días (por defecto solo el del turno), hora por día, atajos, y hasta cuándo por semanas o por sesiones (máximo 24 turnos nuevos).
-- `fn_turno_repetir_preview` y `fn_turno_repetir_confirmar` reciben `p_dias`, `p_horas`, `p_semanas` y `p_sesiones` (una de las dos cantidades). Sin días, la base sigue repitiendo solo el día original.
+- `fn_turno_repetir_preview` y `fn_turno_repetir_confirmar` reciben `p_dias`, `p_horas`, `p_semanas` y `p_sesiones` (una de las dos cantidades). Sin días, la base sigue repitiendo solo el día original. Conserva la prioridad de HU-20.
+- SQL: `supabase/migrations/032_hu37_repetir_varios_dias.sql`. Pruebas: `tests/hu37-repetir-dias.test.mjs`.
+
+### HU-20 — Prioridad o urgencia del turno
+
+- `turno.prioridad` (`normal` por defecto, `alta`, `urgente`) + `prioridad_nota` (≤ 200). Marca visual: no cambia orden, disponibilidad ni sobreturnos.
+- Se elige al otorgar (`fn_otorgar_turno(..., p_prioridad)`, drop + create) y se cambia en `/turnos/[id]` con `fn_cambiar_prioridad_turno(turno, prioridad, nota)` si `prioridad_editable` (confirmado y no empezó). Acción `turnos.prioridad` (Gerente + Mesa); el Profesional solo la ve.
+- `PrioridadBadge` (texto + color; Normal sin marca) en `/agenda` (día y semana), `/turnos`, `/turnos/[id]`, `/mi-agenda` y `/mi-agenda/[id]`. `/turnos` suma el filtro Prioridad (`fn_buscar_turnos(..., p_prioridad)`, drop + create).
+- Reprogramar la conserva; repetir (HU-25) la copia. `fn_obtener_turno`, `fn_consultar_agenda_profesional` y `fn_turno_repetir_confirmar` recreadas.
+- SQL: `supabase/migrations/027_hu20_prioridad_turno.sql`. Pruebas: `supabase/tests/hu20_prioridad_turno.sql` y `tests/hu20-prioridad-turno.test.mjs`. Evidencia en `docs/hu-20-prioridad-turno.md`.
 
 ### HU-25 — Repetir un turno en las próximas semanas
 
@@ -371,15 +399,53 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - RPC: `fn_registrar_reembolso(p_id_turno, p_motivo, p_detalle, p_medio)` (devuelve lo mismo que `fn_obtener_pago`). `fn_obtener_pago` suma `reembolsable`, `pago.estado` (Pagado/Reembolsado) y `reembolso`. Validación con los mismos mensajes en `validarReembolso`.
 - Reembolsado: badge `EstadoPagoBadge`, bloque con fecha/hora AR, motivo, detalle, importe, medio y quién lo registró; se ocultan "Registrar reembolso" y "Corregir pago" (`puedeCorregirPago`; `fn_corregir_pago` igual lo rechaza). El turno no cambia de estado.
 - `/pagos`: columna Estado (+ fecha, motivo e importe del reembolso) y filtro Reembolso Todos / Con / Sin (`p_reembolso` de `fn_listar_pagos`, en la URL con `urlPagos`).
-- El SQL ya está aplicado en el proyecto (no lo toca el front). Pruebas: `tests/hu22-reembolso.test.mjs`.
+- SQL: `supabase/migrations/023_hu22_reembolso_pago.sql` (tabla `reembolso`, `unique(id_pago)`, RLS sin grants). Pruebas: `tests/hu22-reembolso.test.mjs`.
+
+### HU-17 — Estado de cobro de cada turno
+
+- Estados: **Pendiente de pago** (confirmado o atendido sin pago), **Pagado** (tiene pago, aunque después se cancele o se marque ausente), **Reembolsado** (su pago tiene reembolso, HU-22) y **No corresponde cobro** (cancelado o ausente sin pago). Etiquetas y colores en `src/lib/pagos/cobro.ts`; siempre con texto (`EstadoCobroBadge`).
+- **No se guarda**: lo calcula la base con una sola regla, `fn_estado_cobro(estado_turno, tiene_pago, tiene_reembolso)` (interna, revocada a `authenticated`). La reutilizan `fn_obtener_turno`, `fn_consultar_agenda_profesional`, `fn_buscar_turnos` y `fn_obtener_pago` (campo `estado_cobro`). Nunca se calcula en el front.
+- Pasar a Pagado = registrar el pago (HU-14). No hay botón que cambie el estado. Corregir una ausencia sin pago vuelve a Pendiente (sale de la regla).
+- Dónde se ve: detalle del turno (bloque "Pago"), pantalla de pago, `/turnos` (columna **Cobro** + filtro `?cobro=` combinable y que se conserva al paginar; con Pendiente, atajos **Todos / Hasta hoy / Próximos**), agenda Día y Semana. `/pagos` tiene **Ver pendientes de cobro** (`URL_PENDIENTES_COBRO`: Pendiente, sin límite de fechas).
+- Solo Recepción y Gerente: en `fn_obtener_turno` y la agenda, al Profesional le llega `estado_cobro: null` (no se ve en `/mi-agenda`).
+- El comprobante (HU-35) puede usar `turno.estado_cobro` de `fn_obtener_pago`.
+- SQL: `supabase/migrations/024_hu17_estado_cobro.sql` (drop de la firma de 7 parámetros de `fn_buscar_turnos`). Pruebas: `supabase/tests/hu17_estado_cobro.sql` y `tests/hu17-estado-cobro.test.mjs` (`npm test`). Evidencia en `docs/hu-17-estado-cobro.md`.
+
+### HU-35 — Comprobante de pago
+
+- Pantalla `/pagos/[id]/comprobante` (`[id]` = id del pago; `?imprimir=1` abre el diálogo de impresión). Solo **Gerente** y **Mesa de Entradas** (acción `pagos.consultar`). Constancia **interna**, no factura fiscal.
+- Contenido (`ComprobantePago`): logo + "KineSys" + "Consultorio de kinesiología", Nº `0000123`, emitido el (= fecha y hora del registro del pago, AR), paciente, turno (fecha, horario, profesional, servicio, estado), cobertura y nº de afiliado o Particular, importes (base, descuento, final en pesos), medio, estado de cobro (HU-17) y quién registró el cobro. Leyendas "Corregido el …" y "Reembolsado el … por $ X".
+- PDF: `DescargarComprobanteButton` usa `window.print()` como el PDF de horarios (HU-27); título = `Comprobante 0000123 - Apellido, Nombre`. Al imprimir solo sale `.imprimible`. Sin librerías nuevas.
+- Accesos: tras registrar el pago ("Ver comprobante" / "Descargar PDF"), pantalla del pago, detalle del turno con pago y `/pagos` (columna Nº, "Ver comprobante" y búsqueda `?numero=`, combinable). Billetera virtual: muestra el nº de operación (HU-21, migración 029).
+- Número: columna `pago.numero_comprobante` (secuencia `pago_numero_comprobante_seq`, unique, not null, revocada al front). Se asigna al registrar (default de la columna) y no cambia al corregir. Los pagos existentes se numeraron en la migración por `registrado_en`. **Puede haber saltos** (un intento rechazado consume un número): decisión del equipo, no es factura fiscal.
+- RPCs: `fn_obtener_comprobante(id_pago)` (nueva; *El comprobante no existe*), `fn_obtener_pago` suma `pago.numero_comprobante`, `fn_listar_pagos` suma `numero_comprobante` y `p_numero_comprobante` (drop de la firma de 5 parámetros).
+- **Unificación con HU-21** (`029_unificar_pagos_hu21_hu35.sql`): 025 y 028 recreaban cada una su `fn_listar_pagos` y quedaban dos versiones (error *Could not choose the best candidate function*). La 029 deja una sola: `fn_listar_pagos(texto, desde, hasta, pagina, reembolso, medio, numero_comprobante)`; `fn_obtener_pago` con nº de comprobante + nº de operación + estado de cobro; y el comprobante muestra el **nº de operación** si el pago fue con billetera. Al modificar una función de pagos, partir de esta versión.
+- SQL: `supabase/migrations/025_hu35_comprobante_pago.sql`. Pruebas: `supabase/tests/hu35_comprobante_pago.sql` y `tests/hu35-comprobante.test.mjs` (`npm test`). Evidencia en `docs/hu-35-comprobante-pago.md`.
+
+### HU-21 — Cobro con billetera virtual
+
+- Sin integración con APIs: Recepción comprueba el cobro en la app de la billetera y lo registra como pago de HU-14 con medio **Billetera virtual** (`billetera`) y **Nº de operación** (4..50 letras/números, sin espacios, único). Con otros medios el campo no aparece y el nº no se guarda.
+- `pago.numero_operacion` (check *billetera ⇔ nº*, índice único `idx_pago_numero_operacion`), `pago_correccion.numero_operacion_anterior/_nuevo`, `reembolso.medio_devolucion` admite `billetera`.
+- `fn_registrar_pago` / `fn_corregir_pago` (+ `p_numero_operacion`) y `fn_listar_pagos` (+ `p_medio`) con drop + create; helper interno `fn_validar_numero_operacion`. `/pagos` filtra por Medio y muestra el nº.
+- SQL: `supabase/migrations/028_hu21_billetera_virtual.sql`. Pruebas: `supabase/tests/hu21_billetera_virtual.sql` y `tests/hu21-billetera-virtual.test.mjs`. Evidencia en `docs/hu-21-billetera-virtual.md`.
 
 ### HU-15 — Dashboard del profesional
 
 - En `/` (Inicio), solo para el **Profesional** (acción `atencion.dashboard`); Recepción y Gerente no lo ven (usan `/agenda`). Mes y día elegido en la URL: `/?mes=2026-10&dia=2026-10-05`.
 - RPC: `fn_consultar_dashboard_profesional(mes)` (solo lectura, `fn_exigir_rol(['Profesional'])`, profesional = `auth.uid()`, sin parámetro de profesional). Devuelve `dia` (total sin cancelados, atendidos, pendientes = confirmados), `semana` (lunes a domingo de hoy, hora AR: cancelaciones y ausencias) y `mes` (sus turnos de ese mes, todos los estados).
 - Calendario mensual de lunes a domingo (sábado y domingo incluidos), hasta 3 turnos por día (hora + estado en texto) y la lista del día con link a `/mi-agenda/[id]`.
-- Color por proximidad solo en confirmados de hoy o futuros (`proximidad` en `src/lib/dashboard/calendario.ts`): hoy rojo, 1-3 días naranja, 4-7 verde, más de 7 azul; el resto gris.
+- HU-36 (#70) reemplaza el color por proximidad: color según estado (confirmado azul, atendido verde, ausente naranja, cancelado gris) e ícono según proximidad (hoy, 1-3, 4-7 y más de 7 días; sin ícono en turnos no confirmados/pasados). Los colores de `EstadoTurnoBadge` son compartidos por `/agenda`, `/mi-agenda` y `/turnos`; ver `docs/hu-36-calendario-colores-proximidad.md`.
 - SQL: `supabase/migrations/017_hu15_dashboard_profesional.sql`. Pruebas: `supabase/tests/hu15_dashboard_profesional.sql` y `tests/hu15-dashboard.test.mjs` (`npm test`). Evidencia en `docs/hu-15-dashboard-profesional.md`.
+
+### HU-39 — Historia clínica del paciente (Profesional)
+
+- Pantalla: `/historia-clinica/[paciente]?turno=` (se abre con el botón "Historia clínica" de `/mi-agenda/[id]`; `?editar=1` muestra el formulario). Solo **Profesional** (`exigirProfesional`, acciones `historia.consultar` y `historia.registrar`). No se entra por `/pacientes` (es de Recepción).
+- Tablas `historia_clinica` (una por paciente, `unique(id_paciente)`, seis textos opcionales ≤ 1000, `creado_*` / `modificado_*`) y `historia_clinica_version` (copia de la versión anterior en cada edición), con RLS y sin grants. Nunca se borra.
+- RPCs: `fn_obtener_historia_clinica(paciente)` → `{ paciente, ficha | null, versiones, evolucion }` y `fn_guardar_historia_clinica(paciente, 6 textos)` (crea o edita; vacío = sin dato; exige al menos un campo; sin cambios no crea versión; lock por paciente).
+- Acceso: helper interno `fn_exigir_paciente_propio(uuid)` (revocado a `authenticated`): Profesional activo con al menos un turno (cualquier estado) con el paciente; si no, *No tenés turnos con este paciente*. Mesa de Entradas y Gerente quedan afuera (lo clínico es de los profesionales).
+- Evolución = atenciones de HU-13 del paciente con **todos** los profesionales (motivo, observaciones, orden médica de HU-24A), solo lectura. HU-16 va a sumar ahí el resto del historial.
+- PDF (Should): `ImprimirHistoriaButton` con el mecanismo de HU-27 (`.solo-impresion`); `.historia-impresion` imprime en varias páginas.
+- SQL: `supabase/migrations/024_hu39_historia_clinica.sql`. Pruebas: `supabase/tests/hu39_historia_clinica.sql` y `tests/hu39-historia-clinica.test.mjs` (`npm test`). Evidencia en `docs/hu-39-historia-clinica.md`.
 
 ### HU-26 — Indicadores generales del centro (vista corta, Incremento 2)
 

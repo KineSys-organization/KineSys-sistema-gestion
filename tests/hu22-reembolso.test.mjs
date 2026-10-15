@@ -35,8 +35,9 @@ test("validación del reembolso: mismos mensajes que fn_registrar_reembolso", ()
   );
   assert.equal(validarReembolso({ ...base, motivo: "otro", detalle: "Error de cobro" }), null);
   assert.equal(validarReembolso({ ...base, medio: "" }), "Elegí un medio de devolución válido");
-  assert.equal(validarReembolso({ ...base, medio: "billetera" }), "Elegí un medio de devolución válido");
-  for (const medio of ["efectivo", "transferencia", "debito", "credito"]) {
+  assert.equal(validarReembolso({ ...base, medio: "bitcoin" }), "Elegí un medio de devolución válido");
+  // HU-21: un pago con billetera virtual también se reembolsa (la devolución se hace afuera).
+  for (const medio of ["efectivo", "transferencia", "debito", "credito", "billetera"]) {
     assert.equal(validarReembolso({ ...base, medio }), null, medio);
   }
 });

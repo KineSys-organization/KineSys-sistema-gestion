@@ -6,6 +6,7 @@ import { otorgarTurno } from "@/lib/turnos/actions";
 import type { EstadoOtorgar } from "@/lib/turnos/tipos";
 import type { ObraSocialPaciente } from "@/lib/pacientes/tipos";
 import { urlPasoHorario } from "@/lib/turnos/flujo";
+import { PRIORIDAD_POR_DEFECTO, PRIORIDADES } from "@/lib/turnos/prioridad";
 import {
   obrasActivasParaCobertura,
   coberturaInicial,
@@ -34,6 +35,7 @@ export function OtorgarTurnoForm({
   const obrasActivas = obrasActivasParaCobertura(obras);
   // Una sola obra activa viene preseleccionada; con varias, Recepción tiene que elegir.
   const [cobertura, setCobertura] = useState(coberturaInicial(obras));
+  const [prioridad, setPrioridad] = useState<string>(PRIORIDAD_POR_DEFECTO);
 
   // Se envía con onSubmit (y no con action={...}) para que React no resetee el
   // formulario si la base rechaza el turno: así la cobertura elegida sigue marcada.
@@ -80,6 +82,23 @@ export function OtorgarTurnoForm({
           </label>
         </div>
       </fieldset>
+
+      {/* HU-20: prioridad del turno. Si no se elige, queda Normal. */}
+      <div className="campo">
+        <label htmlFor="prioridad">Prioridad</label>
+        <select
+          id="prioridad"
+          name="prioridad"
+          value={prioridad}
+          onChange={(e) => setPrioridad(e.target.value)}
+        >
+          {PRIORIDADES.map((p) => (
+            <option key={p.valor} value={p.valor}>
+              {p.etiqueta}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {estado.error && (
         <p className="mensaje-error" role="alert">

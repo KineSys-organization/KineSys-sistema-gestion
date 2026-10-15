@@ -1,4 +1,4 @@
-// HU-15. Calendario mensual del profesional y color por proximidad.
+// HU-15/HU-36. Calendario mensual del profesional: color por estado e ícono por proximidad.
 // Lógica pura (sin Supabase ni Next) para poder testearla con `npm test`.
 import type { EstadoTurno } from "@/lib/turnos/tipos";
 import type { TurnoMes } from "@/lib/dashboard/tipos";
@@ -42,30 +42,49 @@ export function diasEntre(desde: string, hasta: string): number {
   return Math.round((b - a) / 86_400_000);
 }
 
-// Color por proximidad (reglas de negocio de HU-15). Solo los confirmados de hoy o futuros
-// tienen color; atendidos, cancelados, ausentes o confirmados ya pasados van en gris.
-export type Proximidad = "hoy" | "pronto" | "semana" | "lejos" | "gris";
+export type ColorEstadoTurno = "azul" | "verde" | "naranja" | "gris";
+
+// El color depende únicamente del estado (HU-36), no de la fecha del turno.
+const COLOR_POR_ESTADO: Record<EstadoTurno, ColorEstadoTurno> = {
+  confirmado: "azul",
+  atendido: "verde",
+  ausente: "naranja",
+  cancelado: "gris",
+};
+
+export function colorPorEstado(estado: EstadoTurno): ColorEstadoTurno {
+  return COLOR_POR_ESTADO[estado];
+}
+
+// Los turnos confirmados de hoy en adelante muestran un ícono de proximidad.
+// Turnos no confirmados o pasados no llevan ícono.
+export type Proximidad = "hoy" | "pronto" | "semana" | "lejos";
 
 export function proximidad(
   turno: { fecha: string; estado: EstadoTurno },
   hoy: string
-): Proximidad {
-  if (turno.estado !== "confirmado") return "gris";
+): Proximidad | null {
+  if (turno.estado !== "confirmado") return null;
   const dias = diasEntre(hoy, turno.fecha);
-  if (dias < 0) return "gris";
+  if (dias < 0) return null;
   if (dias === 0) return "hoy";
   if (dias <= 3) return "pronto";
   if (dias <= 7) return "semana";
   return "lejos";
 }
 
-// Referencias del calendario (el color nunca va solo: cada turno muestra hora y estado).
+export const REFERENCIAS_ESTADO: { estado: EstadoTurno; texto: string }[] = [
+  { estado: "confirmado", texto: "Confirmado" },
+  { estado: "atendido", texto: "Atendido" },
+  { estado: "ausente", texto: "Ausente" },
+  { estado: "cancelado", texto: "Cancelado" },
+];
+
 export const REFERENCIAS_PROXIMIDAD: { proximidad: Proximidad; texto: string }[] = [
   { proximidad: "hoy", texto: "Hoy" },
   { proximidad: "pronto", texto: "De 1 a 3 días" },
   { proximidad: "semana", texto: "De 4 a 7 días" },
   { proximidad: "lejos", texto: "Más de 7 días" },
-  { proximidad: "gris", texto: "Atendido, cancelado, ausente o pasado" },
 ];
 
 // "Hoy", "Mañana", "En 5 días", "Hace 2 días": se muestra junto al color en la lista del día.

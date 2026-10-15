@@ -19,14 +19,18 @@ test("la orden médica es opcional (vacía, solo espacios o sin el campo)", () =
 });
 
 test("largo máximo 2000 (igual que el check de la tabla y la función)", () => {
+  // Desde HU-38 la orden lleva sesiones: se mandan para probar solo el largo.
   assert.equal(LARGO_MAXIMO_ORDEN_MEDICA, 2000);
-  assert.equal(validarAtencion({ ...base, orden: "o".repeat(2000) }), null);
+  assert.equal(validarAtencion({ ...base, orden: "o".repeat(2000), sesiones: "5" }), null);
   assert.equal(
-    validarAtencion({ ...base, orden: "o".repeat(2001) }),
+    validarAtencion({ ...base, orden: "o".repeat(2001), sesiones: "5" }),
     "La orden médica no puede superar los 2000 caracteres"
   );
   // Se cuenta después del trim, como en la base.
-  assert.equal(validarAtencion({ ...base, orden: `  ${"o".repeat(2000)}  ` }), null);
+  assert.equal(
+    validarAtencion({ ...base, orden: `  ${"o".repeat(2000)}  `, sesiones: "5" }),
+    null
+  );
 });
 
 test("la orden no reemplaza a las observaciones ni cambia las reglas de HU-13", () => {
@@ -46,7 +50,9 @@ const leer = (...partes) => readFileSync(join(...partes), "utf8");
 
 test("las server actions mandan p_orden_medica al rpc, sin supabase.from", () => {
   const actions = leer("src", "lib", "atencion", "actions.ts");
-  assert.equal(actions.match(/p_orden_medica: campos\.orden\.trim\(\) \|\| null/g)?.length, 2);
+  // HU-38: registrar y editar arman la orden con el mismo helper (detalle + sesiones).
+  assert.match(actions, /p_orden_medica: campos\.orden\.trim\(\) \|\| null/);
+  assert.equal(actions.match(/\.\.\.parametrosOrden\(campos\)/g)?.length, 2);
   assert.match(actions, /formData\.get\("orden_medica"\)/);
   assert.doesNotMatch(actions, /\.from\(/);
 });

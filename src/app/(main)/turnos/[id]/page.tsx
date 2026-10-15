@@ -5,11 +5,19 @@ import { AusenciaTurnoForm } from "@/components/turnos/AusenciaTurnoForm";
 import { CancelarTurnoForm } from "@/components/turnos/CancelarTurnoForm";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 import { RepetirTurnoForm } from "@/components/turnos/RepetirTurnoForm";
+import { PrioridadBadge } from "@/components/turnos/PrioridadBadge";
+import { PrioridadForm } from "@/components/turnos/PrioridadForm";
 import { obtenerTurno } from "@/lib/turnos/actions";
 import { consultarHorarios } from "@/lib/profesionales/horarios-actions";
 import { obtenerPagoTurno } from "@/lib/pagos/actions";
-import { etiquetaMedio, formatearPesos, puedeCorregirPago } from "@/lib/pagos/validar";
+import {
+  etiquetaMedio,
+  formatearPesos,
+  puedeCorregirPago,
+  urlComprobante,
+} from "@/lib/pagos/validar";
 import { EstadoPagoBadge } from "@/components/pagos/EstadoPagoBadge";
+import { EstadoCobroBadge } from "@/components/pagos/EstadoCobroBadge";
 import { urlPasoHorario, urlPasoPaciente } from "@/lib/turnos/flujo";
 import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
 
@@ -132,6 +140,21 @@ export default async function TurnoPage({ params, searchParams }: Props) {
             {turno.cobertura}
             {turno.numero_afiliado && ` · nº ${turno.numero_afiliado}`}
           </dd>
+          {/* HU-20: se ve siempre; se cambia solo si está confirmado y no empezó. */}
+          <dt>Prioridad</dt>
+          <dd>
+            <PrioridadBadge prioridad={turno.prioridad} mostrarNormal />
+            {turno.prioridad_nota && <span className="texto-suave"> · {turno.prioridad_nota}</span>}
+            {turno.prioridad_editable && puedeHacer(usuario.rol_usuario, "turnos.prioridad") && (
+              <PrioridadForm
+                // key: si cambia la prioridad guardada, el formulario arranca con el valor nuevo.
+                key={`${turno.prioridad}-${turno.prioridad_nota ?? ""}`}
+                idTurno={turno.id_turno}
+                prioridad={turno.prioridad}
+                nota={turno.prioridad_nota}
+              />
+            )}
+          </dd>
           {turno.estado === "cancelado" && (
             <>
               <dt>Motivo de cancelación</dt>
@@ -157,6 +180,12 @@ export default async function TurnoPage({ params, searchParams }: Props) {
           aunque después se cancele, se marque ausente o se reprograme. */}
       <div className="tarjeta bloque-pago">
         <h3>Pago</h3>
+        {/* HU-17: estado de cobro calculado por la base (texto + color). */}
+        {turno.estado_cobro && (
+          <p>
+            Estado de cobro: <EstadoCobroBadge estado={turno.estado_cobro} />
+          </p>
+        )}
         {errorPago ? (
           <p className="mensaje-error" role="alert">
             {errorPago}
@@ -172,9 +201,17 @@ export default async function TurnoPage({ params, searchParams }: Props) {
               ` · Reembolsado ${formatearMomento(detallePago.reembolso.registrado_en)}`}{" "}
             <Link href={`/turnos/${turno.id_turno}/pago?volver=turno`}>
               {puedeCorregirPago(detallePago.pago) ? "Ver o corregir" : "Ver detalle"}
+            </Link>{" "}
+            {/* HU-35: un turno con pago tiene su comprobante. */}
+            <Link
+              className="boton-secundario boton-inline"
+              href={urlComprobante(detallePago.pago.id_pago)}
+            >
+              Ver comprobante
             </Link>
           </p>
         ) : detallePago?.cobrable ? (
+          // HU-17: Pendiente de pago → el único camino a Pagado es registrar el pago (HU-14).
           <p>
             Sin pago registrado.{" "}
             <Link

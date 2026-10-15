@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   armarMes,
+  colorPorEstado,
   diaElegido,
   esMesValido,
   nombreMes,
@@ -23,7 +24,14 @@ const turno = (fecha, estado = "confirmado", hora = "09:00") => ({
   nombre_servicio: "Evaluación inicial",
 });
 
-test("proximidad: hoy rojo, 1-3 días naranja, 4-7 verde, más de 7 azul", () => {
+test("color del turno: confirmado azul, atendido verde, ausente naranja y cancelado gris", () => {
+  assert.equal(colorPorEstado("confirmado"), "azul");
+  assert.equal(colorPorEstado("atendido"), "verde");
+  assert.equal(colorPorEstado("ausente"), "naranja");
+  assert.equal(colorPorEstado("cancelado"), "gris");
+});
+
+test("proximidad: icono para hoy, 1-3, 4-7 y más de 7 días", () => {
   const hoy = "2026-09-29";
   assert.equal(proximidad(turno("2026-09-29"), hoy), "hoy");
   assert.equal(proximidad(turno("2026-09-30"), hoy), "pronto");
@@ -31,17 +39,18 @@ test("proximidad: hoy rojo, 1-3 días naranja, 4-7 verde, más de 7 azul", () =>
   assert.equal(proximidad(turno("2026-10-03"), hoy), "semana");
   assert.equal(proximidad(turno("2026-10-06"), hoy), "semana");
   assert.equal(proximidad(turno("2026-10-07"), hoy), "lejos");
+  assert.equal(proximidad(turno("2026-10-08"), hoy), "lejos");
 });
 
-test("proximidad: atendidos, cancelados, ausentes y confirmados pasados van en gris", () => {
+test("sin icono de proximidad para atendidos, cancelados, ausentes y confirmados pasados", () => {
   const hoy = "2026-09-29";
-  assert.equal(proximidad(turno("2026-09-29", "atendido"), hoy), "gris");
-  assert.equal(proximidad(turno("2026-10-01", "cancelado"), hoy), "gris");
-  assert.equal(proximidad(turno("2026-09-28", "ausente"), hoy), "gris");
-  assert.equal(proximidad(turno("2026-09-28"), hoy), "gris");
+  assert.equal(proximidad(turno("2026-09-29", "atendido"), hoy), null);
+  assert.equal(proximidad(turno("2026-10-01", "cancelado"), hoy), null);
+  assert.equal(proximidad(turno("2026-09-28", "ausente"), hoy), null);
+  assert.equal(proximidad(turno("2026-09-28"), hoy), null);
 });
 
-test("el color no va solo: texto de proximidad junto a cada turno", () => {
+test("el ícono tiene texto accesible y el turno conserva su estado textual", () => {
   assert.equal(textoProximidad("2026-09-29", "2026-09-29"), "Hoy");
   assert.equal(textoProximidad("2026-09-30", "2026-09-29"), "Mañana");
   assert.equal(textoProximidad("2026-10-04", "2026-09-29"), "En 5 días");
@@ -105,4 +114,27 @@ test("solo el Profesional ve el dashboard y el id sale de la sesión", () => {
 test("cada turno del día abre /mi-agenda/[id]", () => {
   const componente = readFileSync("src/components/dashboard/DashboardProfesional.tsx", "utf8");
   assert.match(componente, /href=\{`\/mi-agenda\/\$\{t\.id_turno\}`\}/);
+  assert.match(componente, /Colores = estado/);
+  assert.match(componente, /Íconos = proximidad/);
+  assert.match(componente, /aria-label/);
+  assert.match(componente, /turno-color-\$\{colorPorEstado\(t\.estado\)\}/);
+});
+
+test("la leyenda y los SVG incluyen íconos de proximidad hasta más de 7 días", () => {
+  const componente = readFileSync("src/components/dashboard/DashboardProfesional.tsx", "utf8");
+  const calendario = readFileSync("src/lib/dashboard/calendario.ts", "utf8");
+  for (const tipo of ["hoy", "pronto", "semana", "lejos"]) {
+    assert.match(componente, new RegExp(`tipo === "${tipo}"`));
+  }
+  assert.match(calendario, /\{ proximidad: "lejos", texto: "Más de 7 días" \}/);
+  assert.doesNotMatch(componente, /Más de 7 días: sin ícono/);
+});
+
+test("EstadoTurnoBadge comparte los colores por estado en las agendas", () => {
+  const badge = readFileSync("src/components/turnos/EstadoTurnoBadge.tsx", "utf8");
+  assert.match(badge, /colorPorEstado\(estado\)/);
+  for (const ruta of ["agenda/page.tsx", "mi-agenda/page.tsx", "turnos/page.tsx"]) {
+    const codigo = readFileSync(`src/app/(main)/${ruta}`, "utf8");
+    assert.match(codigo, /EstadoTurnoBadge/);
+  }
 });

@@ -4,9 +4,11 @@ import {
   armarMes,
   diaElegido,
   esMesValido,
+  colorPorEstado,
   mesDeFecha,
   nombreMes,
   proximidad,
+  REFERENCIAS_ESTADO,
   REFERENCIAS_PROXIMIDAD,
   sumarMeses,
   textoProximidad,
@@ -31,7 +33,70 @@ const ETIQUETA_ESTADO: Record<EstadoTurno, string> = {
 // En cada día del calendario se ven hasta 3 turnos; el resto, en la lista del día.
 const TURNOS_POR_CELDA = 3;
 
-// HU-15. Dashboard del Profesional en Inicio. Server Component: el mes y el día elegido
+function IconoProximidad({
+  tipo,
+  etiqueta,
+  decorativo = false,
+}: {
+  tipo: "hoy" | "pronto" | "semana" | "lejos";
+  etiqueta: string;
+  decorativo?: boolean;
+}) {
+  const accesibilidad = decorativo
+    ? { "aria-hidden": true as const }
+    : { role: "img" as const, "aria-label": etiqueta, title: etiqueta };
+
+  return (
+    <svg
+      className={`proximidad-icono proximidad-icono-${tipo}`}
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      focusable="false"
+      {...accesibilidad}
+    >
+      {tipo === "hoy" && (
+        <>
+          <path d="M5.2 5.2 3.7 3.7M18.8 5.2l1.5-1.5M8 3h8" />
+          <circle cx="12" cy="13" r="8" />
+          <path d="M12 8v5l3.2 2M9.2 21h5.6" />
+          <circle cx="12" cy="13" r=".75" fill="currentColor" stroke="none" />
+        </>
+      )}
+      {tipo === "pronto" && (
+        <>
+          <path d="M7 3h10M7 21h10M8 3c0 4.5 4 4.5 4 9s-4 4.5-4 9M16 3c0 4.5-4 4.5-4 9s4 4.5 4 9" />
+          <path d="M9.4 6.2h5.2M9.4 17.8h5.2" />
+          <path d="M10 8.2 12 10l2-1.8zM10 15.8 12 14l2 1.8z" fill="currentColor" stroke="none" opacity=".28" />
+        </>
+      )}
+      {tipo === "semana" && (
+        <>
+          <rect x="3" y="4.5" width="18" height="17" rx="3" />
+          <path d="M8 2.5v4M16 2.5v4M3 9h18" />
+          <rect x="5.5" y="11.5" width="13" height="3.5" rx="1.5" fill="currentColor" stroke="none" opacity=".2" />
+          <path d="M7.5 13.2h9M7.5 17.8h.01M11.5 17.8h.01M15.5 17.8h.01" />
+        </>
+      )}
+      {tipo === "lejos" && (
+        <>
+          <path d="M3 7V5.5A2.5 2.5 0 0 1 5.5 3H16" />
+          <path d="M6 7.5h12.5A2.5 2.5 0 0 1 21 10v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7.5Z" />
+          <path d="M10 5.5v4M16 5.5v4M6 11h15" />
+          <path d="M9.5 14.5h.01M12.5 14.5h.01M9.5 17.5h.01" />
+          <path d="M14 17.5h4m-1.7-1.7 1.7 1.7-1.7 1.7" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+// HU-15/HU-36. Dashboard del Profesional en Inicio. Server Component: el mes y el día elegido
 // van en la URL (?mes=2026-09&dia=2026-09-29), así recargar o volver mantiene la vista.
 export async function DashboardProfesional({
   hoy,
@@ -154,20 +219,30 @@ export async function DashboardProfesional({
                         >
                           <span className="dia-numero">{celda.dia}</span>
                           {bloqueosEnFecha(celda.fecha, bloqueos.data).slice(0, 1).map((bloqueo) => (
-                            <span key={bloqueo.id_bloqueo} className="turno-chip prox-gris" title={textoBloqueo(bloqueo)}>
+                            <span key={bloqueo.id_bloqueo} className="turno-chip turno-chip-bloqueo" title={textoBloqueo(bloqueo)}>
                               Bloqueado
                             </span>
                           ))}
-                          {celda.turnos.slice(0, TURNOS_POR_CELDA).map((t) => (
-                            <span
-                              key={t.id_turno}
-                              className={`turno-chip prox-${proximidad(t, hoy)}`}
-                              title={`${t.hora_inicio} ${ETIQUETA_ESTADO[t.estado]} · ${t.apellido_paciente}, ${t.nombre_paciente}`}
-                            >
-                              {t.hora_inicio}{" "}
-                              <span className="turno-chip-estado">{ETIQUETA_ESTADO[t.estado]}</span>
-                            </span>
-                          ))}
+                          {celda.turnos.slice(0, TURNOS_POR_CELDA).map((t) => {
+                            const cercania = proximidad(t, hoy);
+                            return (
+                              <span
+                                key={t.id_turno}
+                                className={`turno-chip turno-color-${colorPorEstado(t.estado)}`}
+                                title={`${t.hora_inicio} ${ETIQUETA_ESTADO[t.estado]} · ${t.apellido_paciente}, ${t.nombre_paciente}`}
+                              >
+                                <span className="turno-chip-texto">
+                                  {t.hora_inicio} <span className="turno-chip-estado">{ETIQUETA_ESTADO[t.estado]}</span>
+                                </span>
+                                {cercania && (
+                                  <IconoProximidad
+                                    tipo={cercania}
+                                    etiqueta={textoProximidad(t.fecha.slice(0, 10), hoy)}
+                                  />
+                                )}
+                              </span>
+                            );
+                          })}
                           {celda.turnos.length > TURNOS_POR_CELDA && (
                             <span className="turno-chip-mas">
                               +{celda.turnos.length - TURNOS_POR_CELDA} más
@@ -183,14 +258,30 @@ export async function DashboardProfesional({
           </table>
         </div>
 
-        <ul className="referencias-proximidad" aria-label="Referencias de colores">
-          {REFERENCIAS_PROXIMIDAD.map((r) => (
-            <li key={r.proximidad}>
-              <span className={`referencia-color prox-${r.proximidad}`} aria-hidden="true" />
-              {r.texto}
-            </li>
-          ))}
-        </ul>
+        <div className="referencias-calendario" aria-label="Referencias del calendario">
+          <div className="referencia-grupo">
+            <strong>Colores = estado</strong>
+            <ul className="referencias-proximidad">
+              {REFERENCIAS_ESTADO.map((r) => (
+                <li key={r.estado}>
+                  <span className={`referencia-color turno-color-${colorPorEstado(r.estado)}`} aria-hidden="true" />
+                  {r.texto}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="referencia-grupo">
+            <strong>Íconos = proximidad</strong>
+            <ul className="referencias-proximidad">
+              {REFERENCIAS_PROXIMIDAD.map((r) => (
+                <li key={r.proximidad}>
+                  <IconoProximidad tipo={r.proximidad} etiqueta={r.texto} decorativo />
+                  {r.texto}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </section>
 
       {elegido && (
@@ -228,13 +319,22 @@ export async function DashboardProfesional({
                   </tr>
                 </thead>
                 <tbody>
-                  {turnosDelDia.map((t) => (
+                  {turnosDelDia.map((t) => {
+                    const cercania = proximidad(t, hoy);
+                    return (
                     <tr key={t.id_turno} className={t.estado === "cancelado" ? "fila-cancelada" : undefined}>
                       <td>
-                        <span className={`referencia-color prox-${proximidad(t, hoy)}`} aria-hidden="true" />
-                        {t.hora_inicio} a {t.hora_fin}
+                        <div className="horario-con-proximidad">
+                          <span>{t.hora_inicio} a {t.hora_fin}</span>
+                          {cercania && (
+                            <IconoProximidad
+                              tipo={cercania}
+                              etiqueta={textoProximidad(t.fecha.slice(0, 10), hoy)}
+                            />
+                          )}
+                        </div>
                         <span className="texto-suave proximidad-texto">
-                          {formatearFechaCorta(t.fecha)} · {textoProximidad(t.fecha.slice(0, 10), hoy)}
+                          {formatearFechaCorta(t.fecha)}
                         </span>
                       </td>
                       <td>
@@ -250,7 +350,8 @@ export async function DashboardProfesional({
                         </Link>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

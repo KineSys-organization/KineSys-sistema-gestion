@@ -35,12 +35,15 @@ const MATRIZ = {
   // HU-12/HU-13: la agenda propia y la atención son solo del Profesional.
   "/mi-agenda": [false, false, true],
   "/mi-agenda/abc": [false, false, true],
+  // HU-39: la historia clínica es solo del Profesional (lo clínico no lo ve Recepción).
+  "/historia-clinica/abc": [false, false, true],
   // HU-26: indicadores generales, solo Gerente.
   "/indicadores": [true, false, false],
   "/bloqueos": [true, false, false], // HU-33
   // HU-14: pagos, Recepción y Gerente.
   "/pagos": [true, true, false],
   "/turnos/abc/pago": [true, true, false],
+  "/pagos/abc/comprobante": [true, true, false], // HU-35
 };
 const ORDEN_ROLES = ["Gerente", "Mesa de Entradas", "Profesional"];
 
@@ -96,9 +99,13 @@ test("puedeHacer: cada acción según el rol", () => {
     "turnos.reprogramar": [true, true, false],
     "turnos.buscar": [true, true, false],
     "turnos.repetir": [true, true, false], // HU-25
+    "turnos.prioridad": [true, true, false], // HU-20
     "atencion.agenda": [false, false, true],
     "atencion.registrar": [false, false, true],
     "atencion.dashboard": [false, false, true],
+    "historia.consultar": [false, false, true], // HU-39
+    "historia.registrar": [false, false, true],
+    "ordenes.consultar": [true, false, true], // HU-24B
     "indicadores.consultar": [true, false, false],
     "bloqueos.gestionar": [true, false, false], // HU-33
     "bloqueos.consultar": [true, true, true], // HU-33
