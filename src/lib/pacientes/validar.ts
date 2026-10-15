@@ -148,6 +148,7 @@ export type FiltrosPacientes = {
   obra: string | null; // null = todas; "particular"; o el uuid de la obra
   edadMin: number | null;
   edadMax: number | null;
+  estado: "activos" | "inactivos" | "todos";
 };
 
 const UUID_FILTRO =
@@ -158,6 +159,7 @@ export function leerFiltrosPacientes(params: {
   q?: string;
   obra?: string;
   edad?: string;
+  estado?: string;
 }): FiltrosPacientes {
   const obra = (params.obra ?? "").trim();
   const rango = RANGOS_EDAD.find((r) => r.valor === (params.edad ?? "").trim());
@@ -168,6 +170,9 @@ export function leerFiltrosPacientes(params: {
     obra: obra === OBRA_PARTICULAR || UUID_FILTRO.test(obra) ? obra : null,
     edadMin: min ? Number(min) : null,
     edadMax: max ? Number(max) : null,
+    estado: params.estado === "inactivos" || params.estado === "todos"
+      ? params.estado
+      : "activos",
   };
 }
 
