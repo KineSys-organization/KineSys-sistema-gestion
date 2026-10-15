@@ -5,12 +5,14 @@ import {
   etiquetaMedio,
   etiquetaMotivoReembolso,
   formatearMomento,
+  formatearNumeroComprobante,
   formatearPesos,
   leerFiltrosPagos,
   MEDIOS_PAGO,
   MENSAJE_SIN_PAGOS,
   OPCIONES_FILTRO_REEMBOLSO,
   totalPaginasPagos,
+  urlComprobante,
   urlPagos,
   type ParamsPagos,
 } from "@/lib/pagos/validar";
@@ -70,6 +72,20 @@ export default async function PagosPage({ searchParams }: Props) {
             placeholder="DNI o nombre y apellido"
           />
         </div>
+        {/* HU-35: búsqueda por nº de comprobante ("123" o "0000123"). */}
+        <div className="campo">
+          <label htmlFor="numero">Nº de comprobante</label>
+          <input
+            id="numero"
+            name="numero"
+            inputMode="numeric"
+            pattern="\d{1,12}"
+            maxLength={12}
+            defaultValue={filtros.numero ? formatearNumeroComprobante(filtros.numero) : ""}
+            placeholder="0000123"
+            title="Solo números"
+          />
+        </div>
         {/* Período de la fecha del pago (no la del turno). */}
         <RangoFechas desde={filtros.desde ?? ""} hasta={filtros.hasta ?? ""} />
         <div className="campo">
@@ -124,6 +140,7 @@ export default async function PagosPage({ searchParams }: Props) {
           <table className="tabla">
             <thead>
               <tr>
+                <th>Nº</th>
                 <th>Paciente</th>
                 <th>Fecha del turno</th>
                 <th>Servicio</th>
@@ -137,6 +154,7 @@ export default async function PagosPage({ searchParams }: Props) {
             <tbody>
               {pagos.map((pago) => (
                 <tr key={pago.id_pago}>
+                  <td>{formatearNumeroComprobante(pago.numero_comprobante)}</td>
                   <td>
                     {pago.apellido_paciente}, {pago.nombre_paciente}
                     <span className="texto-suave"> · DNI {pago.dni_paciente}</span>
@@ -169,9 +187,15 @@ export default async function PagosPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td>
-                    <Link className="boton-pill" href={`/turnos/${pago.id_turno}/pago`}>
-                      Ver detalle
-                    </Link>
+                    <div className="fila-acciones">
+                      <Link className="boton-pill" href={`/turnos/${pago.id_turno}/pago`}>
+                        Ver detalle
+                      </Link>
+                      {/* HU-35: el mismo comprobante, listo para reimprimir. */}
+                      <Link className="boton-pill" href={urlComprobante(pago.id_pago)}>
+                        Ver comprobante
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}
