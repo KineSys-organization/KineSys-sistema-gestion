@@ -2,6 +2,7 @@ import Link from "next/link";
 import { exigirProfesional } from "@/lib/auth";
 import { AtencionForm } from "@/components/atencion/AtencionForm";
 import { DatosAutomaticosOrden, OrdenMedica } from "@/components/atencion/OrdenMedica";
+import { PrioridadBadge } from "@/components/turnos/PrioridadBadge";
 import { consultarMiAgenda, obtenerMiTurno } from "@/lib/atencion/actions";
 import { calcularEdad, hoyArgentina } from "@/lib/atencion/validar";
 import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
@@ -102,9 +103,13 @@ export default async function MiTurnoPage({ params, searchParams }: Props) {
             {formatearFecha(turno.fecha)} · {turno.hora_inicio} a {turno.hora_fin}
           </p>
         </div>
-        <span className={CLASE_ESTADO[turno.estado] ?? "badge-inactivo"}>
-          {ETIQUETA_ESTADO[turno.estado] ?? turno.estado}
-        </span>
+        <div className="fila-acciones">
+          {/* HU-20: Alta / Urgente (solo lectura para el Profesional). */}
+          <PrioridadBadge prioridad={turno.prioridad} />
+          <span className={CLASE_ESTADO[turno.estado] ?? "badge-inactivo"}>
+            {ETIQUETA_ESTADO[turno.estado] ?? turno.estado}
+          </span>
+        </div>
       </div>
 
       {mensajeOk && (

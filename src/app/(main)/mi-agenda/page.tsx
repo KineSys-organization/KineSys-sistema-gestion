@@ -4,6 +4,7 @@ import { consultarMiAgenda } from "@/lib/atencion/actions";
 import { esFechaValida, hoyArgentina, sumarDias } from "@/lib/atencion/validar";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
+import { PrioridadBadge } from "@/components/turnos/PrioridadBadge";
 
 type Props = {
   searchParams: Promise<{ fecha?: string }>;
@@ -120,6 +121,8 @@ export default async function MiAgendaPage({ searchParams }: Props) {
                     </td>
                     <td>
                       {turno.apellido_paciente}, {turno.nombre_paciente}
+                      {/* HU-20: el Profesional ve la prioridad, no la cambia. */}
+                      <PrioridadBadge prioridad={turno.prioridad} />
                     </td>
                     <td>{turno.dni_paciente}</td>
                     <td>{turno.nombre_servicio}</td>

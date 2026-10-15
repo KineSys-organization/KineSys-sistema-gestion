@@ -3,6 +3,7 @@
 // El filtrado y la paginación los hace fn_buscar_turnos.
 
 import type { EstadoTurno } from "./tipos";
+import { esPrioridad, type Prioridad } from "./prioridad";
 
 const UUID_OK =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -29,6 +30,7 @@ export type FiltrosTurnos = {
   desde: string | null; // null = sin límite
   hasta: string | null;
   estado: EstadoTurno | null; // null = Todos
+  prioridad: Prioridad | null; // HU-20: null = Todas
   pagina: number;
 };
 
@@ -40,6 +42,7 @@ export type ParamsTurnos = {
   desde?: string;
   hasta?: string;
   estado?: string;
+  prioridad?: string; // HU-20
   pagina?: string;
 };
 
@@ -65,6 +68,8 @@ export function leerFiltrosTurnos(params: ParamsTurnos, hoy: string): FiltrosTur
     desde: primeraEntrada ? hoy : params.desde?.trim() || null,
     hasta: primeraEntrada ? hoy : params.hasta?.trim() || null,
     estado,
+    // HU-20: una prioridad desconocida cuenta como "Todas".
+    prioridad: esPrioridad(params.prioridad) ? params.prioridad : null,
     pagina: Number.isInteger(pagina) && pagina >= 1 ? pagina : 1,
   };
 }
@@ -89,6 +94,7 @@ export function urlTurnos(filtros: FiltrosTurnos, pagina = 1): string {
   params.set("desde", filtros.desde ?? "");
   params.set("hasta", filtros.hasta ?? "");
   if (filtros.estado) params.set("estado", filtros.estado);
+  if (filtros.prioridad) params.set("prioridad", filtros.prioridad);
   if (pagina > 1) params.set("pagina", String(pagina));
   return `/turnos?${params.toString()}`;
 }

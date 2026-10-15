@@ -2140,3 +2140,43 @@ a.badge-horario:hover {
 .item-orden .bloque-orden-medica {
   margin-top: 4px;
 }
+
+/* ============ HU-20: prioridad del turno (texto + color; Normal sin marca) ============ */
+.badge-prioridad {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.badge-prioridad-normal {
+  margin-left: 0;
+  background: #eef1f4;
+  color: #56616b;
+}
+
+.badge-prioridad-alta {
+  background: #fff4e0;
+  border-color: #f0b44c;
+  color: #8a4b00; /* 6.5:1 sobre el fondo */
+}
+
+.badge-prioridad-urgente {
+  background: #fde8e8;
+  border-color: #e07070;
+  color: #9b1c1c; /* 7:1 sobre el fondo */
+}
+
+.form-prioridad {
+  margin-top: 10px;
+}
+
+dd .boton-pill {
+  margin-left: 8px;
+}

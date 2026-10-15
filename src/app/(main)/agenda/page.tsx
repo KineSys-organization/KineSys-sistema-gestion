@@ -8,6 +8,7 @@ import { DescargarHorarioPdfButton } from "@/components/profesionales/DescargarH
 import { urlPasoPaciente } from "@/lib/turnos/flujo";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
+import { PrioridadBadge } from "@/components/turnos/PrioridadBadge";
 import { obtenerDiasSemana } from "@/lib/agenda/semana";
 import type { TurnoAgenda } from "@/lib/agenda/tipos";
 
@@ -40,6 +41,8 @@ function TablaTurnos({ turnos }: { turnos: TurnoAgenda[] }) {
               </td>
               <td>
                 {turno.apellido_paciente}, {turno.nombre_paciente}
+                {/* HU-20: Alta / Urgente, en la vista diaria y en la semanal. */}
+                <PrioridadBadge prioridad={turno.prioridad} />
               </td>
               <td>{turno.dni_paciente}</td>
               <td>{turno.nombre_servicio}</td>

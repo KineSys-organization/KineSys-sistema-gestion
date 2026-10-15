@@ -97,6 +97,7 @@ test("puedeHacer: cada acción según el rol", () => {
     "turnos.reprogramar": [true, true, false],
     "turnos.buscar": [true, true, false],
     "turnos.repetir": [true, true, false], // HU-25
+    "turnos.prioridad": [true, true, false], // HU-20
     "atencion.agenda": [false, false, true],
     "atencion.registrar": [false, false, true],
     "atencion.dashboard": [false, false, true],

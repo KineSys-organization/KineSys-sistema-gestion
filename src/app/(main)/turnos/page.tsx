@@ -15,6 +15,8 @@ import { urlPasoPaciente } from "@/lib/turnos/flujo";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
 import { RangoFechas } from "@/components/turnos/RangoFechas";
+import { PrioridadBadge } from "@/components/turnos/PrioridadBadge";
+import { PRIORIDADES } from "@/lib/turnos/prioridad";
 
 type Props = {
   searchParams: Promise<ParamsTurnos>;
@@ -106,6 +108,18 @@ export default async function TurnosPage({ searchParams }: Props) {
             ))}
           </select>
         </div>
+        {/* HU-20: combinable con los demás filtros. */}
+        <div className="campo">
+          <label htmlFor="prioridad">Prioridad</label>
+          <select id="prioridad" name="prioridad" defaultValue={filtros.prioridad ?? ""}>
+            <option value="">Todas</option>
+            {PRIORIDADES.map((p) => (
+              <option key={p.valor} value={p.valor}>
+                {p.etiqueta}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="fila-acciones">
           <button className="boton-principal boton-inline" type="submit">
             Filtrar
@@ -158,6 +172,8 @@ export default async function TurnosPage({ searchParams }: Props) {
                   </td>
                   <td>
                     {turno.apellido_paciente}, {turno.nombre_paciente}
+                    {/* HU-20: Alta / Urgente (Normal sin marca). */}
+                    <PrioridadBadge prioridad={turno.prioridad} />
                   </td>
                   <td>{turno.dni_paciente}</td>
                   <td>

@@ -1,3 +1,5 @@
+import type { Prioridad } from "./prioridad";
+
 // HU-13 suma "atendido".
 export type EstadoTurno = "confirmado" | "cancelado" | "ausente" | "atendido";
 
@@ -38,6 +40,10 @@ export type Turno = {
   id_obra_social: string | null;
   cobertura: string;
   numero_afiliado: string | null;
+  // HU-20: prioridad (marca visual). Editable: confirmado y todavía no empezó.
+  prioridad: Prioridad;
+  prioridad_nota: string | null;
+  prioridad_editable: boolean;
   // HU-10A: datos de la cancelación (null si no está cancelado).
   motivo_cancelacion: string | null;
   detalle_cancelacion: string | null;
@@ -72,6 +78,7 @@ export type TurnoListado = {
   hora_fin: string;
   estado: EstadoTurno;
   motivo_cancelacion: string | null;
+  prioridad: Prioridad; // HU-20
   id_paciente: string;
   nombre_paciente: string;
   apellido_paciente: string;

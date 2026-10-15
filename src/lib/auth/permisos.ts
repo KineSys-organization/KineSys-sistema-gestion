@@ -49,6 +49,7 @@ export const PERMISOS_ACCIONES = {
   "turnos.reprogramar": RECEPCION, // HU-10C
   "turnos.buscar": RECEPCION, // HU-09: listado con filtros
   "turnos.repetir": RECEPCION, // HU-25: repetir un turno las próximas semanas
+  "turnos.prioridad": RECEPCION, // HU-20: cambiar la prioridad (el Profesional solo la ve)
   "atencion.agenda": SOLO_PROFESIONAL, // HU-12: su agenda y sus turnos (la base filtra por auth.uid())
   "atencion.registrar": SOLO_PROFESIONAL, // HU-13: registrar y editar la atención
   "atencion.dashboard": SOLO_PROFESIONAL, // HU-15: su dashboard en Inicio (la base filtra por auth.uid())
