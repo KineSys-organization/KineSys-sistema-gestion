@@ -114,6 +114,48 @@ select {
   background: var(--blanco);
 }
 
+.campo-password {
+  position: relative;
+}
+
+.campo-password input {
+  padding-right: 52px !important;
+}
+
+.boton-mostrar-password {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gris-texto);
+  cursor: pointer;
+}
+
+.boton-mostrar-password:hover {
+  background: var(--fondo);
+  color: var(--azul-principal);
+}
+
+.boton-mostrar-password:focus-visible {
+  outline: 2px solid var(--celeste);
+}
+
+.boton-mostrar-password svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
 .campo input:not([type="checkbox"]):focus,
 .campo select:focus {
   outline: 2px solid var(--celeste);
@@ -1935,4 +1977,81 @@ a.badge-horario:hover {
 .proximidad-texto {
   display: block;
   font-size: 12px;
+}
+
+/* HU-39: historia clínica del paciente. */
+.ficha-clinica .ficha-fila {
+  display: contents;
+}
+
+.ficha-clinica dt {
+  max-width: 220px;
+}
+
+.ultima-modificacion {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+
+.form-historia {
+  margin: 0 0 16px;
+}
+
+.versiones-historia {
+  margin-top: 16px;
+  border-top: 1px solid var(--borde);
+  padding-top: 12px;
+}
+
+.versiones-historia summary {
+  cursor: pointer;
+  color: var(--azul-principal);
+  font-weight: 600;
+}
+
+.version-historia {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--fondo);
+}
+
+.lista-evolucion {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item-evolucion {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.item-evolucion:last-child {
+  border-bottom: 0;
+}
+
+.evolucion-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0 0 8px;
+}
+
+@media print {
+  /* La historia puede ocupar varias páginas: fixed (HU-27) imprimiría solo la primera. */
+  .historia-impresion {
+    position: absolute !important;
+    top: 0;
+  }
+
+  .historia-impresion h4 {
+    margin: 20px 0 8px;
+    color: var(--azul-principal);
+  }
+
+  .historia-impresion .item-evolucion {
+    page-break-inside: avoid;
+  }
 }
