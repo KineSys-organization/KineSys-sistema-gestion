@@ -2,6 +2,7 @@
 // HU-22: fn_registrar_reembolso devuelve lo mismo que fn_obtener_pago.
 // Los importes llegan como number (numeric de la base, en pesos).
 import type { EstadoTurno } from "@/lib/turnos/tipos";
+import type { EstadoCobro } from "@/lib/pagos/cobro";
 
 export type TurnoParaPago = {
   id_turno: string;
@@ -20,6 +21,7 @@ export type TurnoParaPago = {
   id_obra_social: string | null; // null = Particular
   cobertura: string;
   numero_afiliado: string | null;
+  estado_cobro: EstadoCobro; // HU-17 (también para el comprobante, HU-35)
 };
 
 // HU-17: la base lo deriva (Reembolsado = tiene fila en reembolso). No hay columna estado.

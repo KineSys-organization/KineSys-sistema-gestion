@@ -9,6 +9,7 @@ import { obtenerTurno } from "@/lib/turnos/actions";
 import { obtenerPagoTurno } from "@/lib/pagos/actions";
 import { etiquetaMedio, formatearPesos, puedeCorregirPago } from "@/lib/pagos/validar";
 import { EstadoPagoBadge } from "@/components/pagos/EstadoPagoBadge";
+import { EstadoCobroBadge } from "@/components/pagos/EstadoCobroBadge";
 import { urlPasoHorario, urlPasoPaciente } from "@/lib/turnos/flujo";
 import { etiquetaMotivo, formatearFecha } from "@/lib/turnos/validar";
 
@@ -148,6 +149,12 @@ export default async function TurnoPage({ params, searchParams }: Props) {
           aunque después se cancele, se marque ausente o se reprograme. */}
       <div className="tarjeta bloque-pago">
         <h3>Pago</h3>
+        {/* HU-17: estado de cobro calculado por la base (texto + color). */}
+        {turno.estado_cobro && (
+          <p>
+            Estado de cobro: <EstadoCobroBadge estado={turno.estado_cobro} />
+          </p>
+        )}
         {errorPago ? (
           <p className="mensaje-error" role="alert">
             {errorPago}
@@ -166,6 +173,7 @@ export default async function TurnoPage({ params, searchParams }: Props) {
             </Link>
           </p>
         ) : detallePago?.cobrable ? (
+          // HU-17: Pendiente de pago → el único camino a Pagado es registrar el pago (HU-14).
           <p>
             Sin pago registrado.{" "}
             <Link
