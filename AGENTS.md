@@ -366,7 +366,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - En `/` (Inicio), solo para el **Profesional** (acción `atencion.dashboard`); Recepción y Gerente no lo ven (usan `/agenda`). Mes y día elegido en la URL: `/?mes=2026-10&dia=2026-10-05`.
 - RPC: `fn_consultar_dashboard_profesional(mes)` (solo lectura, `fn_exigir_rol(['Profesional'])`, profesional = `auth.uid()`, sin parámetro de profesional). Devuelve `dia` (total sin cancelados, atendidos, pendientes = confirmados), `semana` (lunes a domingo de hoy, hora AR: cancelaciones y ausencias) y `mes` (sus turnos de ese mes, todos los estados).
 - Calendario mensual de lunes a domingo (sábado y domingo incluidos), hasta 3 turnos por día (hora + estado en texto) y la lista del día con link a `/mi-agenda/[id]`.
-- Color por proximidad solo en confirmados de hoy o futuros (`proximidad` en `src/lib/dashboard/calendario.ts`): hoy rojo, 1-3 días naranja, 4-7 verde, más de 7 azul; el resto gris.
+- HU-36 (#70) reemplaza el color por proximidad: color según estado (confirmado azul, atendido verde, ausente naranja, cancelado gris) e ícono según proximidad (hoy, 1-3, 4-7 y más de 7 días; sin ícono en turnos no confirmados/pasados). Los colores de `EstadoTurnoBadge` son compartidos por `/agenda`, `/mi-agenda` y `/turnos`; ver `docs/hu-36-calendario-colores-proximidad.md`.
 - SQL: `supabase/migrations/017_hu15_dashboard_profesional.sql`. Pruebas: `supabase/tests/hu15_dashboard_profesional.sql` y `tests/hu15-dashboard.test.mjs` (`npm test`). Evidencia en `docs/hu-15-dashboard-profesional.md`.
 
 ### HU-39 — Historia clínica del paciente (Profesional)
