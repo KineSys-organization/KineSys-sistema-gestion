@@ -11,6 +11,7 @@
 # next
 /.next/
 /out/
+/.vercel/
 
 # env — nunca subir claves
 .env

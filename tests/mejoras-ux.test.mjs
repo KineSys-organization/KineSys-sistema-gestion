@@ -73,12 +73,14 @@ test("filtros de pacientes: lee la URL e ignora lo inválido", () => {
     obra: null,
     edadMin: null,
     edadMax: null,
+    estado: "activos",
   });
   assert.deepEqual(leerFiltrosPacientes({ q: " Perez ", obra: uuid, edad: "18-39" }), {
     texto: "Perez",
     obra: uuid,
     edadMin: 18,
     edadMax: 39,
+    estado: "activos",
   });
   const mayores = leerFiltrosPacientes({ edad: "65-", obra: OBRA_PARTICULAR });
   assert.equal(mayores.edadMin, 65);
