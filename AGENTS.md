@@ -2,7 +2,7 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Personal interno** HU-29/HU-30, **Obras sociales** HU-31/HU-32, **Indicadores generales** HU-26 en su vista corta del Incremento 2) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14 con reembolsos HU-22 y billetera virtual HU-21, **Estado de cobro** HU-17, **Prioridad del turno** HU-20), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 con orden médica HU-24A/HU-38, **Historial de órdenes** HU-24B, **Dashboard** en Inicio HU-15 e **Historia clínica** HU-39), con control de acceso por rol (HU-08). El comprobante de pago (HU-35) y el resto de los indicadores siguen pendientes.
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Personal interno** HU-29/HU-30, **Obras sociales** HU-31/HU-32, **Indicadores generales** HU-26, **Dashboard operativo** HU-18 e **Indicadores económicos** HU-19) y recepción (**Pacientes**, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14 con reembolsos HU-22 y billetera virtual HU-21, **Estado de cobro** HU-17, **Prioridad del turno** HU-20), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 con orden médica HU-24A/HU-38, **Historial de órdenes** HU-24B, **Dashboard** en Inicio HU-15 e **Historia clínica** HU-39), con control de acceso por rol (HU-08). El comprobante de pago (HU-35) sigue pendiente.
 
 Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
@@ -129,7 +129,7 @@ src/
     (main)/mi-agenda/[id]    → paciente del turno + registrar/editar atención (HU-13) con orden médica (HU-24A / HU-38)
     (main)/mi-agenda/[id]/ordenes → historial de órdenes médicas del paciente del turno (HU-24B)
     (main)/historia-clinica/[paciente] → ficha clínica + evolución del paciente (HU-39, solo Profesional)
-    (main)/indicadores       → indicadores generales del centro (HU-26, solo Gerente)
+    (main)/indicadores       → indicadores del centro: generales (HU-26), económicos (HU-19) y operativos (HU-18), solo Gerente
     (main)/pagos             → listado de pagos con filtros (HU-14)
     (main)/turnos/[id]/pago  → registrar, consultar y corregir el pago del turno (HU-14)
   proxy.ts + middleware.ts  → Next 15 carga `src/middleware.ts`; la sesión se refresca en `src/lib/supabase/middleware.ts`
@@ -419,6 +419,17 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Evolución = atenciones de HU-13 del paciente con **todos** los profesionales (motivo, observaciones, orden médica de HU-24A), solo lectura. HU-16 va a sumar ahí el resto del historial.
 - PDF (Should): `ImprimirHistoriaButton` con el mecanismo de HU-27 (`.solo-impresion`); `.historia-impresion` imprime en varias páginas.
 - SQL: `supabase/migrations/024_hu39_historia_clinica.sql`. Pruebas: `supabase/tests/hu39_historia_clinica.sql` y `tests/hu39-historia-clinica.test.mjs` (`npm test`). Evidencia en `docs/hu-39-historia-clinica.md`.
+
+### HU-19 — Indicadores económicos del centro
+
+- Sección **Económicos** en `/indicadores` (ancla `#economicos`), con el mismo Desde / Hasta y atajos de HU-26. Solo **Gerente** (`exigirGerente`, acción `indicadores.consultar`).
+- RPC de solo lectura: `fn_consultar_indicadores_economicos(desde, hasta)` (`fn_exigir_rol(['Gerente'])`, período ≤ 366 días).
+- Ingresos brutos = suma de `pago.importe_final` (el vigente, si se corrigió) por **fecha del pago** en hora AR. Reembolsos (HU-22) por **fecha del reembolso**: restan en el período en que se registran. Netos = brutos − reembolsos. Cantidad de pagos y promedio.
+- Desglose por medio (los 5, con Billetera de HU-21), particular vs obra social (cobertura del turno) y total de descuentos. Turnos del período **pendientes de cobro** con la regla de HU-17 (sin estimar importes).
+- Evolución: período anterior de igual duración (los mismos días, justo antes): variación en $ y %. Anterior en 0 → `variacion_porcentaje: null` → *Sin datos para comparar*.
+- (Should) Netos de los últimos 6 meses (barras en CSS) y desglose por servicio y por profesional del turno cobrado.
+- Front: `SeccionEconomicos` y `src/lib/indicadores/economicos.ts` (texto de la variación, meses, ancho de barras). Importes con `formatearPesos`.
+- SQL: `supabase/migrations/030_hu19_indicadores_economicos.sql`. Pruebas: `supabase/tests/hu19_indicadores_economicos.sql` y `tests/hu19-indicadores-economicos.test.mjs` (`npm test`). Evidencia en `docs/hu-19-indicadores-economicos.md`.
 
 ### HU-26 — Indicadores generales del centro (vista corta, Incremento 2)
 
