@@ -2469,3 +2469,21 @@ div.mensaje-ok p {
 dd .boton-pill {
   margin-left: 8px;
 }
+
+/* HU-23: turno online del paciente */
+.portal-titulo-ingreso {
+  margin: 0 0 1rem;
+  text-align: center;
+  color: #123b5d;
+  font-size: 1.15rem;
+}
+
+.form-cancelar-portal p {
+  margin: 0 0 0.5rem;
+}
+
+.form-cancelar-portal .acciones-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

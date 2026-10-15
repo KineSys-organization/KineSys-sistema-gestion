@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Marca } from "@/components/Marca";
 import { login, type EstadoLogin } from "./actions";
@@ -67,6 +68,10 @@ export default function LoginPage() {
         </form>
 
         <p className="login-nota">Sistema de gestión — acceso interno</p>
+        {/* HU-23: los pacientes sacan turno desde su propio ingreso. */}
+        <p className="login-nota">
+          <Link href="/portal/ingresar">¿Sos paciente? Sacá tu turno online</Link>
+        </p>
       </section>
     </main>
   );
