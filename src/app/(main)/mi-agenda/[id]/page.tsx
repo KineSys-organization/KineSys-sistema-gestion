@@ -154,6 +154,13 @@ export default async function MiTurnoPage({ params, searchParams }: Props) {
           href={urlHistoria(turno.id_paciente, { turno: turno.id_turno })}
         >
           Historia clínica
+        </Link>{" "}
+        {/* HU-24B: órdenes médicas del paciente (de todos los profesionales). */}
+        <Link
+          className="boton-secundario boton-inline"
+          href={`/mi-agenda/${turno.id_turno}/ordenes`}
+        >
+          Historial de órdenes
         </Link>
       </div>
 

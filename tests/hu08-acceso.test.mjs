@@ -102,6 +102,7 @@ test("puedeHacer: cada acción según el rol", () => {
     "atencion.dashboard": [false, false, true],
     "historia.consultar": [false, false, true], // HU-39
     "historia.registrar": [false, false, true],
+    "ordenes.consultar": [true, false, true], // HU-24B
     "indicadores.consultar": [true, false, false],
     "pagos.registrar": [true, true, false],
     "pagos.consultar": [true, true, false],

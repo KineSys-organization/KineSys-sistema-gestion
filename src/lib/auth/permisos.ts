@@ -12,6 +12,7 @@ export const MENSAJE_SIN_PERMISO = "No tenés permisos para realizar esta acció
 const SOLO_GERENTE: readonly Rol[] = ["Gerente"];
 const RECEPCION: readonly Rol[] = ["Gerente", "Mesa de Entradas"];
 const SOLO_PROFESIONAL: readonly Rol[] = ["Profesional"];
+const GERENTE_Y_PROFESIONAL: readonly Rol[] = ["Gerente", "Profesional"]; // HU-24B
 
 // Rutas de (main) y quién puede entrar. Inicio ("/") lo ve cualquier rol de gestión.
 // Un prefijo cubre también sus subrutas: "/pacientes" incluye "/pacientes/nuevo".
@@ -53,6 +54,7 @@ export const PERMISOS_ACCIONES = {
   "atencion.dashboard": SOLO_PROFESIONAL, // HU-15: su dashboard en Inicio (la base filtra por auth.uid())
   "historia.consultar": SOLO_PROFESIONAL, // HU-39: ficha clínica + evolución (la base exige un turno con el paciente)
   "historia.registrar": SOLO_PROFESIONAL, // HU-39: crear y editar la ficha clínica
+  "ordenes.consultar": GERENTE_Y_PROFESIONAL, // HU-24B: historial de órdenes médicas (Profesional: con turno con el paciente)
   "indicadores.consultar": SOLO_GERENTE, // HU-26: indicadores generales del centro
   "pagos.registrar": RECEPCION, // HU-14: cobrar un turno
   "pagos.consultar": RECEPCION, // HU-14: ver el pago de un turno y el listado

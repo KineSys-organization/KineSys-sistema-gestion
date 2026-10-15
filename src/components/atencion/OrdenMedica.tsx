@@ -33,14 +33,13 @@ export function DatosAutomaticosOrden({ datos }: { datos: Omit<DatosOrden, "sesi
 }
 
 // HU-38 / HU-24B. Una orden registrada: en pantalla + el bloque que se imprime.
-// `conDatos` = false cuando la pantalla ya muestra paciente/profesional (p. ej. el historial).
-export function OrdenMedica({ datos, conDatos = true }: { datos: DatosOrden; conDatos?: boolean }) {
+export function OrdenMedica({ datos }: { datos: DatosOrden }) {
   const idBloque = `orden-impresion-${datos.id}`;
 
   return (
     <div className="bloque-orden-medica">
       <h4>Orden médica</h4>
-      {conDatos && <DatosAutomaticosOrden datos={datos} />}
+      <DatosAutomaticosOrden datos={datos} />
       <dl className="resumen-turno">
         <dt>Sesiones</dt>
         <dd>{textoSesiones(datos.sesiones)}</dd>
