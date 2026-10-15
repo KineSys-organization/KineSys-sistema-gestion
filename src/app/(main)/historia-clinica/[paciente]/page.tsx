@@ -8,14 +8,17 @@ import {
   formatearMomento,
   urlHistoria,
 } from "@/lib/historia-clinica/validar";
+import { consultarHistorialPaciente } from "@/lib/historial/actions";
+import { leerFiltrosHistorial } from "@/lib/historial/validar";
 import { calcularEdad, hoyArgentina } from "@/lib/atencion/validar";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { HistoriaClinicaForm } from "@/components/historia-clinica/HistoriaClinicaForm";
 import { ImprimirHistoriaButton } from "@/components/historia-clinica/ImprimirHistoriaButton";
+import { HistorialPaciente } from "@/components/historial/HistorialPaciente";
 
 type Props = {
   params: Promise<{ paciente: string }>;
-  searchParams: Promise<{ turno?: string; editar?: string; ok?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 // Los campos de la ficha como lista de definición; los vacíos se muestran con "—".
@@ -32,18 +35,25 @@ function DatosFicha({ ficha }: { ficha: CamposFicha }) {
   );
 }
 
-// HU-39. Historia clínica del paciente: arriba la ficha (se carga y edita) y abajo la
-// evolución (atenciones de HU-13, solo lectura). Solo Profesionales con un turno con el
-// paciente: lo exige fn_obtener_historia_clinica. Se abre desde /mi-agenda/[id].
+// HU-39 + HU-16. Historia clínica: arriba la ficha (se carga y edita) y abajo la evolución
+// (historial completo del paciente: todos los turnos + atención en los atendidos).
+// Solo Profesionales con un turno con el paciente. Se abre desde /mi-agenda/[id].
 export default async function HistoriaClinicaPage({ params, searchParams }: Props) {
-  await exigirProfesional();
+  const usuario = await exigirProfesional();
   const { paciente } = await params;
-  const { turno, editar, ok } = await searchParams;
-  const idTurno = typeof turno === "string" && esIdValido(turno) ? turno : null;
+  const paramsUrl = await searchParams;
+  const turno = typeof paramsUrl.turno === "string" ? paramsUrl.turno : "";
+  const editar = typeof paramsUrl.editar === "string" ? paramsUrl.editar : "";
+  const ok = typeof paramsUrl.ok === "string" ? paramsUrl.ok : "";
+  const idTurno = esIdValido(turno) ? turno : null;
   const volver = idTurno ? `/mi-agenda/${idTurno}` : "/mi-agenda";
   const textoVolver = idTurno ? "← Volver al turno" : "← Volver a mi agenda";
+  const filtrosHistorial = leerFiltrosHistorial(paramsUrl, false);
 
-  const { data, error } = await obtenerHistoriaClinica(paciente);
+  const [{ data, error }, historial] = await Promise.all([
+    obtenerHistoriaClinica(paciente),
+    consultarHistorialPaciente(paciente, filtrosHistorial),
+  ]);
 
   if (error || !data) {
     return (
@@ -141,39 +151,22 @@ export default async function HistoriaClinicaPage({ params, searchParams }: Prop
         </div>
       )}
 
-      <section className="tarjeta bloque">
-        <h3>Evolución</h3>
-        {evolucion.length === 0 ? (
-          <p className="texto-suave">Todavía no hay atenciones registradas para este paciente.</p>
-        ) : (
-          <ol className="lista-evolucion">
-            {evolucion.map((a) => (
-              <li key={a.id_turno} className="item-evolucion">
-                <p className="evolucion-cabecera">
-                  <strong>
-                    {formatearFecha(String(a.fecha_atencion).slice(0, 10))} · {a.hora_inicio}
-                  </strong>
-                  <span className="texto-suave">
-                    {a.profesional} · {a.nombre_servicio}
-                  </span>
-                </p>
-                <dl className="resumen-turno">
-                  <dt>Motivo de consulta</dt>
-                  <dd>{a.motivo_consulta ?? "—"}</dd>
-                  <dt>Observaciones</dt>
-                  <dd className="texto-observaciones">{a.observaciones}</dd>
-                  {a.orden_medica && (
-                    <>
-                      <dt>Orden médica</dt>
-                      <dd className="texto-observaciones">{a.orden_medica}</dd>
-                    </>
-                  )}
-                </dl>
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
+      {!editando && (
+        <section className="tarjeta bloque">
+          <HistorialPaciente
+            base={urlHistoria(p.id_paciente, { turno: idTurno })}
+            filtros={filtrosHistorial}
+            historial={historial.data}
+            error={historial.error}
+            verCobro={false}
+            verAtencion
+            verOrdenes={false}
+            idUsuarioActual={usuario.id_usuario}
+            titulo="Evolución"
+            ocultos={idTurno ? { turno: idTurno } : {}}
+          />
+        </section>
+      )}
 
       <div className="acciones-pie no-imprimir">
         <Link className="boton-secundario boton-inline" href={volver}>

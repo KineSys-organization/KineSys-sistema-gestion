@@ -2291,6 +2291,23 @@ div.mensaje-ok p {
   background: var(--fondo);
 }
 
+/* HU-16: resumen encima del historial / evolución. */
+.historial-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--fondo);
+  color: var(--gris-texto);
+  font-size: 14px;
+}
+
+.historial-resumen strong {
+  color: var(--azul-oscuro);
+}
+
 .lista-evolucion {
   margin: 0;
   padding: 0;
