@@ -4,31 +4,36 @@ import { puedeHacer } from "../src/lib/auth/permisos.ts";
 import { MAXIMO_SEMANAS_REPETIR, validarRepetir } from "../src/lib/turnos/validar.ts";
 
 const uuid = "1583bc01-bdb4-4859-935c-0f4818505aed";
+const base = { idTurno: uuid, modo: "semanas", dias: [4], horas: ["10:00"] };
 
-test("acepta de 1 a 24 semanas", () => {
+test("acepta de 1 a 24 semanas en un solo día", () => {
   assert.equal(MAXIMO_SEMANAS_REPETIR, 24);
-  assert.equal(validarRepetir({ idTurno: uuid, semanas: "1" }), null);
-  assert.equal(validarRepetir({ idTurno: uuid, semanas: "24" }), null);
-  // Con espacios alrededor también (vienen del formulario).
-  assert.equal(validarRepetir({ idTurno: ` ${uuid} `, semanas: " 4 " }), null);
+  assert.equal(validarRepetir({ ...base, cantidad: "1" }), null);
+  assert.equal(validarRepetir({ ...base, cantidad: "24" }), null);
+  assert.equal(validarRepetir({ ...base, idTurno: ` ${uuid} `, cantidad: " 4 " }), null);
 });
 
-test("rechaza 0 y 25 semanas", () => {
-  const mensaje = "Podés repetir el turno entre 1 y 24 semanas";
-  assert.equal(validarRepetir({ idTurno: uuid, semanas: "0" }), mensaje);
-  assert.equal(validarRepetir({ idTurno: uuid, semanas: "25" }), mensaje);
+test("rechaza 0 semanas y más de 24 turnos", () => {
+  assert.equal(
+    validarRepetir({ ...base, cantidad: "0" }),
+    "La cantidad de semanas o de sesiones tiene que ser mayor a cero"
+  );
+  assert.equal(
+    validarRepetir({ ...base, cantidad: "25" }),
+    "No se pueden crear más de 24 turnos nuevos en total"
+  );
 });
 
 test("exige un número entero de semanas", () => {
-  assert.equal(validarRepetir({ idTurno: uuid, semanas: "" }), "Indicá cuántas semanas repetir");
-  const mensaje = "La cantidad de semanas tiene que ser un número entero";
-  assert.equal(validarRepetir({ idTurno: uuid, semanas: "2.5" }), mensaje);
-  assert.equal(validarRepetir({ idTurno: uuid, semanas: "-3" }), mensaje);
-  assert.equal(validarRepetir({ idTurno: uuid, semanas: "cuatro" }), mensaje);
+  assert.equal(validarRepetir({ ...base, cantidad: "" }), "Indicá cuántas semanas repetir");
+  const mensaje = "La cantidad de semanas o de sesiones tiene que ser un número entero";
+  assert.equal(validarRepetir({ ...base, cantidad: "2.5" }), mensaje);
+  assert.equal(validarRepetir({ ...base, cantidad: "-3" }), mensaje);
+  assert.equal(validarRepetir({ ...base, cantidad: "cuatro" }), mensaje);
 });
 
 test("rechaza un turno inválido", () => {
-  assert.equal(validarRepetir({ idTurno: "no-es-uuid", semanas: "4" }), "Turno inválido");
+  assert.equal(validarRepetir({ ...base, idTurno: "no-es-uuid" }), "Turno inválido");
 });
 
 test("solo Gerente y Mesa de Entradas pueden repetir turnos", () => {

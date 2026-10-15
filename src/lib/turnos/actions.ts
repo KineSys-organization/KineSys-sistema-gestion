@@ -259,35 +259,52 @@ export async function listarOpcionesFiltroTurnos(): Promise<{
   };
 }
 
-// HU-25. Repetir un turno semanalmente. Paso 1: ver las fechas propuestas (no crea nada).
+function pedidoRepetir(formData: FormData) {
+  const modo = String(formData.get("modo") ?? "");
+  return {
+    idTurno: String(formData.get("id_turno") ?? "").trim(),
+    modo: modo === "sesiones" ? ("sesiones" as const) : ("semanas" as const),
+    cantidad: String(formData.get("cantidad") ?? "").trim(),
+    dias: formData.getAll("dia").map((d) => Number(d)),
+    horas: formData.getAll("hora").map((h) => String(h).trim()),
+  };
+}
+
+// HU-25 / HU-37. Paso 1: ver las fechas propuestas (no crea nada).
 export async function previsualizarRepeticion(
   _prev: EstadoPreviaRepetir,
   formData: FormData
 ): Promise<EstadoPreviaRepetir> {
-  const campos = {
-    idTurno: String(formData.get("id_turno") ?? "").trim(),
-    semanas: String(formData.get("semanas") ?? "").trim(),
+  const campos = pedidoRepetir(formData);
+  const pedido = {
+    modo: campos.modo,
+    cantidad: campos.cantidad,
+    dias: campos.dias,
+    horas: campos.horas,
   };
 
   const sinPermiso = await exigirAccion("turnos.repetir");
-  if (sinPermiso) return { error: sinPermiso, semanas: campos.semanas, fechas: null };
+  if (sinPermiso) return { error: sinPermiso, pedido, fechas: null };
 
   const errorValidacion = validarRepetir(campos);
-  if (errorValidacion) return { error: errorValidacion, semanas: campos.semanas, fechas: null };
+  if (errorValidacion) return { error: errorValidacion, pedido, fechas: null };
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_turno_repetir_preview", {
     p_id_turno: campos.idTurno,
-    p_semanas: Number(campos.semanas),
+    p_dias: campos.dias,
+    p_horas: campos.horas,
+    p_semanas: campos.modo === "semanas" ? Number(campos.cantidad) : null,
+    p_sesiones: campos.modo === "sesiones" ? Number(campos.cantidad) : null,
   });
 
-  if (error) return { error: error.message, semanas: campos.semanas, fechas: null };
+  if (error) return { error: error.message, pedido, fechas: null };
 
   const fechas = ((data ?? []) as FechaRepeticion[]).map((f) => ({
     ...f,
     fecha: String(f.fecha).slice(0, 10),
   }));
-  return { error: null, semanas: campos.semanas, fechas };
+  return { error: null, pedido, fechas };
 }
 
 // HU-25. Paso 2: crear los turnos. La base revalida cada fecha en ese momento
@@ -299,10 +316,7 @@ export async function confirmarRepeticion(
   const sinPermiso = await exigirAccion("turnos.repetir");
   if (sinPermiso) return { error: sinPermiso, resultado: null };
 
-  const campos = {
-    idTurno: String(formData.get("id_turno") ?? "").trim(),
-    semanas: String(formData.get("semanas") ?? "").trim(),
-  };
+  const campos = pedidoRepetir(formData);
 
   const errorValidacion = validarRepetir(campos);
   if (errorValidacion) return { error: errorValidacion, resultado: null };
@@ -310,7 +324,10 @@ export async function confirmarRepeticion(
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_turno_repetir_confirmar", {
     p_id_turno: campos.idTurno,
-    p_semanas: Number(campos.semanas),
+    p_dias: campos.dias,
+    p_horas: campos.horas,
+    p_semanas: campos.modo === "semanas" ? Number(campos.cantidad) : null,
+    p_sesiones: campos.modo === "sesiones" ? Number(campos.cantidad) : null,
   });
 
   if (error) return { error: error.message, resultado: null };

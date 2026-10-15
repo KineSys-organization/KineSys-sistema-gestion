@@ -321,6 +321,18 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Filtros en la URL (`leerFiltrosTurnos` / `urlTurnos` en `src/lib/turnos/busqueda.ts`). Sin `desde`/`hasta` en la URL = hoy; vacíos = sin límite ("Limpiar filtros"). `RangoFechas` (cliente) impide Hasta < Desde.
 - SQL: `supabase/migrations/016_hu09_buscar_turnos.sql`. Pruebas: `supabase/tests/hu09_buscar_turnos.sql` y `tests/hu09-buscar-turnos.test.mjs`. Evidencia en `docs/hu-09-buscar-turnos.md`.
 
+### HU-33 — Bloquear días u horarios (feriados y licencias)
+
+- Pantalla `/bloqueos`, solo Gerente (`exigirGerente`, acción `bloqueos.gestionar`). Recepción y Profesional los ven en la agenda (`bloqueos.consultar`).
+- RPCs ya aplicadas: `fn_listar_bloqueos`, `fn_crear_bloqueo` (`p_solo_consultar` muestra los turnos confirmados afectados sin guardar), `fn_eliminar_bloqueo` (solo si todavía no empezó) y `fn_consultar_bloqueos_agenda`.
+- Un bloqueo no cancela turnos. La disponibilidad (otorgar, reprogramar, repetir) ya no ofrece el horario: lo descuenta `fn_horarios_del_dia`.
+- La agenda de Recepción, `/mi-agenda` y el calendario del Profesional muestran el día o el horario con su motivo.
+
+### HU-37 — Repetir un turno en varios días de la semana
+
+- Amplía el formulario de HU-25 en `/turnos/[id]`: casillas de días (por defecto solo el del turno), hora por día, atajos, y hasta cuándo por semanas o por sesiones (máximo 24 turnos nuevos).
+- `fn_turno_repetir_preview` y `fn_turno_repetir_confirmar` reciben `p_dias`, `p_horas`, `p_semanas` y `p_sesiones` (una de las dos cantidades). Sin días, la base sigue repitiendo solo el día original.
+
 ### HU-25 — Repetir un turno en las próximas semanas
 
 - Desde `/turnos/[id]` (botón "Repetir semanalmente" si el turno está `confirmado`) y justo después de otorgar (`otorgarTurno` redirige a `/turnos/[id]?nuevo=1`, que abre el formulario). Solo **Gerente** y **Mesa de Entradas** (acción `turnos.repetir`).

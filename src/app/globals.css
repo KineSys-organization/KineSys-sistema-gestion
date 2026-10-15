@@ -1646,6 +1646,23 @@ a.badge-horario:hover {
 }
 
 /* Alta de franjas en varios días: casillas Lunes..Domingo en grilla. */
+.atajos-bloqueo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.atajos-bloqueo .fila-acciones {
+  margin: 0;
+}
+
+.atajos-bloqueo .campo {
+  margin: 0;
+  width: 110px;
+}
+
 .dias-semana {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));

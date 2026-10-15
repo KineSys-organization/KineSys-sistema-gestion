@@ -4,6 +4,8 @@ import { consultarMiAgenda } from "@/lib/atencion/actions";
 import { esFechaValida, hoyArgentina, sumarDias } from "@/lib/atencion/validar";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
+import { consultarBloqueosAgenda } from "@/lib/bloqueos/actions";
+import { AvisoBloqueos } from "@/components/bloqueos/AvisoBloqueos";
 
 type Props = {
   searchParams: Promise<{ fecha?: string }>;
@@ -12,7 +14,7 @@ type Props = {
 // HU-12. Agenda del profesional logueado: solo sus turnos (lo garantiza la base).
 // La fecha va en la URL (?fecha=), así "Volver" y recargar mantienen el día.
 export default async function MiAgendaPage({ searchParams }: Props) {
-  await exigirProfesional();
+  const usuario = await exigirProfesional();
 
   const hoy = hoyArgentina();
   const { fecha: fechaParam } = await searchParams;
@@ -20,7 +22,10 @@ export default async function MiAgendaPage({ searchParams }: Props) {
   const fecha = pedida && esFechaValida(pedida) ? pedida : hoy;
   const fechaInvalida = pedida !== "" && !esFechaValida(pedida);
 
-  const { data, error } = await consultarMiAgenda(fecha);
+  const [{ data, error }, bloqueos] = await Promise.all([
+    consultarMiAgenda(fecha),
+    consultarBloqueosAgenda(usuario.id_usuario, fecha, fecha),
+  ]);
   const turnos = data?.turnos ?? [];
   const pendientes = turnos.filter((t) => t.atendible).length;
   const esHoy = fecha === hoy;
@@ -79,6 +84,13 @@ export default async function MiAgendaPage({ searchParams }: Props) {
             </p>
           )}
         </div>
+
+        {bloqueos.error && (
+          <p className="mensaje-error" role="alert">
+            {bloqueos.error}
+          </p>
+        )}
+        <AvisoBloqueos fecha={fecha} bloqueos={bloqueos.data} />
 
         {error ? (
           <p className="mensaje-error" role="alert">

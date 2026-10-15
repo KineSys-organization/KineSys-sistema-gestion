@@ -37,6 +37,7 @@ const MATRIZ = {
   "/mi-agenda/abc": [false, false, true],
   // HU-26: indicadores generales, solo Gerente.
   "/indicadores": [true, false, false],
+  "/bloqueos": [true, false, false], // HU-33
   // HU-14: pagos, Recepción y Gerente.
   "/pagos": [true, true, false],
   "/turnos/abc/pago": [true, true, false],
@@ -99,6 +100,8 @@ test("puedeHacer: cada acción según el rol", () => {
     "atencion.registrar": [false, false, true],
     "atencion.dashboard": [false, false, true],
     "indicadores.consultar": [true, false, false],
+    "bloqueos.gestionar": [true, false, false], // HU-33
+    "bloqueos.consultar": [true, true, true], // HU-33
     "pagos.registrar": [true, true, false],
     "pagos.consultar": [true, true, false],
     "pagos.corregir": [true, true, false],

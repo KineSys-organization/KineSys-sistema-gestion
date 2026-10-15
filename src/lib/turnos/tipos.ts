@@ -98,18 +98,27 @@ export type FechaRepeticion = {
   hora_fin: string;
   disponible: boolean;
   motivo: string | null; // null si está disponible
+  dia_semana?: number;
+};
+
+// HU-25 / HU-37: lo que se le pidió a la base en el preview que se está viendo.
+export type PedidoRepetir = {
+  modo: "semanas" | "sesiones";
+  cantidad: string;
+  dias: number[];
+  horas: string[];
 };
 
 // HU-25: lo que devuelve fn_turno_repetir_confirmar.
 export type ResultadoRepeticion = {
   id_serie: string | null; // null si no se creó ningún turno
-  creados: { id_turno: string; fecha: string }[];
-  omitidos: { fecha: string; motivo: string }[];
+  creados: { id_turno: string; fecha: string; hora_inicio?: string }[];
+  omitidos: { fecha: string; motivo: string; hora_inicio?: string }[];
 };
 
 export type EstadoPreviaRepetir = {
   error: string | null;
-  semanas: string; // las semanas del preview que se está mostrando
+  pedido: PedidoRepetir | null;
   fechas: FechaRepeticion[] | null;
 };
 

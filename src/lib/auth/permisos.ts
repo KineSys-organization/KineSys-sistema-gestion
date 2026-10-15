@@ -26,6 +26,7 @@ export const PERMISOS_RUTAS: { prefijo: string; roles: readonly Rol[] }[] = [
   { prefijo: "/turnos", roles: RECEPCION },
   { prefijo: "/mi-agenda", roles: SOLO_PROFESIONAL }, // HU-12/HU-13: incluye /mi-agenda/[id]
   { prefijo: "/indicadores", roles: SOLO_GERENTE }, // HU-26
+  { prefijo: "/bloqueos", roles: SOLO_GERENTE }, // HU-33: feriados, cierres y licencias
   { prefijo: "/pagos", roles: RECEPCION }, // HU-14: listado de pagos (cobrar es /turnos/[id]/pago)
 ];
 
@@ -51,6 +52,8 @@ export const PERMISOS_ACCIONES = {
   "atencion.registrar": SOLO_PROFESIONAL, // HU-13: registrar y editar la atención
   "atencion.dashboard": SOLO_PROFESIONAL, // HU-15: su dashboard en Inicio (la base filtra por auth.uid())
   "indicadores.consultar": SOLO_GERENTE, // HU-26: indicadores generales del centro
+  "bloqueos.gestionar": SOLO_GERENTE, // HU-33: crear y eliminar bloqueos de agenda
+  "bloqueos.consultar": ROLES, // HU-33: Recepción y Profesional los ven en su agenda
   "pagos.registrar": RECEPCION, // HU-14: cobrar un turno
   "pagos.consultar": RECEPCION, // HU-14: ver el pago de un turno y el listado
   "pagos.corregir": RECEPCION, // HU-14: corregir importe/medio con motivo
