@@ -338,6 +338,21 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Filtros en la URL (`leerFiltrosTurnos` / `urlTurnos` en `src/lib/turnos/busqueda.ts`). Sin `desde`/`hasta` en la URL = hoy; vacíos = sin límite ("Limpiar filtros"). `RangoFechas` (cliente) impide Hasta < Desde.
 - SQL: `supabase/migrations/016_hu09_buscar_turnos.sql`. Pruebas: `supabase/tests/hu09_buscar_turnos.sql` y `tests/hu09-buscar-turnos.test.mjs`. Evidencia en `docs/hu-09-buscar-turnos.md`.
 
+### HU-33 — Bloquear días u horarios (feriados y licencias)
+
+- Pantalla `/bloqueos`, solo Gerente (`exigirGerente`, acción `bloqueos.gestionar`). Recepción y Profesional los ven en la agenda (`bloqueos.consultar`).
+- RPCs ya aplicadas: `fn_listar_bloqueos`, `fn_crear_bloqueo` (`p_solo_consultar` muestra los turnos confirmados afectados sin guardar), `fn_eliminar_bloqueo` (solo si todavía no empezó) y `fn_consultar_bloqueos_agenda`.
+- Un bloqueo no cancela turnos. La disponibilidad (otorgar, reprogramar, repetir) ya no ofrece el horario: lo descuenta `fn_horarios_del_dia`.
+- La agenda de Recepción, `/mi-agenda` y el calendario del Profesional muestran el día o el horario con su motivo.
+- La ocupación de HU-18 descuenta los minutos bloqueados de la disponibilidad (y el centro solo cuenta profesionales activos, como en la corrección 030).
+- SQL: `supabase/migrations/031_hu33_bloqueos_agenda.sql`. Pruebas: `tests/hu33-bloqueos.test.mjs`.
+
+### HU-37 — Repetir un turno en varios días de la semana
+
+- Amplía el formulario de HU-25 en `/turnos/[id]`: casillas de días (por defecto solo el del turno), hora por día, atajos, y hasta cuándo por semanas o por sesiones (máximo 24 turnos nuevos).
+- `fn_turno_repetir_preview` y `fn_turno_repetir_confirmar` reciben `p_dias`, `p_horas`, `p_semanas` y `p_sesiones` (una de las dos cantidades). Sin días, la base sigue repitiendo solo el día original. Conserva la prioridad de HU-20.
+- SQL: `supabase/migrations/032_hu37_repetir_varios_dias.sql`. Pruebas: `tests/hu37-repetir-dias.test.mjs`.
+
 ### HU-20 — Prioridad o urgencia del turno
 
 - `turno.prioridad` (`normal` por defecto, `alta`, `urgente`) + `prioridad_nota` (≤ 200). Marca visual: no cambia orden, disponibilidad ni sobreturnos.

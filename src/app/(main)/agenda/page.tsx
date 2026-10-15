@@ -12,6 +12,8 @@ import { PrioridadBadge } from "@/components/turnos/PrioridadBadge";
 import { EstadoCobroBadge } from "@/components/pagos/EstadoCobroBadge";
 import { obtenerDiasSemana } from "@/lib/agenda/semana";
 import type { TurnoAgenda } from "@/lib/agenda/tipos";
+import { consultarBloqueosAgenda } from "@/lib/bloqueos/actions";
+import { AvisoBloqueos } from "@/components/bloqueos/AvisoBloqueos";
 
 type Props = {
   searchParams: Promise<{ profesional?: string; fecha?: string; vista?: string }>;
@@ -97,6 +99,11 @@ export default async function AgendaPage({ searchParams }: Props) {
       ? await obtenerAgenda({ id_profesional: profesional.id_usuario, fecha })
       : null;
   const horarioProfesional = profesional ? await consultarHorarios(profesional.id_usuario) : null;
+  const desdeBloqueos = vista === "semana" ? (diasSemana[0] ?? fecha) : fecha;
+  const hastaBloqueos = vista === "semana" ? (diasSemana[6] ?? fecha) : fecha;
+  const bloqueos = profesional
+    ? await consultarBloqueosAgenda(profesional.id_usuario, desdeBloqueos, hastaBloqueos)
+    : null;
   const turnos = agenda?.data?.turnos ?? [];
 
   const urlAgenda = (dia: string, modo = vista) =>
@@ -223,6 +230,13 @@ export default async function AgendaPage({ searchParams }: Props) {
                 )}
               </div>
 
+              {bloqueos?.error && (
+                <p className="mensaje-error" role="alert">
+                  {bloqueos.error}
+                </p>
+              )}
+              <AvisoBloqueos fecha={fecha} bloqueos={bloqueos?.data ?? []} />
+
               {agenda?.error ? (
                 <p className="mensaje-error" role="alert">
                   {agenda.error}
@@ -250,6 +264,7 @@ export default async function AgendaPage({ searchParams }: Props) {
                         {turnosDia.length} {turnosDia.length === 1 ? "turno" : "turnos"}
                       </p>
                     </div>
+                    <AvisoBloqueos fecha={dia} bloqueos={bloqueos?.data ?? []} />
                     {agendaDia?.error ? (
                       <p className="mensaje-error" role="alert">
                         {agendaDia.error}

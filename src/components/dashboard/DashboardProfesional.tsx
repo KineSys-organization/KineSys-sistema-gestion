@@ -19,6 +19,8 @@ import { formatearFechaCorta } from "@/lib/indicadores/validar";
 import { formatearFecha } from "@/lib/turnos/validar";
 import { DIAS_SEMANA } from "@/lib/disponibilidad/calendario";
 import { EstadoTurnoBadge } from "@/components/turnos/EstadoTurnoBadge";
+import { consultarBloqueosAgenda } from "@/lib/bloqueos/actions";
+import { bloqueosEnFecha, rangoMes, textoBloqueo } from "@/lib/bloqueos/validar";
 import type { EstadoTurno } from "@/lib/turnos/tipos";
 
 const ETIQUETA_ESTADO: Record<EstadoTurno, string> = {
@@ -98,15 +100,21 @@ function IconoProximidad({
 // van en la URL (?mes=2026-09&dia=2026-09-29), así recargar o volver mantiene la vista.
 export async function DashboardProfesional({
   hoy,
+  idProfesional,
   mesPedido,
   diaPedido,
 }: {
   hoy: string;
+  idProfesional: string;
   mesPedido: string;
   diaPedido: string;
 }) {
   const mes = esMesValido(mesPedido) ? mesPedido : mesDeFecha(hoy);
-  const { data, error } = await consultarDashboard(mes);
+  const periodo = rangoMes(mes);
+  const [{ data, error }, bloqueos] = await Promise.all([
+    consultarDashboard(mes),
+    consultarBloqueosAgenda(idProfesional, periodo.desde, periodo.hasta),
+  ]);
 
   if (error || !data) {
     return (
@@ -210,6 +218,11 @@ export async function DashboardProfesional({
                           scroll={false}
                         >
                           <span className="dia-numero">{celda.dia}</span>
+                          {bloqueosEnFecha(celda.fecha, bloqueos.data).slice(0, 1).map((bloqueo) => (
+                            <span key={bloqueo.id_bloqueo} className="turno-chip turno-chip-bloqueo" title={textoBloqueo(bloqueo)}>
+                              Bloqueado
+                            </span>
+                          ))}
                           {celda.turnos.slice(0, TURNOS_POR_CELDA).map((t) => {
                             const cercania = proximidad(t, hoy);
                             return (
@@ -284,6 +297,12 @@ export async function DashboardProfesional({
               </p>
             )}
           </div>
+
+          {bloqueosEnFecha(elegido, bloqueos.data).map((bloqueo) => (
+            <p key={bloqueo.id_bloqueo} className="aviso-accion" role="status">
+              {textoBloqueo(bloqueo)}
+            </p>
+          ))}
 
           {turnosDelDia.length === 0 ? (
             <p className="texto-suave">No tenés turnos este día.</p>
