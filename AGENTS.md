@@ -185,7 +185,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 ## Fuera de alcance (todavía)
 
 - Web de pacientes (login del paciente)
-- Pagos parciales, facturación fiscal (AFIP/ARCA), facturar a la obra social, resto de los indicadores (HU-18)
+- Pagos parciales, facturación fiscal (AFIP/ARCA), facturar a la obra social
 - Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
 - RLS cerrado en tablas históricas (las nuevas de HU-04 van con RLS + revoke; el acceso es solo por `fn_*`)
 
