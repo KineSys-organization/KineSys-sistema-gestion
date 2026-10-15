@@ -11,6 +11,7 @@ import {
   esIdTurnoPago,
   validarCorreccion,
   validarFiltrosPagos,
+  validarReembolso,
   type CamposPago,
   type FiltrosPagos,
 } from "@/lib/pagos/validar";
@@ -20,6 +21,8 @@ function normalizarDetalle(detalle: DetallePago): DetallePago {
   return {
     ...detalle,
     turno: { ...detalle.turno, fecha: String(detalle.turno.fecha).slice(0, 10) },
+    reembolsable: Boolean(detalle.reembolsable),
+    reembolso: detalle.reembolso ?? null,
     correcciones: detalle.correcciones ?? [],
   };
 }
@@ -119,7 +122,42 @@ export async function corregirPago(
   redirect(`/turnos/${campos.idTurno}/pago?ok=corregido`);
 }
 
+// HU-22. Reembolso total del pago. La base bloquea el pago y rechaza un segundo reembolso
+// (un doble envío no duplica). El estado del turno no cambia.
+export async function registrarReembolso(
+  _prev: EstadoPago,
+  formData: FormData
+): Promise<EstadoPago> {
+  const sinPermiso = await exigirAccion("pagos.reembolsar");
+  if (sinPermiso) return { ok: false, error: sinPermiso };
+
+  const idTurno = String(formData.get("id_turno") ?? "").trim();
+  if (!esIdTurnoPago(idTurno)) return { ok: false, error: "Turno inválido" };
+
+  const campos = {
+    motivo: String(formData.get("motivo") ?? ""),
+    detalle: String(formData.get("detalle") ?? ""),
+    medio: String(formData.get("medio_devolucion") ?? ""),
+  };
+  const errorValidacion = validarReembolso(campos);
+  if (errorValidacion) return { ok: false, error: errorValidacion };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("fn_registrar_reembolso", {
+    p_id_turno: idTurno,
+    p_motivo: campos.motivo,
+    p_detalle: campos.detalle.trim() || null,
+    p_medio: campos.medio,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  refrescarPagos(idTurno);
+  redirect(`/turnos/${idTurno}/pago?ok=reembolsado`);
+}
+
 // HU-14. Listado de pagos con filtros (paciente y período de la fecha del pago).
+// HU-22: suma el filtro Con / Sin reembolso.
 export async function listarPagos(filtros: FiltrosPagos): Promise<{
   data: ResultadoPagos | null;
   error: string | null;
@@ -136,6 +174,7 @@ export async function listarPagos(filtros: FiltrosPagos): Promise<{
     p_desde: filtros.desde,
     p_hasta: filtros.hasta,
     p_pagina: filtros.pagina,
+    p_reembolso: filtros.reembolso,
   });
 
   if (error) return { data: null, error: error.message };
@@ -148,6 +187,8 @@ export async function listarPagos(filtros: FiltrosPagos): Promise<{
       pagos: (resultado.pagos ?? []).map((p) => ({
         ...p,
         fecha_turno: String(p.fecha_turno).slice(0, 10),
+        estado_pago: p.estado_pago ?? (p.reembolso ? "Reembolsado" : "Pagado"),
+        reembolso: p.reembolso ?? null,
       })),
     },
     error: null,

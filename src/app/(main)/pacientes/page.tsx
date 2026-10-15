@@ -4,7 +4,7 @@ import { filtrarPacientes, listarObrasSociales } from "@/lib/pacientes/actions";
 import { leerFiltrosPacientes, OBRA_PARTICULAR, RANGOS_EDAD } from "@/lib/pacientes/validar";
 
 type Props = {
-  searchParams: Promise<{ q?: string; obra?: string; edad?: string }>;
+  searchParams: Promise<{ q?: string; obra?: string; edad?: string; estado?: string }>;
 };
 
 // HU-04 + filtros: se ve el listado apenas se entra, y se acota por texto (DNI o
@@ -20,7 +20,7 @@ export default async function PacientesPage({ searchParams }: Props) {
   ]);
 
   const hayFiltros =
-    filtros.texto !== "" || filtros.obra !== null || filtros.edadMin !== null;
+    filtros.texto !== "" || filtros.obra !== null || filtros.edadMin !== null || filtros.estado !== "activos";
   const rangoElegido = RANGOS_EDAD.find((r) => r.valor === params.edad)?.valor ?? "";
 
   return (
@@ -71,6 +71,14 @@ export default async function PacientesPage({ searchParams }: Props) {
             ))}
           </select>
         </div>
+        <div className="campo">
+          <label htmlFor="estado">Estado</label>
+          <select id="estado" name="estado" defaultValue={filtros.estado}>
+            <option value="activos">Activos</option>
+            <option value="inactivos">Inactivos</option>
+            <option value="todos">Todos</option>
+          </select>
+        </div>
         <div className="fila-acciones">
           <button className="boton-principal boton-inline" type="submit">
             Filtrar
@@ -115,6 +123,7 @@ export default async function PacientesPage({ searchParams }: Props) {
                 <th>Edad</th>
                 <th>Teléfono</th>
                 <th>Email</th>
+                <th>Estado</th>
                 <th>Obras sociales</th>
                 <th></th>
               </tr>
@@ -130,13 +139,18 @@ export default async function PacientesPage({ searchParams }: Props) {
                   <td>{paciente.telefono_paciente}</td>
                   <td>{paciente.mail_paciente}</td>
                   <td>
+                    <span className={paciente.activo ? "badge-activo" : "badge-inactivo"}>
+                      {paciente.activo ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td>
                     {(paciente.obras_sociales ?? [])
                       .map((obra) => `${obra.nombre_obra_social} (${obra.numero_afiliado})`)
                       .join(", ") || "Particular"}
                   </td>
                   <td>
                     <Link className="boton-pill" href={`/pacientes/${paciente.id_paciente}`}>
-                      Editar
+                      Ficha
                     </Link>
                   </td>
                 </tr>

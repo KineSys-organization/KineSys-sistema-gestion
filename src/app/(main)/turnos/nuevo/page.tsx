@@ -248,6 +248,17 @@ async function PasoConfirmar({ datos }: { datos: DatosFlujo }) {
     );
   }
 
+  if (!paciente.activo) {
+    return (
+      <>
+        <p className="mensaje-error" role="alert">
+          El paciente está inactivo y no puede recibir turnos nuevos.
+        </p>
+        <Link href={cambiarPaciente}>Elegir otro paciente</Link>
+      </>
+    );
+  }
+
   return (
     <>
       <h3>Paciente</h3>

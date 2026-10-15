@@ -114,6 +114,48 @@ select {
   background: var(--blanco);
 }
 
+.campo-password {
+  position: relative;
+}
+
+.campo-password input {
+  padding-right: 52px !important;
+}
+
+.boton-mostrar-password {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gris-texto);
+  cursor: pointer;
+}
+
+.boton-mostrar-password:hover {
+  background: var(--fondo);
+  color: var(--azul-principal);
+}
+
+.boton-mostrar-password:focus-visible {
+  outline: 2px solid var(--celeste);
+}
+
+.boton-mostrar-password svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
 .campo input:not([type="checkbox"]):focus,
 .campo select:focus {
   outline: 2px solid var(--celeste);
@@ -573,6 +615,10 @@ select {
   max-width: 680px;
 }
 
+.modulo-paciente-ficha {
+  max-width: 1180px;
+}
+
 .modulo-cabecera {
   display: flex;
   align-items: flex-start;
@@ -592,10 +638,20 @@ select {
   gap: 20px;
 }
 
+.paciente-ficha-grid {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+
 @media (min-width: 900px) {
   .modulo-grid {
     grid-template-columns: 340px 1fr;
     align-items: start;
+  }
+
+  .paciente-ficha-grid {
+    grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr);
   }
 }
 
@@ -701,8 +757,24 @@ select {
 }
 
 .badge-inactivo {
-  background: #eef1f4;
-  color: #56616b; /* 5.4:1 (antes #6b7680, 4.1:1) */
+  background: #fdeaea;
+  color: #a11b1b;
+}
+
+.estado-paciente-confirmacion {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #f1caca;
+  border-radius: 10px;
+  background: #fff8f8;
+}
+
+.estado-paciente-confirmacion ul {
+  padding-left: 22px;
+}
+
+.estado-paciente-confirmacion li + li {
+  margin-top: 8px;
 }
 
 /* HU-36: los estados de turno usan los mismos tonos en todas las agendas. */
@@ -1748,10 +1820,18 @@ a.badge-horario:hover {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  border-left: 4px solid var(--azul-principal);
 }
 
-.indicador-destacado {
-  border-left: 4px solid var(--azul-principal);
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .indicador {
+    transition: transform 160ms ease, box-shadow 160ms ease;
+  }
+
+  .indicador:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sombra), 0 10px 24px rgb(0 101 166 / 10%);
+  }
 }
 
 .indicador-titulo {
@@ -1769,6 +1849,61 @@ a.badge-horario:hover {
 .indicador-detalle {
   color: var(--gris-texto);
   font-size: 12px;
+}
+
+/* HU-18. Resumen por estado con tonos suaves y texto de alto contraste. */
+.tabla-operativa {
+  min-width: 880px;
+}
+
+.tabla-detalle {
+  display: block;
+  margin-top: 4px;
+}
+
+.estados-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 290px;
+}
+
+.estado-total,
+.estado-indicador {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.estado-total {
+  color: var(--azul-oscuro);
+  background: #e8f2f8;
+}
+
+.estado-confirmado {
+  color: #124b70;
+  background: #e4f2fa;
+}
+
+.estado-atendido {
+  color: #155b3b;
+  background: #e4f5eb;
+}
+
+.estado-cancelado {
+  color: #8b2635;
+  background: #fdebed;
+}
+
+.estado-ausente {
+  color: #754d06;
+  background: #fff3d6;
 }
 
 /* HU-14: pagos. Importe final destacado (se ve antes de guardar) y bloque en el detalle del turno. */
@@ -2024,4 +2159,79 @@ a.badge-horario:hover {
   padding: 2px;
   margin: 0;
   border-radius: 7px;
+/* HU-39: historia clínica del paciente. */
+.ficha-clinica .ficha-fila {
+  display: contents;
+}
+
+.ficha-clinica dt {
+  max-width: 220px;
+}
+
+.ultima-modificacion {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+
+.form-historia {
+  margin: 0 0 16px;
+}
+
+.versiones-historia {
+  margin-top: 16px;
+  border-top: 1px solid var(--borde);
+  padding-top: 12px;
+}
+
+.versiones-historia summary {
+  cursor: pointer;
+  color: var(--azul-principal);
+  font-weight: 600;
+}
+
+.version-historia {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--fondo);
+}
+
+.lista-evolucion {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item-evolucion {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.item-evolucion:last-child {
+  border-bottom: 0;
+}
+
+.evolucion-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0 0 8px;
+}
+
+@media print {
+  /* La historia puede ocupar varias páginas: fixed (HU-27) imprimiría solo la primera. */
+  .historia-impresion {
+    position: absolute !important;
+    top: 0;
+  }
+
+  .historia-impresion h4 {
+    margin: 20px 0 8px;
+    color: var(--azul-principal);
+  }
+
+  .historia-impresion .item-evolucion {
+    page-break-inside: avoid;
+  }
 }

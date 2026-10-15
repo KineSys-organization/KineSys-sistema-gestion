@@ -1,6 +1,9 @@
 // HU-14. Pagos: medios, importes, validaciones y filtros del listado.
+// HU-22 / HU-17: reembolso total y estado Pagado / Reembolsado.
 // Lógica pura (sin Supabase ni Next) para poder testearla con `npm test`.
-// La base (fn_registrar_pago / fn_corregir_pago) vuelve a validar todo.
+// La base (fn_registrar_pago / fn_corregir_pago / fn_registrar_reembolso) vuelve a validar todo.
+import { puedeHacer } from "@/lib/auth/permisos";
+import type { Pago } from "@/lib/pagos/tipos";
 
 const UUID_OK =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -140,12 +143,77 @@ export function esIdTurnoPago(id: string): boolean {
   return UUID_OK.test(id.trim());
 }
 
+// ============ Reembolso (HU-22) ============
+
+export const LARGO_MAXIMO_DETALLE_REEMBOLSO = 200;
+
+// Misma lista que valida fn_registrar_reembolso.
+export const MOTIVOS_REEMBOLSO = [
+  { valor: "turno_cancelado", etiqueta: "Turno cancelado" },
+  { valor: "pedido_paciente", etiqueta: "Pedido del paciente" },
+  { valor: "otro", etiqueta: "Otro" },
+] as const;
+
+export type MotivoReembolso = (typeof MOTIVOS_REEMBOLSO)[number]["valor"];
+
+export const MENSAJE_YA_REEMBOLSADO = "Este pago ya fue reembolsado";
+export const AVISO_REEMBOLSO =
+  "El reembolso registra dinero devuelto. Si el pago fue por billetera virtual, la devolución en la billetera se hace fuera del sistema.";
+
+export function etiquetaMotivoReembolso(motivo: string | null | undefined): string {
+  return MOTIVOS_REEMBOLSO.find((m) => m.valor === motivo)?.etiqueta ?? "—";
+}
+
+export function esMotivoReembolso(valor: string): valor is MotivoReembolso {
+  return MOTIVOS_REEMBOLSO.some((m) => m.valor === valor);
+}
+
+export type CamposReembolso = {
+  motivo: string;
+  detalle: string;
+  medio: string;
+};
+
+// Mismos mensajes que la base. El detalle es opcional salvo con motivo Otro.
+export function validarReembolso(campos: CamposReembolso): string | null {
+  if (!esMotivoReembolso(campos.motivo)) return "Elegí el motivo del reembolso";
+  const detalle = campos.detalle.trim();
+  if (detalle.length > LARGO_MAXIMO_DETALLE_REEMBOLSO) {
+    return `El detalle no puede superar los ${LARGO_MAXIMO_DETALLE_REEMBOLSO} caracteres`;
+  }
+  if (campos.motivo === "otro" && !detalle) {
+    return "Indicá el detalle del reembolso cuando el motivo es Otro";
+  }
+  if (!esMedioPago(campos.medio)) return "Elegí un medio de devolución válido";
+  return null;
+}
+
+// Botón "Registrar reembolso": la base dice si el pago es reembolsable y la matriz si el rol puede.
+export function mostrarBotonReembolso(reembolsable: boolean, rol: string | null | undefined): boolean {
+  return reembolsable && puedeHacer(rol, "pagos.reembolsar");
+}
+
+// Un pago reembolsado no se corrige (fn_corregir_pago igual lo rechaza).
+export function puedeCorregirPago(pago: Pick<Pago, "estado"> | null): boolean {
+  return pago !== null && pago.estado !== "Reembolsado";
+}
+
 // ============ Listado (/pagos) ============
+
+// HU-22: null = todos; "con" / "sin" reembolso (parámetro p_reembolso de fn_listar_pagos).
+export type FiltroReembolso = "con" | "sin" | null;
+
+export const OPCIONES_FILTRO_REEMBOLSO = [
+  { valor: "", etiqueta: "Todos" },
+  { valor: "con", etiqueta: "Con reembolso" },
+  { valor: "sin", etiqueta: "Sin reembolso" },
+] as const;
 
 export type FiltrosPagos = {
   texto: string; // paciente: nombre, apellido o DNI
   desde: string | null; // fecha del PAGO; null = sin límite
   hasta: string | null;
+  reembolso: FiltroReembolso;
   pagina: number;
 };
 
@@ -153,8 +221,14 @@ export type ParamsPagos = {
   q?: string;
   desde?: string;
   hasta?: string;
+  reembolso?: string;
   pagina?: string;
 };
+
+function leerFiltroReembolso(valor: string | undefined): FiltroReembolso {
+  const limpio = valor?.trim();
+  return limpio === "con" || limpio === "sin" ? limpio : null;
+}
 
 function esFecha(valor: string): boolean {
   if (!FECHA_OK.test(valor)) return false;
@@ -168,6 +242,7 @@ export function leerFiltrosPagos(params: ParamsPagos): FiltrosPagos {
     texto: (params.q ?? "").trim().slice(0, LARGO_MAXIMO_BUSQUEDA),
     desde: params.desde?.trim() || null,
     hasta: params.hasta?.trim() || null,
+    reembolso: leerFiltroReembolso(params.reembolso),
     pagina: Number.isInteger(pagina) && pagina >= 1 ? pagina : 1,
   };
 }
@@ -188,6 +263,7 @@ export function urlPagos(filtros: FiltrosPagos, pagina = 1): string {
   if (filtros.texto) params.set("q", filtros.texto);
   if (filtros.desde) params.set("desde", filtros.desde);
   if (filtros.hasta) params.set("hasta", filtros.hasta);
+  if (filtros.reembolso) params.set("reembolso", filtros.reembolso);
   if (pagina > 1) params.set("pagina", String(pagina));
   const query = params.toString();
   return query ? `/pagos?${query}` : "/pagos";
