@@ -141,3 +141,14 @@ test("el proxy manda /portal sin sesión al ingreso del portal, no a /login", ()
   assert.match(codigo, /RUTA_INGRESO_PORTAL = "\/portal\/ingresar"/);
   assert.match(codigo, /fn_acceso_paciente/);
 });
+
+test("un paciente que entra a gestión no pierde la sesión y vuelve a /portal", () => {
+  // obtenerUsuarioGestion solo cierra la sesión si tampoco es un paciente del portal.
+  const auth = readFileSync(join("src", "lib", "auth", "index.ts"), "utf8");
+  assert.match(auth, /rpc\("fn_acceso_paciente"\)[\s\S]*if \(!paciente\) await supabase\.auth\.signOut\(\)/);
+
+  // En /login, el proxy manda al paciente con sesión a su portal.
+  const proxy = readFileSync(join("src", "lib", "supabase", "middleware.ts"), "utf8");
+  const login = proxy.slice(proxy.indexOf("if (user && esRutaPublica)"));
+  assert.match(login, /fn_acceso_paciente[\s\S]*url\.pathname = "\/portal"/);
+});

@@ -85,6 +85,16 @@ export async function updateSession(request: NextRequest) {
       url.search = "";
       return NextResponse.redirect(url);
     }
+
+    // HU-23: un paciente con sesión que cae en /login (por ej. entró a / o a una pantalla de
+    // gestión) vuelve a su portal en vez de ver el login interno.
+    const { data: paciente, error: errorPaciente } = await supabase.rpc("fn_acceso_paciente");
+    if (!errorPaciente && paciente) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/portal";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;
