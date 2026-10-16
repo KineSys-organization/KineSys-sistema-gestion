@@ -24,6 +24,7 @@ declare
   v_hora text;
   v_turno uuid;
   v_n integer;
+  v_obra_ajena uuid;
 begin
   -- ============ Datos de base (como postgres) ============
   select id, email into v_pac_auth, v_pac_mail from auth.users where email = 'juanrodriguez@gmail.com';
@@ -79,6 +80,16 @@ begin
   if (select origen from public.turno where id_turno = v_ajeno) <> 'recepcion' then
     raise exception 'FALLA: el origen por defecto no es recepcion';
   end if;
+
+  -- Una obra social que el paciente NO tiene (se lee como postgres: authenticated no ve la tabla).
+  select o.id_obra_social into v_obra_ajena
+  from public.obra_social o
+  where not exists (
+    select 1 from public.paciente_obra_social pos
+    where pos.id_paciente = v_pac and pos.id_obra_social = o.id_obra_social
+  )
+  limit 1;
+  v_obra_ajena := coalesce(v_obra_ajena, gen_random_uuid());
 
   -- ============ Paciente ============
   perform set_config('request.jwt.claims', jsonb_build_object('sub', v_pac_auth, 'role', 'authenticated')::text, true);
@@ -136,7 +147,7 @@ begin
   -- Cobertura que no es suya.
   begin
     perform public.fn_paciente_sacar_turno(v_prof, v_serv, v_fecha, v_hora::time,
-      (select id_obra_social from public.obra_social limit 1));
+      v_obra_ajena);
     raise exception 'FALLA: aceptó una obra social que no es del paciente';
   exception when others then
     if sqlerrm <> 'La obra social elegida no es una de tus coberturas activas' then raise; end if;
@@ -149,9 +160,12 @@ begin
     or v_res ->> 'cobertura' <> 'Particular' or not (v_res ->> 'cancelable')::boolean then
     raise exception 'FALLA: el turno online quedó mal: %', v_res;
   end if;
+  -- La prioridad se mira como postgres (el paciente no lee la tabla turno).
+  reset role;
   if (select prioridad from public.turno where id_turno = v_turno) <> 'normal' then
     raise exception 'FALLA: el turno online no quedó con prioridad normal';
   end if;
+  set local role authenticated;
   if v_res ? 'atencion' or v_res ? 'pago' or v_res ? 'prioridad' then
     raise exception 'FALLA: el portal devuelve datos que no son del paciente';
   end if;
