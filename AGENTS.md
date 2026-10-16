@@ -430,6 +430,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - `pago.numero_operacion` (check *billetera ⇔ nº*, índice único `idx_pago_numero_operacion`), `pago_correccion.numero_operacion_anterior/_nuevo`, `reembolso.medio_devolucion` admite `billetera`.
 - `fn_registrar_pago` / `fn_corregir_pago` (+ `p_numero_operacion`) y `fn_listar_pagos` (+ `p_medio`) con drop + create; helper interno `fn_validar_numero_operacion`. `/pagos` filtra por Medio y muestra el nº.
 - SQL: `supabase/migrations/028_hu21_billetera_virtual.sql`. Pruebas: `supabase/tests/hu21_billetera_virtual.sql` y `tests/hu21-billetera-virtual.test.mjs`. Evidencia en `docs/hu-21-billetera-virtual.md`.
+- Corrección: en el proyecto `reembolso` conservaba un check viejo con nombre automático, `reembolso_medio_devolucion_check` (sin `billetera`), además de `reembolso_medio_valido`; reembolsar un pago con billetera por ese medio fallaba. `supabase/migrations/20261016120000_hu21_reembolso_medio_billetera.sql` lo borra (queda solo `reembolso_medio_valido`). Prueba: `supabase/tests/hu21_reembolso_billetera.sql`.
 
 ### HU-15 — Dashboard del profesional
 
