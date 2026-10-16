@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import {
+  cantidadConTexto,
   leerFiltrosHistorial,
   MENSAJE_RANGO_INVALIDO,
   MENSAJE_SIN_RESULTADOS,
@@ -12,7 +13,7 @@ import {
 } from "../src/lib/historial/validar.ts";
 import { puedeHacer } from "../src/lib/auth/permisos.ts";
 
-const migracion = readFileSync("supabase/migrations/033_hu16_historial_paciente.sql", "utf8");
+const migracion = readFileSync("supabase/migrations/034_hu16_historial_paciente.sql", "utf8");
 const pruebaSql = readFileSync("supabase/tests/hu16_historial_paciente.sql", "utf8");
 const paginaPaciente = readFileSync("src/app/(main)/pacientes/[id]/page.tsx", "utf8");
 const paginaHistoria = readFileSync("src/app/(main)/historia-clinica/[paciente]/page.tsx", "utf8");
@@ -98,4 +99,15 @@ test("el front no usa supabase.from y exige la acción antes de la RPC", () => {
   assert.match(paginaHistoria, /verAtencion/);
   assert.match(pruebaSql, /fn_consultar_historial_paciente/);
   assert.match(pruebaSql, /rollback/);
+});
+
+test("el resumen usa singular con 1 y plural con el resto", () => {
+  assert.equal(cantidadConTexto(1, "turno", "turnos"), "turno");
+  assert.equal(cantidadConTexto(0, "turno", "turnos"), "turnos");
+  assert.equal(cantidadConTexto(27, "atendido", "atendidos"), "atendidos");
+});
+
+test("con rango inválido la action igual trae los profesionales y no devuelve turnos", () => {
+  assert.match(action, /p_desde: errorFiltros \? null/);
+  assert.match(action, /turnos: \[\] \}, error: errorFiltros/);
 });

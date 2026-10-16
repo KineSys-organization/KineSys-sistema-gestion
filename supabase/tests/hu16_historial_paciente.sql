@@ -1,5 +1,5 @@
 -- Pruebas HU-16: historial completo del paciente (vista administrativa y clínica).
--- Requiere 033_hu16_historial_paciente.sql. Todo se revierte al final.
+-- Requiere 034_hu16_historial_paciente.sql. Todo se revierte al final.
 begin;
 
 do $$

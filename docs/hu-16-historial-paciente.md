@@ -21,7 +21,7 @@ Rama: `feat/hu-16-historial-paciente`. Issue: #16.
 
 ## Backend
 
-`supabase/migrations/033_hu16_historial_paciente.sql` (aplicada en el proyecto):
+`supabase/migrations/034_hu16_historial_paciente.sql` (aplicada en el proyecto):
 
 - `fn_consultar_historial_paciente(paciente, desde, hasta, profesional, pagina)`
 - Recepción: `fn_es_recepcion` + vista `administrativa` (cobro vía `fn_estado_cobro`; `tiene_orden_medica` solo si es Gerente).

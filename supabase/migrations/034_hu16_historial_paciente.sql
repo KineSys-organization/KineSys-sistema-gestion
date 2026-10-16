@@ -7,7 +7,8 @@
 --   * Profesional: vista clínica (atención con motivo, observaciones y orden). Sin pagos.
 --     Exige al menos un turno propio con el paciente (fn_exigir_paciente_propio).
 -- Resumen + listado paginado (10) con filtros de fechas y profesional.
--- Ya aplicada en el proyecto como 033_hu16_historial_paciente.
+-- Ya aplicada en el proyecto (en el historial de Supabase figura como 033_hu16_historial_paciente;
+-- el archivo se renombró a 034 porque 033 ya la usa HU-19 en main).
 
 create or replace function public.fn_consultar_historial_paciente(
   p_id_paciente uuid,

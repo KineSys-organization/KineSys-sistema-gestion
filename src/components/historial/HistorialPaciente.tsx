@@ -4,6 +4,7 @@ import { EstadoCobroBadge } from "@/components/pagos/EstadoCobroBadge";
 import { RangoFechas } from "@/components/turnos/RangoFechas";
 import type { HistorialPaciente as Datos, FiltrosHistorial } from "@/lib/historial/tipos";
 import {
+  cantidadConTexto,
   MENSAJE_SIN_RESULTADOS,
   MENSAJE_SIN_TURNOS,
   totalPaginas,
@@ -89,19 +90,20 @@ export function HistorialPaciente({
         </p>
       )}
 
-      {resumen && (
+      {/* Con un error (p. ej. rango inválido) no se muestra el resumen: no respetaría los filtros. */}
+      {!error && resumen && (
         <div className="historial-resumen" role="status">
           <span>
-            <strong>{resumen.total}</strong> turnos
+            <strong>{resumen.total}</strong> {cantidadConTexto(resumen.total, "turno", "turnos")}
           </span>
           <span>
-            <strong>{resumen.atendidos}</strong> atendidos
+            <strong>{resumen.atendidos}</strong> {cantidadConTexto(resumen.atendidos, "atendido", "atendidos")}
           </span>
           <span>
-            <strong>{resumen.ausentes}</strong> ausentes
+            <strong>{resumen.ausentes}</strong> {cantidadConTexto(resumen.ausentes, "ausente", "ausentes")}
           </span>
           <span>
-            <strong>{resumen.cancelados}</strong> cancelados
+            <strong>{resumen.cancelados}</strong> {cantidadConTexto(resumen.cancelados, "cancelado", "cancelados")}
           </span>
         </div>
       )}
@@ -137,9 +139,9 @@ export function HistorialPaciente({
         </div>
       </form>
 
-      {sinTurnosNunca ? (
+      {error ? null : sinTurnosNunca ? (
         <p className="texto-suave">{MENSAJE_SIN_TURNOS}</p>
-      ) : !error && turnos.length === 0 ? (
+      ) : turnos.length === 0 ? (
         <p className="texto-suave">{MENSAJE_SIN_RESULTADOS}</p>
       ) : (
         <>
@@ -159,10 +161,8 @@ export function HistorialPaciente({
                     <strong title={formatearFecha(fecha)}>
                       {fechaCorta(fecha)} · {t.hora_inicio} a {t.hora_fin}
                     </strong>
-                    <EstadoTurnoBadge
-                      estado={t.estado as EstadoTurno}
-                      motivoCancelacion={t.motivo_cancelacion}
-                    />
+                    {/* Sin motivoCancelacion: el motivo (con su detalle) va abajo en "Motivo de cancelación". */}
+                    <EstadoTurnoBadge estado={t.estado as EstadoTurno} />
                     {verCobro && <EstadoCobroBadge estado={t.estado_cobro} />}
                   </p>
                   <dl className="resumen-turno">

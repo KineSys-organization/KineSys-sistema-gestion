@@ -83,6 +83,11 @@ export function urlHistorial(
   return `${path}${qs ? `?${qs}` : ""}${ancla}`;
 }
 
+// "1 turno" / "2 turnos" en el resumen (solo devuelve la palabra).
+export function cantidadConTexto(cantidad: number, singular: string, plural: string): string {
+  return cantidad === 1 ? singular : plural;
+}
+
 export function esIdValido(id: string | null | undefined): boolean {
   return UUID_OK.test((id ?? "").trim());
 }

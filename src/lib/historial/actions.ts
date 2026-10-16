@@ -16,20 +16,23 @@ export async function consultarHistorialPaciente(
   if (!esIdValido(idPaciente)) return { data: null, error: "Paciente inválido" };
 
   const errorFiltros = validarFiltrosHistorial(filtros);
-  if (errorFiltros) return { data: null, error: errorFiltros };
 
+  // Con rango inválido igual se consulta (sin fechas) para que el combo de profesionales
+  // no quede vacío; se devuelve el error y ningún turno.
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_consultar_historial_paciente", {
     p_id_paciente: idPaciente.trim(),
-    p_desde: filtros.desde,
-    p_hasta: filtros.hasta,
+    p_desde: errorFiltros ? null : filtros.desde,
+    p_hasta: errorFiltros ? null : filtros.hasta,
     p_id_profesional: filtros.profesional,
-    p_pagina: filtros.pagina,
+    p_pagina: errorFiltros ? 1 : filtros.pagina,
   });
 
-  if (error) return { data: null, error: error.message };
+  if (error) return { data: null, error: errorFiltros ?? error.message };
 
   const cuerpo = data as HistorialPaciente;
+  if (errorFiltros) return { data: { ...cuerpo, turnos: [] }, error: errorFiltros };
+
   return {
     data: {
       ...cuerpo,
