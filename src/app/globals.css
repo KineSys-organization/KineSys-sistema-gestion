@@ -2695,3 +2695,26 @@ dd .boton-pill {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* HU-23: servicios y profesionales del portal. Reusan los botones de horarios, pero con
+   columnas más anchas porque el texto es largo (nombre + duración y precio). */
+.horarios-botones.portal-opciones {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  margin-bottom: 12px;
+}
+
+.portal-opciones .horario-boton {
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.portal-opcion-detalle {
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.horario-boton:hover .portal-opcion-detalle {
+  color: inherit;
+}

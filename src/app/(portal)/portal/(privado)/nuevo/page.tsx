@@ -107,14 +107,13 @@ export default async function SacarTurnoPage({ searchParams }: Props) {
               Por ahora no hay servicios para reservar online. Comunicate con Recepción.
             </p>
           ) : (
-            <ul className="horarios-botones">
+            <ul className="horarios-botones portal-opciones">
               {catalogo.map((s) => (
                 <li key={s.id_servicio}>
                   <Link className="horario-boton" href={urlPortalNuevo({ servicio: s.id_servicio })}>
                     {s.nombre_servicio}
-                    <span className="texto-suave">
-                      {" "}
-                      · {s.duracion_minutos} min
+                    <span className="texto-suave portal-opcion-detalle">
+                      {s.duracion_minutos} min
                       {formatearPrecio(s.precio_servicio) && ` · ${formatearPrecio(s.precio_servicio)}`}
                     </span>
                   </Link>
@@ -131,7 +130,7 @@ export default async function SacarTurnoPage({ searchParams }: Props) {
       {paso === 2 && servicio && (
         <section className="tarjeta bloque">
           <h3>¿Con qué profesional?</h3>
-          <ul className="horarios-botones">
+          <ul className="horarios-botones portal-opciones">
             {servicio.profesionales.map((p) => (
               <li key={p.id_profesional}>
                 <Link
