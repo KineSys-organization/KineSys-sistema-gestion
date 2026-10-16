@@ -2486,3 +2486,194 @@ div.mensaje-ok p {
 dd .boton-pill {
   margin-left: 8px;
 }
+
+/* ===== HU-19: indicadores económicos ===== */
+.grilla-economicos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.grilla-economicos h4,
+.barras-meses-titulo {
+  margin: 0 0 10px;
+  color: var(--azul-principal);
+}
+
+.evolucion-ingresos p {
+  margin: 6px 0;
+}
+
+.evolucion-valor {
+  font-size: 1.3rem;
+}
+
+/* Texto + color (nunca solo color): sube verde, baja rojo, sin datos gris. */
+.tendencia-sube .evolucion-valor {
+  color: #1b7a45;
+}
+
+.tendencia-baja .evolucion-valor {
+  color: #a3261c;
+}
+
+.tendencia-sin_datos .evolucion-valor,
+.tendencia-igual .evolucion-valor {
+  color: var(--gris-texto);
+}
+
+/* Barras de los últimos 6 meses, sin librerías. */
+.barras-meses {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barras-meses li {
+  display: grid;
+  grid-template-columns: 80px 1fr minmax(110px, auto);
+  align-items: center;
+  gap: 10px;
+}
+
+.barra-etiqueta {
+  color: var(--gris-texto);
+  font-size: 13px;
+}
+
+.barra-pista {
+  height: 14px;
+  border-radius: 999px;
+  background: #eef1f4;
+  overflow: hidden;
+}
+
+.barra-relleno {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--azul-principal);
+}
+
+.barra-valor {
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* HU-19: tarjetas de la sección Económicos.
+   Ocupan todo el ancho (auto-fit, sin columnas vacías a la derecha) y el importe
+   se achica según la pantalla para que "$ 1.234.567,89" no se salga de la tarjeta. */
+.indicadores-grid-economicos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+.indicador-importe {
+  font-size: clamp(20px, 2vw, 28px);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* El dato principal: ingresos netos. Fondo blanco como el resto; solo el título en azul. */
+.indicador-destacado .indicador-titulo {
+  color: var(--azul-principal);
+}
+
+/* Tablas de importes: números alineados a la derecha, como en una planilla. */
+.grilla-economicos .celda-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Medios sin pagos en el período: se ven, pero en segundo plano. */
+.grilla-economicos .fila-en-cero td {
+  color: var(--gris-texto);
+}
+
+.grilla-economicos .tarjeta > p {
+  margin: 12px 0 0;
+}
+
+/* ===== HU-19: gráficos de barras verticales (medio, servicio, profesional) ===== */
+/* Se despliegan con "Ver gráfico" (<details> del navegador, sin JavaScript). */
+.grafico-desplegable {
+  margin-top: 14px;
+}
+
+.grafico-desplegable > summary {
+  display: inline-flex;
+  list-style: none; /* sin el triangulito del navegador */
+}
+
+.grafico-desplegable > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* El botón cambia de texto: "Ver gráfico" / "Ocultar gráfico". */
+.grafico-desplegable .texto-ocultar,
+.grafico-desplegable[open] .texto-ver {
+  display: none;
+}
+
+.grafico-desplegable[open] .texto-ocultar {
+  display: inline;
+}
+
+/* Columnas lado a lado; con muchas, se desplaza de costado sin romper la página. */
+.grafico-barras {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 8px 4px 4px;
+  overflow-x: auto;
+}
+
+.grafico-columna {
+  display: grid;
+  grid-template-rows: auto 170px auto;
+  justify-items: center;
+  gap: 6px;
+  flex: 1 0 72px;
+  min-width: 72px;
+}
+
+.grafico-valor {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--azul-oscuro);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pista de la barra: el relleno crece desde abajo según el importe. */
+.grafico-pista {
+  display: flex;
+  align-items: flex-end;
+  width: 36px;
+  height: 100%;
+  border-radius: 8px 8px 0 0;
+  background: #eef1f4;
+}
+
+.grafico-relleno {
+  display: block;
+  width: 100%;
+  border-radius: 8px 8px 0 0;
+  background: var(--azul-principal);
+}
+
+.grafico-etiqueta {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--gris-texto);
+  font-size: 12px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

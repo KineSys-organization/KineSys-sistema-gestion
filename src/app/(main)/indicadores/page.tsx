@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { exigirGerente } from "@/lib/auth";
-import { obtenerDashboardOperativo, obtenerIndicadores } from "@/lib/indicadores/actions";
+import {
+  obtenerDashboardOperativo,
+  obtenerIndicadores,
+  obtenerIndicadoresEconomicos,
+} from "@/lib/indicadores/actions";
+import { SeccionEconomicos } from "@/components/indicadores/SeccionEconomicos";
 import {
   formatearFechaCorta,
   periodoPorDefecto,
@@ -75,9 +80,10 @@ export default async function IndicadoresPage({ searchParams }: Props) {
     hasta: primero(params.hasta) ?? porDefecto.hasta,
   };
 
-  const [resumen, dashboard] = await Promise.all([
+  const [resumen, dashboard, economicos] = await Promise.all([
     obtenerIndicadores(periodo),
     obtenerDashboardOperativo(periodo),
+    obtenerIndicadoresEconomicos(periodo), // HU-19
   ]);
   const { data } = resumen;
   const error = resumen.error ?? dashboard.error;
@@ -98,9 +104,15 @@ export default async function IndicadoresPage({ searchParams }: Props) {
           <h2>Indicadores</h2>
           <p className="texto-suave">Resumen del consultorio en el período que elijas.</p>
         </div>
-        <a className="boton-principal boton-inline" href="#dashboard-operativo">
-          Ver dashboard operativo ↓
-        </a>
+        <div className="fila-acciones">
+          {/* HU-19: acceso directo a la sección económica. */}
+          <a className="boton-secundario boton-inline" href="#economicos">
+            Ver económicos ↓
+          </a>
+          <a className="boton-principal boton-inline" href="#dashboard-operativo">
+            Ver dashboard operativo ↓
+          </a>
+        </div>
       </div>
 
       <form className="tarjeta bloque filtro-fecha" method="get">
@@ -160,6 +172,18 @@ export default async function IndicadoresPage({ searchParams }: Props) {
             ))}
           </div>
         </>
+      )}
+
+      {/* HU-19: mismo Desde / Hasta y atajos de arriba. Un error acá no tapa el resto. */}
+      {economicos.data ? (
+        <SeccionEconomicos datos={economicos.data} />
+      ) : (
+        economicos.error &&
+        !error && (
+          <p className="mensaje-error" role="alert">
+            Indicadores económicos: {economicos.error}
+          </p>
+        )
       )}
 
       {dashboard.data && (
