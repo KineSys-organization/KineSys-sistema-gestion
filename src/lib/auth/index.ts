@@ -32,7 +32,10 @@ export const obtenerUsuarioGestion = cache(async () => {
 
   const { data, error } = await supabase.rpc("fn_acceso_gestion");
   if (error || !data || data.length === 0) {
-    await supabase.auth.signOut();
+    // HU-23: un paciente del portal no es de gestión, pero su sesión vale para /portal:
+    // no se la cerramos (el proxy lo manda de /login a /portal). Al resto, sí.
+    const { data: paciente } = await supabase.rpc("fn_acceso_paciente");
+    if (!paciente) await supabase.auth.signOut();
     return null;
   }
 

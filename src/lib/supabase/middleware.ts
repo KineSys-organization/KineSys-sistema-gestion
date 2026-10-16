@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { supabaseKey, supabaseUrl } from "@/lib/supabase/env";
 
 const RUTAS_PUBLICAS = ["/login"];
+// HU-23: ingreso del portal del paciente (no se importa de lib/portal para no cargar next/headers acá).
+const RUTA_INGRESO_PORTAL = "/portal/ingresar";
 
 function esArchivoEstatico(pathname: string) {
   return (
@@ -40,6 +42,31 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+
+  // HU-23: el portal del paciente tiene su propio ingreso y su propia función de acceso.
+  if (pathname === "/portal" || pathname.startsWith("/portal/")) {
+    const esIngreso = pathname.startsWith(RUTA_INGRESO_PORTAL);
+
+    if (!user && !esIngreso) {
+      const url = request.nextUrl.clone();
+      url.pathname = RUTA_INGRESO_PORTAL;
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+
+    if (user && esIngreso) {
+      const { data, error } = await supabase.rpc("fn_acceso_paciente");
+      if (!error && data) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/portal";
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+    }
+
+    return supabaseResponse;
+  }
+
   const esRutaPublica = RUTAS_PUBLICAS.some((ruta) => pathname.startsWith(ruta));
 
   if (!user && !esRutaPublica) {
@@ -55,6 +82,16 @@ export async function updateSession(request: NextRequest) {
     if (!error && data && data.length > 0) {
       const url = request.nextUrl.clone();
       url.pathname = data[0]?.rol_usuario === "Gerente" ? "/indicadores" : "/";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+
+    // HU-23: un paciente con sesión que cae en /login (por ej. entró a / o a una pantalla de
+    // gestión) vuelve a su portal en vez de ver el login interno.
+    const { data: paciente, error: errorPaciente } = await supabase.rpc("fn_acceso_paciente");
+    if (!errorPaciente && paciente) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/portal";
       url.search = "";
       return NextResponse.redirect(url);
     }

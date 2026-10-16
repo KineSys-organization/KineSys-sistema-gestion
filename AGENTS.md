@@ -2,9 +2,9 @@
 
 Consultorio de kinesiología (trabajo de facultad). Backend: **Supabase** (Postgres + Auth). Frontend: **Next.js 15 App Router + TypeScript + React 19**.
 
-Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Personal interno** HU-29/HU-30, **Obras sociales** HU-31/HU-32, **Indicadores generales** HU-26, **Dashboard operativo** HU-18 e **Indicadores económicos** HU-19) y recepción (**Pacientes** con **Historial** HU-16, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14 con reembolsos HU-22 y billetera virtual HU-21, **Estado de cobro** HU-17, **Comprobante de pago** HU-35, **Prioridad del turno** HU-20), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 con orden médica HU-24A/HU-38, **Historial de órdenes** HU-24B, **Dashboard** en Inicio HU-15 e **Historia clínica** HU-39 con evolución HU-16), con control de acceso por rol (HU-08).
+Hoy existe la **base de acceso** (login, sesión e inicio protegido), módulos de Gerente (**Servicios**, **Profesionales** con franjas HU-02B, **Personal interno** HU-29/HU-30, **Obras sociales** HU-31/HU-32, **Indicadores generales** HU-26, **Dashboard operativo** HU-18 e **Indicadores económicos** HU-19) y recepción (**Pacientes** con **Historial** HU-16, **Disponibilidad**, **Otorgar turno** HU-06 con el paciente primero HU-28, **Agenda** HU-07, **Cancelar turno** HU-10A, **Marcar ausencia** HU-10B, **Reprogramar** HU-10C, **Turnos** HU-09, **Repetir semanalmente** HU-25, **Pagos** HU-14 con reembolsos HU-22 y billetera virtual HU-21, **Estado de cobro** HU-17, **Comprobante de pago** HU-35, **Prioridad del turno** HU-20), módulo del Profesional (**Mi agenda** HU-12, **Registrar atención** HU-13 con orden médica HU-24A/HU-38, **Historial de órdenes** HU-24B, **Dashboard** en Inicio HU-15 e **Historia clínica** HU-39 con evolución HU-16), con control de acceso por rol (HU-08), y el **Turno online** del paciente (HU-23, portal aparte en `/portal`).
 
-Los pacientes **no inician sesión en esta web** (usan otra). Acá Recepción los registra para otorgar turnos. Roles de este sistema: `Gerente`, `Profesional`, `Mesa de Entradas`.
+Los pacientes **no entran al sistema de gestión**: Recepción los registra para otorgar turnos. Desde HU-23 tienen su propio **portal** (`/portal`, ingreso en `/portal/ingresar` con `fn_acceso_paciente`) para sacar, ver y cancelar sus turnos. Roles de gestión: `Gerente`, `Profesional`, `Mesa de Entradas`.
 
 El enrutamiento y el login/logout copian el ERP Palacio de las Golosinas (`erp-epg`), en TypeScript.
 
@@ -133,6 +133,8 @@ src/
     (main)/pagos             → listado de pagos con filtros (HU-14)
     (main)/turnos/[id]/pago  → registrar, consultar y corregir el pago del turno (HU-14)
     (main)/pagos/[id]/comprobante → comprobante del pago, ver y descargar PDF (HU-35; [id] = id_pago)
+    (portal)/portal/ingresar  → ingreso del paciente al turno online (HU-23)
+    (portal)/portal/(privado) → /portal (mis turnos) y /portal/nuevo (sacar turno), exigen paciente (HU-23)
   proxy.ts + middleware.ts  → Next 15 carga `src/middleware.ts`; la sesión se refresca en `src/lib/supabase/middleware.ts`
 ```
 
@@ -184,7 +186,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 
 ## Fuera de alcance (todavía)
 
-- Web de pacientes (login del paciente)
+- Registro de la cuenta del paciente y recuperación de contraseña (el portal de HU-23 solo ingresa)
 - Pagos parciales, facturación fiscal (AFIP/ARCA), facturar a la obra social
 - Alta de usuarios genérica `crear-usuario` (el alta de profesional usa `crear-profesional`)
 - RLS cerrado en tablas históricas (las nuevas de HU-04 van con RLS + revoke; el acceso es solo por `fn_*`)
@@ -464,6 +466,14 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Profesional: la **Evolución** de `/historia-clinica/[paciente]` usa el mismo historial (vista clínica: atención en los atendidos; sin pagos). Exige turno propio con el paciente.
 - RPC: `fn_consultar_historial_paciente(paciente, desde, hasta, profesional, pagina)` → resumen + página de 10. Filtros en la URL (`hdesde`/`hhasta`/`hprofesional`/`hpagina` en la ficha del paciente para no chocar con órdenes).
 - SQL: `supabase/migrations/034_hu16_historial_paciente.sql` (ya aplicada). Pruebas: `supabase/tests/hu16_historial_paciente.sql` y `tests/hu16-historial-paciente.test.mjs`. Evidencia en `docs/hu-16-historial-paciente.md`.
+
+### HU-23 — Sacar turno online (portal del paciente)
+
+- Pantallas: `/portal/ingresar`, `/portal` (mis turnos + cancelar) y `/portal/nuevo` (servicio → profesional → día y horario → cobertura y confirmar). Fuera de `(main)` y de la matriz de HU-08: páginas con `exigirPaciente()`, actions con `exigirPacienteAccion()` (`src/lib/portal/acceso.ts`).
+- Proxy: `/portal/*` sin sesión → `/portal/ingresar`; paciente con sesión en el ingreso → `/portal`. El resto no cambió.
+- Paciente de la sesión: `fn_paciente_actual()` (interna) con `auth.uid()`: ficha con `id_paciente = auth.uid()` o ficha cuyo `mail_paciente` = mail **confirmado** de la cuenta. Ambiguo, inactivo o usuario de gestión → error. El front nunca manda el id del paciente.
+- RPCs: `fn_acceso_paciente`, `fn_paciente_catalogo`, `fn_paciente_calendario`, `fn_paciente_horarios`, `fn_paciente_sacar_turno`, `fn_paciente_mis_turnos`, `fn_paciente_cancelar_turno`. Disponibilidad con `fn_horarios_del_dia` (mismas reglas que Recepción, 30 días), mismo lock y `EXCLUDE` que HU-06; sin turnos superpuestos del mismo paciente; prioridad Normal; `turno.origen = 'online'`. Cancelar: propio, confirmado y sin empezar, motivo `pedido_paciente`. Nada clínico ni de pagos.
+- SQL: `supabase/migrations/035_hu23_turno_online.sql` (no modifica funciones existentes). Pruebas: `supabase/tests/hu23_turno_online.sql` y `tests/hu23-turno-online.test.mjs`. Detalle y decisiones en `docs/hu-23-turno-online.md`.
 
 ### HU-26 — Indicadores generales del centro (vista corta, Incremento 2)
 

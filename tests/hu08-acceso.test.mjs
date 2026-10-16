@@ -182,6 +182,9 @@ test("cada server action repite el chequeo de rol", () => {
       total++;
       if (delegan[nombre]) {
         assert.ok(cuerpo.includes(delegan[nombre]), `${nombre} debe delegar`);
+      } else if (archivo.includes(join("lib", "portal"))) {
+        // HU-23: el portal del paciente no usa roles de gestión; exige un paciente activo.
+        assert.match(cuerpo, /await exigirPacienteAccion\(\)/, `${archivo}: ${nombre} sin exigirPacienteAccion`);
       } else {
         assert.match(cuerpo, /await exigirAccion\("[a-z.]+"\)/, `${archivo}: ${nombre} sin exigirAccion`);
       }
