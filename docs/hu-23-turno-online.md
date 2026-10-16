@@ -34,8 +34,9 @@ Desde `/login` hay un link "¿Sos paciente? Sacá tu turno online" y desde el po
 - [x] Paso 3: calendario de los próximos 30 días con la cantidad de horarios libres por día, y los horarios del día elegido. Mismo cálculo que Recepción (HU-05): franjas, duración y granularidad, turnos que ocupan, bloqueos de agenda (HU-33) y nada en el pasado.
 - [x] Paso 4: cobertura (obras sociales **activas** del paciente o Particular; una sola → preseleccionada) y **Confirmar turno**.
 - [x] Al confirmar, la base revalida el horario con el mismo lock y la misma `EXCLUDE` que HU-06. Si se ocupó: *El horario seleccionado ya no está disponible* + link "Elegir otro horario".
-- [x] El paciente no puede tener dos turnos confirmados superpuestos: *Ya tenés un turno en ese horario*.
+- [x] El paciente no puede tener dos turnos confirmados superpuestos: *Ya tenés un turno en ese horario*. Las reservas del mismo paciente se atienden de a una (lock por paciente), así dos pestañas no pasan las dos el chequeo.
 - [x] El turno queda `confirmado`, prioridad **Normal** (HU-20 la decide Recepción) y `origen = 'online'`.
+- [x] La validación del front compara la fecha y hora en hora de Argentina (`-03:00`), no en la zona del servidor.
 - [x] Todo lo elegido queda en la URL (`?servicio&profesional&fecha&hora`): recargar o "Cambiar" no pierde nada.
 - [x] Después de confirmar → "Mis turnos" con *Listo, tu turno quedó confirmado: …*
 
@@ -47,7 +48,7 @@ Desde `/login` hay un link "¿Sos paciente? Sacá tu turno online" y desde el po
 
 ### Lo que el paciente NO ve
 
-- [x] Nada clínico (atención, observaciones, orden médica, historia clínica), ni pagos, ni prioridad, ni el motivo interno de los bloqueos por horario.
+- [x] Nada clínico (atención, observaciones, orden médica, historia clínica), ni pagos, ni prioridad, ni el motivo interno de los bloqueos: `fn_paciente_horarios` reemplaza el `mensaje` de `fn_horarios_del_dia` (que trae *bloqueado: …*) por *No hay horarios libres para ese día*.
 
 ### Recepción
 
@@ -66,7 +67,7 @@ Por eso, para que un paciente use el turno online, Recepción tiene que tener su
 
 ## Base de datos
 
-Migración `supabase/migrations/034_hu23_turno_online.sql` (**no modifica ninguna función existente**):
+Migración `supabase/migrations/035_hu23_turno_online.sql` (**no modifica ninguna función existente**):
 
 | Objeto | Para qué |
 |---|---|

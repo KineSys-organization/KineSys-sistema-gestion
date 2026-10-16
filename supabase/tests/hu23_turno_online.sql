@@ -1,5 +1,5 @@
 -- Pruebas HU-23 (sacar turno online). Todo se revierte al final (rollback).
--- Requiere la migración 034_hu23_turno_online.sql aplicada.
+-- Requiere la migración 035_hu23_turno_online.sql aplicada.
 --
 -- Cuentas: Paciente juanrodriguez@ (se le da una ficha con su mail), Mesa carlaperez@ y
 -- el primer Profesional activo con servicio y franjas. El turno se saca sobre un horario

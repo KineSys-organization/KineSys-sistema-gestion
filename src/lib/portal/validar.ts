@@ -77,7 +77,10 @@ export function validarSacarTurno(input: CamposSacarTurno, ahora: Date = new Dat
     return "Elegí el día y el horario";
   }
 
-  const inicio = new Date(`${input.fecha.trim()}T${input.hora.trim()}:00`);
+  // La fecha y la hora del turno son de Argentina (UTC-3, sin horario de verano). Sin el
+  // offset se leerían en la zona del servidor (UTC en producción) y se rechazarían los
+  // turnos de las próximas 3 horas.
+  const inicio = new Date(`${input.fecha.trim()}T${input.hora.trim()}:00-03:00`);
   if (Number.isNaN(inicio.getTime())) return "La fecha no es válida";
   if (inicio < ahora) return "No se pueden sacar turnos en una fecha u hora pasada";
 

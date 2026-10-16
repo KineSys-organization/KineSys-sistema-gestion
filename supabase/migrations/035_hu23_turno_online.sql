@@ -274,6 +274,7 @@ set search_path = ''
 as $$
 declare
   v_hoy date := (timezone('America/Argentina/Buenos_Aires', now()))::date;
+  v_disp jsonb;
 begin
   perform public.fn_paciente_actual();
 
@@ -289,9 +290,19 @@ begin
     raise exception 'Solo se pueden sacar turnos hasta 30 días desde hoy';
   end if;
 
-  -- Sin el detalle interno (franja completa y motivos de bloqueo por horario).
-  return public.fn_horarios_del_dia(p_id_profesional, p_id_servicio, p_fecha)
-    - 'en_franja' - 'bloqueados';
+  v_disp := public.fn_horarios_del_dia(p_id_profesional, p_id_servicio, p_fecha);
+
+  -- Sin el detalle interno (franja completa y motivos de bloqueo por horario). El 'mensaje'
+  -- de fn_horarios_del_dia trae el motivo del bloqueo ("bloqueado: Licencia ..."), así que
+  -- se reemplaza por uno genérico.
+  return (v_disp - 'en_franja' - 'bloqueados')
+    || jsonb_build_object(
+      'mensaje',
+      case
+        when jsonb_array_length(v_disp -> 'horarios') = 0 then 'No hay horarios libres para ese día'
+        else null
+      end
+    );
 end;
 $$;
 
@@ -344,6 +355,13 @@ begin
       raise exception 'La obra social elegida no es una de tus coberturas activas';
     end if;
   end if;
+
+  -- De a una las reservas del mismo paciente: así dos pestañas (aunque sean con profesionales
+  -- distintos) no pasan las dos el chequeo de "Ya tenés un turno en ese horario". Este lock
+  -- solo lo toma el portal y siempre antes que el del profesional, así que no hay deadlock.
+  perform pg_advisory_xact_lock(
+    hashtextextended('paciente:' || v_paciente::text, 0)
+  );
 
   -- Igual que fn_otorgar_turno: evita confirmar contra una agenda que HU-03 está cambiando
   -- y atiende de a una las confirmaciones del mismo profesional y día.

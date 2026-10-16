@@ -56,6 +56,7 @@ export const PERMISOS_ACCIONES = {
   "atencion.dashboard": SOLO_PROFESIONAL, // HU-15: su dashboard en Inicio (la base filtra por auth.uid())
   "historia.consultar": SOLO_PROFESIONAL, // HU-39: ficha clínica + evolución (la base exige un turno con el paciente)
   "historia.registrar": SOLO_PROFESIONAL, // HU-39: crear y editar la ficha clínica
+  "historial.consultar": ROLES, // HU-16: historial del paciente (Recepción admin; Profesional clínico)
   "ordenes.consultar": GERENTE_Y_PROFESIONAL, // HU-24B: historial de órdenes médicas (Profesional: con turno con el paciente)
   "indicadores.consultar": SOLO_GERENTE, // HU-26: indicadores generales del centro
   "bloqueos.gestionar": SOLO_GERENTE, // HU-33: crear y eliminar bloqueos de agenda

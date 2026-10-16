@@ -60,7 +60,8 @@ test("urlPortalNuevo conserva lo elegido en orden", () => {
 });
 
 test("validarSacarTurno: obligatorios, pasado y cobertura", () => {
-  const ahora = new Date("2026-10-15T12:00:00");
+  // 12:00 de Argentina, explícito para que no dependa de la zona de la máquina.
+  const ahora = new Date("2026-10-15T12:00:00-03:00");
   const ok = { id_servicio: serv, id_profesional: prof, fecha: "2026-10-20", hora: "10:00", cobertura: PARTICULAR };
   assert.equal(validarSacarTurno(ok, ahora), null);
   assert.equal(validarSacarTurno({ ...ok, cobertura: obra }, ahora), null);
@@ -71,6 +72,8 @@ test("validarSacarTurno: obligatorios, pasado y cobertura", () => {
     validarSacarTurno({ ...ok, fecha: "2026-10-15", hora: "11:00" }, ahora),
     "No se pueden sacar turnos en una fecha u hora pasada"
   );
+  // Hoy 14:00 (AR) con "ahora" 12:00 (AR) es futuro, aunque el servidor esté en UTC.
+  assert.equal(validarSacarTurno({ ...ok, fecha: "2026-10-15", hora: "14:00" }, ahora), null);
   assert.equal(validarSacarTurno({ ...ok, cobertura: "" }, ahora), "Elegí con qué cobertura te atendés");
   assert.equal(validarSacarTurno({ ...ok, cobertura: "osde" }, ahora), "Cobertura inválida");
 });
