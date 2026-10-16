@@ -441,7 +441,7 @@ npm test        # tests unitarios (tsx --test, funciona en cualquier Node)
 - Evolución: período anterior de igual duración (los mismos días, justo antes): variación en $ y %. Anterior en 0 → `variacion_porcentaje: null` → *Sin datos para comparar*.
 - (Should) Netos de los últimos 6 meses (barras en CSS) y desglose por servicio y por profesional del turno cobrado.
 - Front: `SeccionEconomicos` y `src/lib/indicadores/economicos.ts` (texto de la variación, meses, ancho de barras). Importes con `formatearPesos`.
-- SQL: `supabase/migrations/030_hu19_indicadores_economicos.sql`. Pruebas: `supabase/tests/hu19_indicadores_economicos.sql` y `tests/hu19-indicadores-economicos.test.mjs` (`npm test`). Evidencia en `docs/hu-19-indicadores-economicos.md`.
+- SQL: `supabase/migrations/033_hu19_indicadores_economicos.sql`. Pruebas: `supabase/tests/hu19_indicadores_economicos.sql` y `tests/hu19-indicadores-economicos.test.mjs` (`npm test`). Evidencia en `docs/hu-19-indicadores-economicos.md`.
 
 ### HU-26 — Indicadores generales del centro (vista corta, Incremento 2)
 

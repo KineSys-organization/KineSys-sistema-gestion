@@ -48,7 +48,7 @@ test("solo Gerente: /indicadores y la acción de indicadores", () => {
 
 // --- Chequeos sobre la migración 030 y la pantalla ---
 
-const sql = readFileSync("supabase/migrations/030_hu19_indicadores_economicos.sql", "utf8");
+const sql = readFileSync("supabase/migrations/033_hu19_indicadores_economicos.sql", "utf8");
 const leer = (ruta) => readFileSync(ruta, "utf8");
 
 test("migración 030: solo lectura, solo Gerente y período ≤ 366 días", () => {

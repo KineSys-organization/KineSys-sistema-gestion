@@ -30,7 +30,7 @@ Usa el mismo Desde / Hasta y los mismos atajos de la HU-26 (por defecto, el mes 
 
 **Permisos:** solo el Gerente (`exigirGerente` y `fn_exigir_rol(['Gerente'])`).
 
-## Base de datos (`030_hu19_indicadores_economicos.sql`)
+## Base de datos (`033_hu19_indicadores_economicos.sql`)
 
 - **`fn_consultar_indicadores_economicos(desde, hasta)`:** de solo lectura, con un período de 366 días como máximo.
 - **No toca nada existente:** no crea tablas ni modifica otras funciones.
